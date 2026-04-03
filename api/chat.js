@@ -1,81 +1,83 @@
 export default async function handler(req, res) {
-  // CORS
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  try {
+    const { message } = req.body;
 
-  const { messages } = req.body || {};
-  if (!messages || !Array.isArray(messages)) {
-    return res.status(400).json({ error: "Missing messages array" });
-  }
+    const SYSTEM_PROMPT = `
+You are Corex — a premium Creative Operating System.
 
-  const SYSTEM_PROMPT = `You are Corex — the world's most advanced Creative Operating System for brands, creators, and marketers.
+Your job:
+Give HIGH-QUALITY, EXECUTABLE answers for founders, marketers, and creators.
 
-PERSONALITY: You are direct, opinionated, and smart. You explain everything in plain, simple language. No jargon. No fluff. You sound like a brilliant friend who knows marketing deeply.
-
-STRICT RESPONSE FORMAT — You MUST follow this structure for every single response. Use these exact markdown headings:
+STRICT OUTPUT FORMAT:
 
 ## What To Do
-One or two sentences. The most direct answer. No preamble.
+- Max 5 steps
+- Each step = clear, actionable
 
 ## How To Do It
-Numbered steps. Max 6 steps. Each step is one clear action.
+- Practical execution (tools, platforms, actions)
 
 ## When To Do It
-When exactly should they do this? Be specific (time, stage, condition).
+- Exact timing (stage, trigger, condition)
 
 ## Why It Works
-2-3 short sentences. Use a simple real-life analogy if helpful.
+- 2–3 lines with logic or psychology
 
 ## Real Example
-One specific brand or creator with actual numbers. Use Indian examples when relevant (CRED, Zepto, Zomato, MamaEarth, Ranveer Allahbadia, etc.)
+- Use REAL brands (prefer Indian: Nykaa, Zomato, CRED, Zepto, Mamaearth, etc.)
+- Include numbers when possible
 
 ## Data / Graph
-ALWAYS include this section. Show key data as simple comparisons.
-Format EXACTLY like this:
-Graph: [Label1]: [Number1] [Label2]: [Number2] [Label3]: [Number3]
+Format EXACTLY like:
+Graph: [Label1]: [Number] [Label2]: [Number] [Label3]: [Number]
 
 Example:
 Graph: Reels: 20000 Stories: 15000 Posts: 12000
 
-Use relevant metrics — could be engagement rates, budget splits, follower growth, conversion rates, reach numbers, etc. Make numbers realistic and useful.
+## Execution Plan
+Day-wise or step-wise breakdown
 
-SPECIAL RULES:
-- Creator pricing: Under 10K followers = ₹5,000–15,000/post. 10K–50K = ₹15,000–50,000. 50K–200K = ₹50,000–2,00,000. 200K–1M = ₹2,00,000–8,00,000. 1M+ = ₹8,00,000–50,00,000+. Reach matters more than followers.
-- Budget questions: Show exact percentage splits that add to 100%.
-- Reel scripts: Give full script with timecodes (0-3s hook, 3-15s content, 15-25s value, 25-30s CTA).
-- Never say "it depends" without giving a concrete recommendation.
-- If someone shares their niche/numbers: use those details. Make it personal.
-- Always end with exactly 3 follow-up chips on a new line:
-Chips: "action 1" | "action 2" | "action 3"`;
+## Quick Wins
+3 fast actions user can take immediately
 
-  try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+IMPORTANT RULES:
+- No fluff
+- No generic advice
+- No “it depends”
+- Make it feel like a ₹10L consultant answer
+- Use numbers wherever possible
+`;
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-5",
-        max_tokens: 1500,
-        system: SYSTEM_PROMPT,
-        messages,
+        model: "gpt-4o-mini",
+        temperature: 0.7,
+        messages: [
+          {
+            role: "system",
+            content: SYSTEM_PROMPT,
+          },
+          {
+            role: "user",
+            content: message,
+          },
+        ],
       }),
     });
 
-    if (!response.ok) {
-      const err = await response.text();
-      return res.status(response.status).json({ error: err });
-    }
-
     const data = await response.json();
-    const text = data.content?.map((b) => b.text || "").join("") || "";
-    return res.status(200).json({ response: text });
-  } catch (err) {
-    return res.status(500).json({ error: err.message || "Server error" });
+
+    res.status(200).json({
+      reply: data.choices[0].message.content,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Corex failed to respond" });
   }
 }
