@@ -839,12 +839,11 @@ Or tap the **+** button to choose a specialised engine.`,
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+    "Content-Type": "application/json"
+  },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1400,
-          system: SYSTEM_PROMPT,
-          messages: newHist,
+    message: newHist[newHist.length - 1].content
         }),
       });
 
