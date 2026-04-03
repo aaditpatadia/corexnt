@@ -514,13 +514,13 @@ export default function CorexApp() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newHist }),
+        body: JSON.stringify({ messages: raw }),
       });
 
       let text = "";
       if (res.ok) {
         const data = await res.json();
-        text = data.response || "";
+        text = data.reply || "";
       } else if (res.status === 429) {
         text = `## What To Do\nWait 10 seconds then try again.\n\n## Why It Works\nYou've sent messages too fast. The system needs a moment.\n\n## Data / Graph\nGraph: Wait: 10\n\nChips: "Try again" | "Ask something else" | "New topic"`;
       } else {
