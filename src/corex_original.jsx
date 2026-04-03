@@ -514,7 +514,7 @@ export default function CorexApp() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: rawInput }),
+        body: JSON.stringify({ message: rawInput }),
       });
 
       let text = "";
