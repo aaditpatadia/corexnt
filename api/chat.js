@@ -1,3 +1,5 @@
+import OpenAI from "openai";
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -10,57 +12,53 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Message is required" });
     }
 
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
     const SYSTEM_PROMPT = `
 You are Corex — a premium Creative Operating System.
 
-Give structured, high-quality, actionable answers.
+Give HIGH-QUALITY, EXECUTABLE answers.
 
 FORMAT:
 
 ## What To Do
-## How To Do It
-## When To Do It
-## Why It Works
-## Real Example
-## Data / Graph
-Graph: Label1: Number Label2: Number Label3: Number
-## Execution Plan
-## Quick Wins
+(max 5 steps)
 
-No fluff. No generic answers.
+## How To Do It
+(tools, execution)
+
+## When To Do It
+(timing)
+
+## Why It Works
+(2-3 lines)
+
+## Real Example
+(real brand)
+
+## Data / Graph
+(Graph: Label1: Number Label2: Number)
+
+Chips: "action 1" | "action 2" | "action 3"
 `;
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        temperature: 0.7,
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: message },
-        ],
-      }),
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini", // fast + cheap + good
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: message },
+      ],
+      temperature: 0.7,
     });
 
-    const data = await response.json();
-
-    console.log("OPENAI RESPONSE:", data);
-
-    const reply =
-      data?.choices?.[0]?.message?.content ||
-      "No response generated";
+    const reply = completion.choices[0].message.content;
 
     return res.status(200).json({ reply });
 
-  } catch (error) {
-    console.error("ERROR:", error);
-    return res.status(500).json({
-      error: "Corex failed",
-      details: error.message,
-    });
+  } catch (err) {
+    console.error("🔥 FULL ERROR:", err);
+    return res.status(500).json({ error: "Corex failed to respond" });
   }
 }
