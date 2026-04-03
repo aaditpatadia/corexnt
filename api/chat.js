@@ -73,8 +73,8 @@ Chips: "action 1" | "action 2" | "action 3"
     }
 
     // ✅ SAFE RESPONSE (no crash)
-    const reply =
-      data?.choices?.[0]?.message?.content || "No response generated";
+   const reply =
+  data?.choices?.[0]?.message?.content || "No response generated";
 
     return res.status(200).json({ reply });
 
