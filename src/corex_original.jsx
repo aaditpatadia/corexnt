@@ -851,7 +851,7 @@ Or tap the **+** button to choose a specialised engine.`,
 
       if (res.ok) {
         const data = await res.json();
-        fullText = data.content?.map(b => b.text || "").join("") || "";
+        fullText = data.choices?.[0]?.message?.content || "";
       } else if (res.status === 429) {
         fullText = `## Slow down a little ⚡\n\nYou're sending messages really fast. Wait 10 seconds and try again.\n\n<chips>["Try again","Ask something else"]</chips>`;
       } else {
