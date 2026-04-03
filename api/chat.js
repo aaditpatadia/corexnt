@@ -1,53 +1,60 @@
 export default async function handler(req, res) {
+  // Allow only POST
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
   try {
     const { message } = req.body;
 
+    if (!message) {
+      return res.status(400).json({ error: "Message is required" });
+    }
+
+    // 🔥 COREX SYSTEM PROMPT (PREMIUM QUALITY)
     const SYSTEM_PROMPT = `
 You are Corex — a premium Creative Operating System.
 
 Your job:
 Give HIGH-QUALITY, EXECUTABLE answers for founders, marketers, and creators.
 
-STRICT OUTPUT FORMAT:
+STRICT FORMAT:
 
 ## What To Do
 - Max 5 steps
-- Each step = clear, actionable
+- Each step must be actionable
 
 ## How To Do It
-- Practical execution (tools, platforms, actions)
+- Tools, platforms, exact execution
 
 ## When To Do It
-- Exact timing (stage, trigger, condition)
+- Timing, triggers, stage
 
 ## Why It Works
-- 2–3 lines with logic or psychology
+- Psychology / logic (2–3 lines)
 
 ## Real Example
-- Use REAL brands (prefer Indian: Nykaa, Zomato, CRED, Zepto, Mamaearth, etc.)
-- Include numbers when possible
+- Use real brands (prefer Indian: Nykaa, Zomato, CRED, Zepto, Mamaearth)
+- Include numbers
 
 ## Data / Graph
 Format EXACTLY like:
 Graph: [Label1]: [Number] [Label2]: [Number] [Label3]: [Number]
 
-Example:
-Graph: Reels: 20000 Stories: 15000 Posts: 12000
-
 ## Execution Plan
-Day-wise or step-wise breakdown
+- Step-by-step or day-wise
 
 ## Quick Wins
-3 fast actions user can take immediately
+- 3 fast actions
 
-IMPORTANT RULES:
+RULES:
 - No fluff
 - No generic advice
-- No “it depends”
-- Make it feel like a ₹10L consultant answer
-- Use numbers wherever possible
+- No "it depends"
+- Make it feel like ₹10L consultant answer
 `;
 
+    // 🔥 OPENAI CALL
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -58,26 +65,38 @@ IMPORTANT RULES:
         model: "gpt-4o-mini",
         temperature: 0.7,
         messages: [
-          {
-            role: "system",
-            content: SYSTEM_PROMPT,
-          },
-          {
-            role: "user",
-            content: message,
-          },
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: message },
         ],
       }),
     });
 
+    // 🔥 HANDLE API FAILURE
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("OpenAI API Error:", errorText);
+
+      return res.status(500).json({
+        error: "AI failed to respond",
+        details: errorText,
+      });
+    }
+
     const data = await response.json();
 
-    res.status(200).json({
-      reply: data.choices[0].message.content,
-    });
+    // 🔥 SAFE PARSING
+    const reply =
+      data?.choices?.[0]?.message?.content ||
+      "No response generated. Try again.";
+
+    return res.status(200).json({ reply });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Corex failed to respond" });
+    console.error("SERVER ERROR:", error);
+
+    return res.status(500).json({
+      error: "Corex crashed",
+      details: error.message,
+    });
   }
 }
