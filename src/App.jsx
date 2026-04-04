@@ -62,7 +62,7 @@ export default function App() {
 
       if (res.ok) {
         const data = await res.json();
-        responseText = data.response || "";
+        responseText = data.reply || "";
       } else if (res.status === 429) {
         responseText = `## Rate limit reached
 Please wait a few seconds before trying again.
