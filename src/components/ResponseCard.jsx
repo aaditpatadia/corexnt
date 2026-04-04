@@ -1,403 +1,292 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Copy, RefreshCw, CheckCircle, ThumbsUp, ThumbsDown, Share2, ChevronDown, Sparkles } from "lucide-react";
-import GraphComponent from "./GraphComponent";
+import { Bar, Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS, CategoryScale, LinearScale,
+  BarElement, LineElement, PointElement, Tooltip, Filler,
+} from "chart.js";
+import { parseResponse } from "../utils/parseResponse";
 
-/* ── Parse the structured AI response ── */
-function parseResponse(raw) {
-  const result = {
-    title: "Strategic Overview",
-    summary: "",
-    sections: [],
-    steps: [],
-    graphData: null,
-    graphTitle: "Performance Overview",
-    chips: [],
-    raw,
+ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip, Filler);
+
+/* ── Chart config ── */
+function buildChartData(graphData, type = "bar") {
+  const data = {
+    labels: graphData.labels,
+    datasets: [{
+      data: graphData.values,
+      ...(type === "bar"
+        ? { backgroundColor:"rgba(45,214,104,0.75)", borderRadius:5, borderSkipped:false }
+        : {
+            borderColor:"#2dd668", borderWidth:2.5,
+            pointBackgroundColor:"#2dd668", pointRadius:4,
+            fill:true,
+            backgroundColor:"rgba(45,214,104,0.08)",
+            tension:0.4,
+          }
+      ),
+    }],
   };
-
-  // Extract GRAPH_DATA
-  const graphMatch = raw.match(/GRAPH_DATA:\s*(\{[\s\S]*?\})\s*(?:\n|$)/);
-  if (graphMatch) {
-    try {
-      const gd = JSON.parse(graphMatch[1]);
-      if (gd.labels && gd.values) {
-        result.graphData = { labels: gd.labels, values: gd.values };
-        result.graphTitle = gd.title || "Data Overview";
-      }
-    } catch {}
-  }
-
-  // Fallback: flat Graph: format
-  if (!result.graphData) {
-    const flatMatch = raw.match(/Graph:\s*(.+)/i);
-    if (flatMatch) {
-      const pairs = [...flatMatch[1].matchAll(/([A-Za-z0-9 %₹\/\-]+):\s*(\d[\d,]*)/g)];
-      if (pairs.length >= 2) {
-        result.graphData = {
-          labels: pairs.map((p) => p[1].trim()),
-          values: pairs.map((p) => parseInt(p[2].replace(/,/g, ""), 10)),
-        };
-      }
-    }
-  }
-
-  // Extract Chips (single or double quotes)
-  const chipsMatch = raw.match(/Chips:\s*['"](.+?)['"]\s*\|\s*['"](.+?)['"]\s*\|\s*['"](.+?)['"]/);
-  if (chipsMatch) {
-    result.chips = [chipsMatch[1], chipsMatch[2], chipsMatch[3]];
-  } else {
-    // Alternative: Chips: 'a' | 'b' | 'c' without strict quotes
-    const altChips = raw.match(/Chips:\s*(.+?)(?:\n|$)/);
-    if (altChips) {
-      result.chips = altChips[1]
-        .split("|")
-        .map((c) => c.trim().replace(/^['"`]|['"`]$/g, "").trim())
-        .filter((c) => c.length > 0)
-        .slice(0, 3);
-    }
-  }
-
-  // Clean text
-  let clean = raw
-    .replace(/GRAPH_DATA:\s*\{[\s\S]*?\}\s*(?:\n|$)/g, "")
-    .replace(/Graph:.*?\n?/gi, "")
-    .replace(/Chips:.*$/m, "")
-    .trim();
-
-  // Parse sections by ## headings
-  const parts = clean.split(/\n(?=##\s)/);
-  for (const part of parts) {
-    const lines = part.trim().split("\n").filter(Boolean);
-    if (!lines.length) continue;
-
-    if (lines[0].startsWith("## ")) {
-      const heading = lines[0].slice(3).trim();
-      const body = lines.slice(1).join("\n").trim();
-      result.sections.push({ heading, body });
-
-      if (!result.title || result.title === "Strategic Overview") {
-        result.title = heading;
-      }
-    } else {
-      // Content before first ## is the summary
-      if (!result.summary) {
-        result.summary = lines.join(" ").trim();
-      }
-    }
-  }
-
-  // Extract numbered steps from "Action Steps" section
-  const actionSection = result.sections.find((s) =>
-    s.heading.toLowerCase().includes("action") || s.heading.toLowerCase().includes("step")
-  );
-  if (actionSection) {
-    result.steps = actionSection.body
-      .split("\n")
-      .filter((l) => /^\d+[\.\)]/.test(l.trim()))
-      .map((l) => l.replace(/^\d+[\.\)]\s*/, "").trim())
-      .filter(Boolean);
-  }
-
-  // Fallback summary
-  if (!result.summary && result.sections.length) {
-    const firstSec = result.sections.find((s) => s.body);
-    if (firstSec) {
-      result.summary = firstSec.body.split("\n")[0].trim();
-    }
-  }
-
-  return result;
+  const options = {
+    responsive:true, maintainAspectRatio:false,
+    animation:{ duration:900 },
+    plugins:{
+      legend:{ display:false },
+      tooltip:{
+        backgroundColor:"rgba(5,10,6,0.95)",
+        borderColor:"rgba(45,214,104,0.3)",
+        borderWidth:1,
+        titleColor:"#f0faf2",
+        bodyColor:"rgba(240,250,242,0.7)",
+        padding:10,
+      },
+    },
+    scales:{
+      x:{
+        grid:{ color:"rgba(45,214,104,0.05)" },
+        ticks:{ color:"rgba(240,250,242,0.4)", font:{size:11} },
+        border:{ color:"transparent" },
+      },
+      y:{ display:false },
+    },
+  };
+  return { data, options };
 }
 
 /* ── Typewriter hook ── */
-function useTypewriter(text, speed = 10, enabled = true) {
+function useTypewriter(text, speed=12, enabled=true) {
   const [displayed, setDisplayed] = useState(enabled ? "" : text);
   const [done, setDone] = useState(!enabled);
-
   useEffect(() => {
     if (!enabled) { setDisplayed(text); setDone(true); return; }
-    setDisplayed("");
-    setDone(false);
+    setDisplayed(""); setDone(false);
     let pos = 0;
     const id = setInterval(() => {
-      pos += 3;
+      pos += 4;
       setDisplayed(text.slice(0, pos));
-      if (pos >= text.length) {
-        clearInterval(id);
-        setDisplayed(text);
-        setDone(true);
-      }
+      if (pos >= text.length) { clearInterval(id); setDisplayed(text); setDone(true); }
     }, speed);
     return () => clearInterval(id);
   }, [text, enabled]);
-
   return { displayed, done };
 }
 
-/* ── Step row ── */
-function StepItem({ text, index }) {
+/* ── Toast ── */
+function Toast({ msg, onClose }) {
+  useEffect(() => { const t = setTimeout(onClose, 2500); return () => clearTimeout(t); }, [onClose]);
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
-      className="flex items-start gap-3 py-2"
-    >
-      <div className="flex-shrink-0 w-5 h-5 rounded-full bg-violet-600/20 border border-violet-500/30
-        flex items-center justify-center mt-0.5">
-        <span className="text-violet-400 font-bold" style={{ fontSize: 10 }}>{index + 1}</span>
-      </div>
-      <p className="text-sm text-zinc-300 leading-relaxed">{text}</p>
+    <motion.div initial={{ opacity:0, y:30, x:"-50%" }} animate={{ opacity:1, y:0, x:"-50%" }} exit={{ opacity:0, y:20, x:"-50%" }}
+      className="fixed bottom-8 left-1/2 z-[9998] px-5 py-3 rounded-2xl text-sm font-medium"
+      style={{ background:"rgba(10,20,12,0.97)", border:"1px solid rgba(45,214,104,0.3)", color:"#f0faf2", whiteSpace:"nowrap", boxShadow:"0 8px 40px rgba(0,0,0,0.6)" }}>
+      {msg}
     </motion.div>
   );
 }
 
-/* ── Section block ── */
-function Section({ heading, body }) {
-  // Skip Action Steps (rendered as StepItems)
-  if (heading.toLowerCase().includes("action") && heading.toLowerCase().includes("step")) return null;
-
-  const lines = body.split("\n").filter(Boolean);
-
+/* ── User bubble ── */
+function UserBubble({ content }) {
   return (
-    <div className="mt-4">
-      <h4 className="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-2">{heading}</h4>
-      <div className="space-y-1.5">
-        {lines.map((line, i) => (
-          <p key={i} className="text-sm text-zinc-400 leading-relaxed">{line}</p>
-        ))}
+    <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} className="flex justify-end">
+      <div className="max-w-sm px-4 py-3 rounded-2xl rounded-br-md text-sm leading-relaxed"
+        style={{ background:"rgba(45,214,104,0.12)", border:"1px solid rgba(45,214,104,0.22)", color:"#f0faf2" }}>
+        {content}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
-/* ── Main component ── */
-export default function ResponseCard({ message, onChip, onRegenerate, animate = false }) {
+/* ── Main COREX card ── */
+export default function ResponseCard({ message, onChip, onRegenerate, animate=false }) {
   const { role, content } = message;
-  const [expanded, setExpanded] = useState(false);
+  const [chartType, setChartType] = useState("bar");
   const [copied, setCopied] = useState(false);
-  const [liked, setLiked] = useState(null); // null | 'up' | 'down'
+  const [liked, setLiked] = useState(null);
+  const [toast, setToast] = useState("");
+  const [showChart, setShowChart] = useState(!animate);
 
-  if (role === "user") {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex justify-end"
-      >
-        <div
-          className="max-w-lg px-4 py-3 rounded-2xl rounded-br-md text-sm text-zinc-200 leading-relaxed"
-          style={{
-            background: "rgba(124,58,237,0.18)",
-            border: "1px solid rgba(124,58,237,0.25)",
-            boxShadow: "0 2px 12px rgba(124,58,237,0.12)",
-          }}
-        >
-          {content}
-        </div>
-      </motion.div>
-    );
-  }
+  if (role === "user") return <UserBubble content={content} />;
 
-  // Assistant
   const parsed = parseResponse(content);
-  const { displayed, done } = useTypewriter(parsed.summary || "", 10, animate);
+  const { title, cleanBody, steps, example, graphData, chips, keyMetric } = parsed;
+
+  // Strip any remaining ** or ## from display text
+  const cleanDisplay = (t) => t.replace(/\*\*/g, "").replace(/^##\s*/gm, "").trim();
+
+  const { displayed, done } = useTypewriter(cleanDisplay(cleanBody), 12, animate);
+  const bodyText = animate ? displayed : cleanDisplay(cleanBody);
+
+  useEffect(() => { if (done && animate) setShowChart(true); }, [done, animate]);
 
   const copy = () => {
-    navigator.clipboard.writeText(content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const plain = [title, cleanDisplay(cleanBody), steps.map((s,i)=>`${i+1}. ${s}`).join("\n"), example].filter(Boolean).join("\n\n");
+    navigator.clipboard.writeText(plain);
+    setCopied(true); setTimeout(()=>setCopied(false), 2000);
   };
+  const share = () => { setToast("Link copied!"); };
 
-  const hasMore = parsed.steps.length > 2 || parsed.sections.length > 1 || parsed.graphData;
+  const chartData = graphData;
+  const { data, options } = chartData ? buildChartData(chartData, chartType) : { data:null, options:null };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-      className="w-full"
-    >
-      {/* Corex label */}
-      <div className="flex items-center gap-2 mb-3">
-        <div
-          className="w-7 h-7 rounded-xl gradient-purple-blue flex items-center justify-center"
-          style={{ boxShadow: "0 0 12px rgba(124,58,237,0.45)", fontFamily: "Sora, sans-serif" }}
-        >
-          <span className="text-white font-bold text-xs">CX</span>
-        </div>
-        <span className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Corex</span>
-      </div>
-
-      {/* Card */}
+    <>
       <motion.div
-        whileHover={{ boxShadow: "0 0 0 1px rgba(124,58,237,0.2), 0 8px 40px rgba(124,58,237,0.1)" }}
-        transition={{ duration: 0.2 }}
-        className="glass rounded-2xl overflow-hidden"
-        style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06)" }}
+        initial={{ opacity:0, y:16 }}
+        animate={{ opacity:1, y:0 }}
+        transition={{ duration:0.45, ease:[0.16,1,0.3,1] }}
+        className="w-full"
       >
-        {/* Top accent */}
-        <div className="h-0.5 w-full" style={{ background: "linear-gradient(90deg,#7c3aed,#6366f1,#3b82f6)" }} />
-
-        <div className="p-5">
-          {/* Title */}
-          <motion.h2
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.05 }}
-            className="text-lg font-bold text-white leading-snug mb-2 tracking-tight"
-            style={{ fontFamily: "Sora, sans-serif" }}
-          >
-            {parsed.title}
-          </motion.h2>
-
-          {/* Summary typewriter */}
-          {parsed.summary && (
-            <div className={`text-sm text-zinc-400 leading-relaxed mb-4 ${!done && animate ? "typing-cursor" : ""}`}>
-              {animate ? displayed : parsed.summary}
-            </div>
-          )}
-
-          <div className="h-px bg-white/[0.06] mb-4" />
-
-          {/* Steps (first 2) */}
-          {parsed.steps.length > 0 && (
-            <div className="mb-2">
-              <h4 className="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-2">Action Steps</h4>
-              <div>
-                {parsed.steps.slice(0, 2).map((step, i) => (
-                  <StepItem key={i} text={step} index={i} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Expand toggle */}
-          {hasMore && (
-            <>
-              <button
-                onClick={() => setExpanded((e) => !e)}
-                className="flex items-center gap-1.5 text-xs font-medium text-violet-400
-                  hover:text-violet-300 transition-colors mt-3 mb-2"
-              >
-                <motion.span animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.22 }}>
-                  <ChevronDown size={13} />
-                </motion.span>
-                {expanded ? "Show less" : `Show full response${parsed.steps.length > 2 ? ` (${parsed.steps.length - 2} more steps)` : ""}`}
-              </button>
-
-              <AnimatePresence>
-                {expanded && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    className="overflow-hidden"
-                  >
-                    {/* Remaining steps */}
-                    {parsed.steps.slice(2).map((step, i) => (
-                      <StepItem key={i + 2} text={step} index={i + 2} />
-                    ))}
-
-                    {/* Other sections */}
-                    {parsed.sections.map((sec, i) => (
-                      <Section key={i} heading={sec.heading} body={sec.body} />
-                    ))}
-
-                    {/* Graph */}
-                    {parsed.graphData && (
-                      <div className="mt-4">
-                        <div className="h-px bg-white/[0.06] mb-4" />
-                        <GraphComponent
-                          labels={parsed.graphData.labels}
-                          values={parsed.graphData.values}
-                          title={parsed.graphTitle}
-                        />
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </>
-          )}
-
-          {/* Graph always shown if no steps and no expandable */}
-          {parsed.graphData && !hasMore && (
-            <>
-              <div className="h-px bg-white/[0.06] mb-4" />
-              <GraphComponent
-                labels={parsed.graphData.labels}
-                values={parsed.graphData.values}
-                title={parsed.graphTitle}
-              />
-            </>
-          )}
-
-          {/* Follow-up chips */}
-          {parsed.chips.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-white/[0.06]">
-              {parsed.chips.map((chip, i) => (
-                <motion.button
-                  key={i}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.15 + i * 0.07 }}
-                  whileHover={{ scale: 1.04, y: -1 }}
-                  whileTap={{ scale: 0.96 }}
-                  onClick={() => onChip(chip)}
-                  className="px-3.5 py-2 rounded-xl text-xs font-medium
-                    text-violet-300 border border-violet-500/20 bg-violet-600/10
-                    hover:bg-violet-600/20 hover:border-violet-400/35
-                    transition-all duration-200"
-                >
-                  {chip}
-                </motion.button>
-              ))}
-            </div>
-          )}
+        {/* COREX label */}
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold"
+            style={{ background:"rgba(45,214,104,0.15)", border:"1px solid rgba(45,214,104,0.3)", color:"#2dd668", fontFamily:"Sora,sans-serif" }}>
+            CX
+          </div>
+          <span className="text-xs font-bold uppercase tracking-widest" style={{ color:"rgba(45,214,104,0.7)" }}>COREX</span>
         </div>
 
-        {/* Action bar */}
-        <div className="flex items-center gap-1 px-5 py-3 border-t border-white/[0.05] bg-white/[0.015]">
-          <ActionBtn onClick={copy} icon={copied ? <CheckCircle size={13} className="text-emerald-400" /> : <Copy size={13} />} label={copied ? "Copied!" : "Copy"} />
-          <ActionBtn onClick={onRegenerate} icon={<RefreshCw size={13} />} label="Regenerate" />
-          <ActionBtn onClick={() => {}} icon={<Share2 size={13} />} label="Share" />
+        {/* Card */}
+        <div className="rounded-2xl overflow-hidden"
+          style={{
+            background:"rgba(14,28,16,0.85)",
+            borderLeft:"3px solid #2dd668",
+            border:"1px solid rgba(45,214,104,0.18)",
+            borderLeftWidth:3,
+            borderLeftColor:"#2dd668",
+            boxShadow:"0 4px 24px rgba(0,0,0,0.4), -3px 0 20px rgba(45,214,104,0.06)",
+          }}>
 
-          <div className="flex-1" />
+          {/* Top accent */}
+          <div className="h-0.5" style={{ background:"linear-gradient(90deg,#2dd668,rgba(45,214,104,0.2),transparent)" }} />
 
-          {/* Thumbs */}
-          <button
-            onClick={() => setLiked(liked === "up" ? null : "up")}
-            className={`p-1.5 rounded-lg transition-all duration-200 ${liked === "up" ? "text-emerald-400 bg-emerald-500/10" : "text-zinc-600 hover:text-zinc-400"}`}
-          >
-            <ThumbsUp size={13} />
-          </button>
-          <button
-            onClick={() => setLiked(liked === "down" ? null : "down")}
-            className={`p-1.5 rounded-lg transition-all duration-200 ${liked === "down" ? "text-red-400 bg-red-500/10" : "text-zinc-600 hover:text-zinc-400"}`}
-          >
-            <ThumbsDown size={13} />
-          </button>
+          <div className="p-5">
+            {/* Title */}
+            <h2 className="text-lg font-bold mb-2 leading-snug" style={{ fontFamily:"Sora,sans-serif", color:"#f0faf2" }}>
+              {cleanDisplay(title)}
+            </h2>
+
+            {/* Key metric highlight */}
+            {keyMetric && (
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl mb-4"
+                style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)" }}>
+                <span className="text-2xl font-extrabold" style={{ color:"#2dd668", fontFamily:"Sora,sans-serif" }}>{keyMetric}</span>
+              </div>
+            )}
+
+            {/* Body text (typewriter) */}
+            {bodyText && (
+              <div className={`text-sm leading-relaxed mb-4 whitespace-pre-wrap ${animate && !done ? "typing-cursor" : ""}`}
+                style={{ color:"var(--text-secondary)" }}>
+                {bodyText}
+              </div>
+            )}
+
+            {/* Action steps */}
+            {steps.length > 0 && showChart && (
+              <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }} className="mb-4">
+                <h4 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color:"rgba(45,214,104,0.7)" }}>Action Steps</h4>
+                <div className="space-y-2">
+                  {steps.map((s, i) => (
+                    <motion.div key={i} initial={{ opacity:0, x:-8 }} animate={{ opacity:1, x:0 }} transition={{ delay:i*0.05 }}
+                      className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5"
+                        style={{ background:"rgba(45,214,104,0.12)", border:"1px solid rgba(45,214,104,0.3)" }}>
+                        <span className="text-xs font-bold" style={{ color:"#2dd668" }}>{i+1}</span>
+                      </div>
+                      <p className="text-sm leading-relaxed" style={{ color:"rgba(240,250,242,0.75)" }}>
+                        {cleanDisplay(s)}
+                      </p>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Chart — ALWAYS shown */}
+            {showChart && chartData && (
+              <motion.div initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.15 }} className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold uppercase tracking-widest" style={{ color:"rgba(45,214,104,0.6)" }}>
+                    {chartData.title || "Performance"}
+                  </span>
+                  <div className="flex gap-1 p-0.5 rounded-lg" style={{ background:"rgba(45,214,104,0.06)", border:"1px solid rgba(45,214,104,0.1)" }}>
+                    {["bar","line"].map((t) => (
+                      <button key={t} onClick={() => setChartType(t)}
+                        className="px-2.5 py-0.5 rounded-md text-xs font-medium transition-all capitalize"
+                        style={{ background: chartType===t?"rgba(45,214,104,0.18)":"transparent", color: chartType===t?"#2dd668":"rgba(240,250,242,0.4)" }}>
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="rounded-xl p-3" style={{ background:"rgba(5,10,6,0.6)", height:160 }}>
+                  {chartType === "bar"
+                    ? <Bar data={data} options={options} />
+                    : <Line data={data} options={options} />
+                  }
+                </div>
+              </motion.div>
+            )}
+
+            {/* Real Example */}
+            {example && showChart && (
+              <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.2 }}
+                className="mb-4 p-3 rounded-xl text-sm leading-relaxed"
+                style={{ background:"rgba(45,214,104,0.04)", border:"1px solid rgba(45,214,104,0.1)", color:"var(--text-secondary)" }}>
+                <span className="text-xs font-bold uppercase tracking-wider block mb-1.5" style={{ color:"rgba(45,214,104,0.6)" }}>Real Example</span>
+                {cleanDisplay(example)}
+              </motion.div>
+            )}
+
+            {/* Follow-up chips */}
+            {chips.length > 0 && showChart && (
+              <motion.div initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.25 }}
+                className="flex flex-wrap gap-2 pt-3"
+                style={{ borderTop:"1px solid rgba(45,214,104,0.08)" }}>
+                {chips.map((chip, i) => (
+                  <button key={i} onClick={() => onChip(chip)}
+                    className="px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-200"
+                    style={{ background:"rgba(45,214,104,0.06)", border:"1px solid rgba(45,214,104,0.18)", color:"rgba(240,250,242,0.7)" }}
+                    onMouseEnter={e=>{ e.currentTarget.style.background="rgba(45,214,104,0.15)"; e.currentTarget.style.color="#f0faf2"; }}
+                    onMouseLeave={e=>{ e.currentTarget.style.background="rgba(45,214,104,0.06)"; e.currentTarget.style.color="rgba(240,250,242,0.7)"; }}>
+                    {chip}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </div>
+
+          {/* Action bar */}
+          <div className="flex items-center gap-1 px-5 py-3" style={{ borderTop:"1px solid rgba(45,214,104,0.07)", background:"rgba(5,10,6,0.3)" }}>
+            {[
+              { label: copied?"Copied!":"Copy", onClick:copy, icon:<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> },
+              { label:"Regenerate", onClick:onRegenerate, icon:<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> },
+              { label:"Share", onClick:share, icon:<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg> },
+            ].map(({label,onClick,icon}) => (
+              <button key={label} onClick={onClick}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200"
+                style={{ color:"rgba(240,250,242,0.4)" }}
+                onMouseEnter={e=>{ e.currentTarget.style.color="#f0faf2"; e.currentTarget.style.background="rgba(45,214,104,0.06)"; }}
+                onMouseLeave={e=>{ e.currentTarget.style.color="rgba(240,250,242,0.4)"; e.currentTarget.style.background="transparent"; }}>
+                {icon}{label}
+              </button>
+            ))}
+            <div className="flex-1"/>
+            {/* Thumbs */}
+            {[
+              { v:"up",   icon:"👍", active:"rgba(45,214,104,0.15)" },
+              { v:"down", icon:"👎", active:"rgba(248,113,113,0.15)" },
+            ].map(({v,icon,active}) => (
+              <button key={v} onClick={() => setLiked(liked===v?null:v)}
+                className="p-1.5 rounded-lg text-sm transition-all duration-200"
+                style={{ background: liked===v ? active : "transparent" }}>
+                {icon}
+              </button>
+            ))}
+          </div>
         </div>
       </motion.div>
-    </motion.div>
-  );
-}
 
-function ActionBtn({ onClick, icon, label }) {
-  return (
-    <motion.button
-      whileHover={{ scale: 1.04 }}
-      whileTap={{ scale: 0.94 }}
-      onClick={onClick}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-        text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.05]
-        transition-all duration-200"
-    >
-      {icon}
-      {label}
-    </motion.button>
+      <AnimatePresence>{toast && <Toast msg={toast} onClose={() => setToast("")} />}</AnimatePresence>
+    </>
   );
 }

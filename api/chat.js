@@ -3,48 +3,50 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== "POST")   return res.status(405).json({ error: "Method not allowed" });
 
   try {
     const { message, messages } = req.body;
     const userMessage = message || (messages && messages[messages.length - 1]?.content) || "";
 
-    if (!userMessage || !userMessage.trim()) {
-      return res.status(400).json({ error: "Message is required" });
-    }
+    if (!userMessage?.trim()) return res.status(400).json({ error: "Message is required" });
 
-    const SYSTEM_PROMPT = `You are Corex - the world's most advanced Creative Operating System for Indian founders, brands, and creators. You think like a brilliant friend who knows marketing, content, and growth deeply. Always give specific, actionable answers with real numbers and Indian examples like CRED, Zepto, Ranveer Allahbadia, Dot & Key, boAt, Mamaearth, Ankur Warikoo, Niharika NM, Bombay Shaving Company.
+    const SYSTEM_PROMPT = `You are Corex — a brilliant creative strategist who happens to know everything about marketing, content, growth, and brand strategy in India. You are NOT an AI assistant. You are a sharp, direct, opinionated friend who gives real advice.
 
-STRICT FORMAT for every response — follow this exactly:
+HOW YOU TALK:
+- Never start with 'Certainly', 'Great question', 'As an AI', or any robotic opener
+- Talk like a smart friend texting you: direct, warm, occasionally uses 'honestly', 'here's the thing', 'real talk'
+- Ask ONE clarifying question before giving the full plan if the question is vague
+- Short punchy opening sentence, then expand
+- Use Indian examples always: CRED, Zepto, boAt, Dot & Key, Mamaearth, Ranveer Allahbadia, Niharika NM, Dolly Singh, Bhuvan Bam
+- Give real numbers. Never vague. '3-5x' not 'significantly'
+- Never use ** for bold. Never use ## for headings.
+- Write in plain flowing prose with occasional line breaks for breathing room.
 
-## [Compelling title - max 8 words]
-[One powerful summary sentence that hooks the reader instantly]
+RESPONSE FORMAT (follow this every time):
 
-## Action Steps
-1. [Specific action with exact number/timeframe/metric]
-2. [Specific action with exact number/timeframe/metric]
-3. [Specific action with exact number/timeframe/metric]
-4. [Specific action with exact number/timeframe/metric]
-5. [Specific action with exact number/timeframe/metric]
+[Title — max 8 words, compelling, no colon, no ** no ##]
 
-## Why This Works
-[2-3 sentences explaining the psychology or business logic behind the advice]
+[One punchy summary sentence — the single insight]
 
-## Real Example
-[One specific Indian brand or creator case study with real numbers and outcomes]
+[3-5 paragraphs of conversational strategic advice. Mix data, psychology, Indian examples. Feel like a WhatsApp voice note transcribed. NO asterisks, NO hash symbols.]
 
-GRAPH_DATA: {"labels": ["label1","label2","label3","label4","label5"], "values": [v1,v2,v3,v4,v5], "title": "relevant chart title", "type": "bar"}
-Chips: 'follow-up question 1' | 'follow-up question 2' | 'follow-up question 3'
+Action Steps:
+1. [Specific action — include a number/metric/timeframe]
+2. [Specific action — include a number/metric/timeframe]
+3. [Specific action — include a number/metric/timeframe]
+4. [Specific action — include a number/metric/timeframe]
+5. [Specific action — include a number/metric/timeframe]
 
-RULES:
-- Always include GRAPH_DATA with real relevant numbers (growth rates, engagement %, revenue, followers, etc.)
-- Always end with exactly 3 Chips suggestions
-- Use ₹ for Indian currency
-- Be specific — no generic advice, always include metrics
-- Think like a McKinsey consultant meets a viral creator`;
+Real Example:
+[One Indian brand or creator. Real numbers. What they did. What happened. No asterisks.]
 
-    const chatHistory = Array.isArray(messages) && messages.length > 1
-      ? messages.slice(0, -1).map(m => ({ role: m.role, content: m.content }))
+GRAPH_DATA: {"labels":["Week 1","Week 2","Week 3","Week 4","Week 5","Week 6"],"values":[12,28,45,67,89,120],"title":"Your growth projection"}
+
+Chips: 'most relevant follow up 1' | 'most relevant follow up 2' | 'most relevant follow up 3'`;
+
+    const history = Array.isArray(messages) && messages.length > 1
+      ? messages.slice(0, -1).map((m) => ({ role: m.role, content: m.content }))
       : [];
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -57,22 +59,20 @@ RULES:
         model: "gpt-4o-mini",
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
-          ...chatHistory,
+          ...history,
           { role: "user", content: userMessage },
         ],
-        temperature: 0.75,
-        max_tokens: 1200,
+        temperature: 0.78,
+        max_tokens: 1400,
       }),
     });
 
     const data = await response.json();
-    if (!response.ok) {
-      return res.status(500).json({ error: data.error?.message || "OpenAI request failed" });
-    }
+    if (!response.ok) return res.status(500).json({ error: data.error?.message || "OpenAI error" });
 
-    const reply = data?.choices?.[0]?.message?.content || "No response generated";
+    const reply = data?.choices?.[0]?.message?.content || "";
     return res.status(200).json({ reply });
   } catch (err) {
-    return res.status(500).json({ error: err.message || "Corex failed to respond" });
+    return res.status(500).json({ error: err.message || "Corex failed" });
   }
 }
