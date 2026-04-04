@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useAuth } from "./Auth";
 
 export default function Login({ onSwitch }) {
   const { login } = useAuth();
