@@ -89,12 +89,15 @@ export default function CustomCursor() {
     <>
       <div
         ref={dotRef}
-        className={`cursor-dot ${clicking ? "clicking" : ""} ${isApp ? "app-cursor-dot" : ""}`}
-        style={isApp ? { background: "#2dd668" } : {}}
+        className={`cursor-dot ${clicking ? "clicking" : ""}`}
+        style={isApp ? {
+          background: "conic-gradient(from 0deg, #60a5fa, #a78bfa, #f472b6, #34d399, #60a5fa)",
+          mixBlendMode: "screen",
+        } : {}}
       />
       <div
         ref={ringRef}
-        className={`cursor-ring ${hovering ? "hovering" : ""} ${isApp ? "app-cursor-ring" : ""}`}
+        className={`cursor-ring ${hovering ? "hovering" : ""}`}
         style={isApp ? { borderColor: "rgba(45,214,104,0.6)" } : {}}
       />
     </>

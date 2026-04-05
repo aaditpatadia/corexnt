@@ -111,10 +111,28 @@ function UserBubble({ message }) {
 }
 
 /* ── Main COREX response card ── */
+function saveReport(content, title) {
+  try {
+    const existing = JSON.parse(localStorage.getItem("corex_reports") || "[]");
+    const EMOJIS = ["📊","📈","🎯","💡","🚀","🛡️","🔍","💼","📋","⚡"];
+    const emoji = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+    const report = {
+      id: Date.now(),
+      savedAt: Date.now(),
+      title: title || "COREX Response",
+      content,
+      emoji,
+    };
+    localStorage.setItem("corex_reports", JSON.stringify([...existing, report]));
+    return true;
+  } catch { return false; }
+}
+
 export default function ResponseCard({ message, onChip, onRegenerate, animate=false }) {
   const { role } = message;
   const [chartType, setChartType] = useState("bar");
   const [copied,    setCopied]    = useState(false);
+  const [saved,     setSaved]     = useState(false);
   const [liked,     setLiked]     = useState(null);
   const [showChart, setShowChart] = useState(!animate);
 
@@ -298,6 +316,11 @@ export default function ResponseCard({ message, onChip, onRegenerate, animate=fa
               label:"Regenerate",
               onClick: onRegenerate,
               icon:<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>,
+            },
+            {
+              label: saved ? "Saved!" : "Save",
+              onClick: () => { if (!saved) { saveReport(message.content, title); setSaved(true); } },
+              icon:<svg width="12" height="12" viewBox="0 0 24 24" fill={saved?"currentColor":"none"} stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>,
             },
           ].map(({ label, onClick, icon }) => (
             <button key={label} onClick={onClick}

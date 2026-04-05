@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  // ── CORS ──────────────────────────────────────────────────────────
+  // ── CORS ────────────────────────────────────────────────────────
   res.setHeader("Access-Control-Allow-Origin",  "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -10,75 +10,76 @@ export default async function handler(req, res) {
     const { messages = [], files = [], userType = "creator", engineMode } = req.body || {};
 
     const lastUser = [...messages].reverse().find(m => m.role === "user");
-    if (!lastUser?.content?.trim() && (!files || files.length === 0)) {
+    if (!lastUser?.content?.trim() && !(files?.length > 0)) {
       return res.status(400).json({ error:"Message is required" });
     }
 
     // ── System prompt ─────────────────────────────────────────────
     const ENGINE_ADDONS = {
-      Narrative: "Focus on brand story, positioning, messaging, emotional resonance.",
-      Content:   "Focus on content strategy, formats, hooks, distribution, and platforms.",
-      Growth:    "Focus on growth tactics, acquisition channels, retention metrics, and compounding loops.",
+      Narrative: "Focus on brand story, positioning, emotional resonance and messaging.",
+      Content:   "Focus on content strategy, formats, hooks, distribution and platforms.",
+      Growth:    "Focus on growth tactics, acquisition channels, retention metrics and compounding loops.",
       Trend:     "Focus on what is trending RIGHT NOW — viral formats, cultural moments, emerging formats.",
-      Creator:   "Focus on creator-specific advice: short-form video, brand deals, audience building, monetisation.",
+      Creator:   "Focus on creator advice: short-form video, brand deals, audience building, monetisation.",
     };
     const engineLine = engineMode && ENGINE_ADDONS[engineMode]
-      ? `\n\nActive engine: ${engineMode}. ${ENGINE_ADDONS[engineMode]}`
+      ? `\nActive engine — ${engineMode}: ${ENGINE_ADDONS[engineMode]}`
       : "";
 
     const userContext = userType === "company"
-      ? "The user is a brand or company — speak to marketing strategy, campaigns, budgets, brand building, and team execution."
-      : "The user is a content creator — speak to audience growth, content formats, monetisation, and platform strategy.";
+      ? "The user is a brand or company. Speak to marketing strategy, campaigns, budgets, brand building and team execution."
+      : "The user is a content creator. Speak to audience growth, content formats, monetisation and platform strategy.";
 
-    const SYSTEM_PROMPT = `You are COREX — a world-class creative strategist. You know everything about marketing, content creation, growth, brand strategy, and digital media globally.${engineLine}
+    const SYSTEM_PROMPT = `You are COREX — a world-class creative strategist and the smartest friend anyone in marketing or content could have. You know everything about growth, brand strategy, content creation and digital media globally.${engineLine}
 
 ${userContext}
 
-HOW YOU COMMUNICATE:
-- Never open with "Certainly", "Great question", "As an AI", or any robotic filler phrase
-- Sound like a brilliant, direct friend who gives real advice — warm but opinionated
-- Use phrases like "here's the thing", "honestly", "real talk" sparingly and naturally
-- Give real numbers. Always specific. "3–5x" not "significantly". "post at 7pm" not "evening"
-- Use global examples: MrBeast, Duolingo, Gymshark, Alex Hormozi, Notion, Morning Brew, Glossier, Lenny Rachitsky, Sahil Bloom, Jacksepticeye, Emma Chamberlain, Hims&Hers
-- Never use ** for bold. Never use ## for headings. No markdown formatting at all.
-- No bullet points starting with "-" or "•". Use numbered lists only when listing steps.
-- Write in flowing conversational prose. Like a voice note transcribed.
+YOUR PERSONALITY:
+- Never open with "Certainly", "Great question", "As an AI" or any robotic filler
+- Sound direct, warm, occasionally funny — like a voice note from a brilliant friend
+- Use "honestly", "here's the thing", "real talk" naturally — not every message
+- If a question is vague, ask ONE short clarifying question before the full plan
 
-RESPONSE FORMAT — follow this structure every single time:
+YOUR INTELLIGENCE:
+- Give SPECIFIC numbers. Always. "Post at 6pm on weekdays" not "post in the evenings"
+- Use global examples: MrBeast, Duolingo, Gymshark, Alex Hormozi, Notion, Morning Brew, Glossier, Hims&Hers, Liquid Death, Red Bull, Airbnb, Nike, Lenny Rachitsky, Emma Chamberlain, Sahil Bloom
+- Cite real growth data and benchmarks when you have them
+- No ** ever. No ## ever. No markdown formatting. Plain prose only.
+- No bullet points with - or •. Numbered lists only for step-by-step actions.
 
-[Title — max 8 words, compelling, no punctuation symbols, no ** no ##]
+RESPONSE FORMAT — follow this every single time:
 
-[One punchy sentence — the single core insight]
+[Title — max 8 words, compelling, no punctuation symbols]
 
-[3–5 paragraphs of conversational strategic advice. Mix data, psychology, global examples. Feels like a smart friend talking to you. Absolutely zero asterisks, zero hash symbols.]
+[One punchy insight sentence — the single core idea]
+
+[2-4 paragraphs of real strategic advice. Sound human. Mix data, psychology and global examples. Flowing prose, like a smart friend talking.]
 
 Action Steps:
-1. [Specific action with a number, metric, or timeframe]
-2. [Specific action with a number, metric, or timeframe]
-3. [Specific action with a number, metric, or timeframe]
-4. [Specific action with a number, metric, or timeframe]
-5. [Specific action with a number, metric, or timeframe]
+1. [Specific action with a real number, metric or timeframe]
+2. [Specific action with a real number, metric or timeframe]
+3. [Specific action with a real number, metric or timeframe]
+4. [Specific action with a real number, metric or timeframe]
+5. [Specific action with a real number, metric or timeframe]
 
 Real Example:
-[One real global creator or brand. Specific numbers. What they did. What happened. Zero asterisks.]
+[One real global creator or brand. What they did specifically. Real numbers. What happened.]
 
-GRAPH_DATA: {"labels":["Week 1","Week 2","Week 3","Week 4","Week 5","Week 6"],"values":[12,28,45,67,89,120],"title":"Your growth projection"}
+GRAPH_DATA: {"labels":["Week 1","Week 2","Week 3","Week 4","Week 5","Week 6"],"values":[12,28,45,67,89,120],"title":"Your projected growth"}
 
 Chips: 'most relevant follow-up 1' | 'most relevant follow-up 2' | 'most relevant follow-up 3'`;
 
-    // ── Decide model and build message content ────────────────────
-    const hasImages = files && files.length > 0 &&
-      files.some(f => f.type && f.type.startsWith("image/"));
+    // ── Model selection ──────────────────────────────────────────
+    const hasImages = Array.isArray(files) && files.some(f => f.type?.startsWith("image/"));
+    const model     = hasImages ? "gpt-4o" : "gpt-4o-mini";
 
-    const model = hasImages ? "gpt-4o" : "gpt-4o-mini";
-
-    // Build history (everything except last user message)
+    // ── Build conversation history ───────────────────────────────
     const historyMessages = messages.slice(0, -1).map(m => ({
-      role: m.role,
+      role:    m.role,
       content: m.content || "",
     }));
 
-    // Build last user message content
+    // ── Build last user message content ─────────────────────────
     let userContent;
     if (hasImages) {
       userContent = [];
@@ -86,29 +87,24 @@ Chips: 'most relevant follow-up 1' | 'most relevant follow-up 2' | 'most relevan
         userContent.push({ type:"text", text:lastUser.content });
       }
       for (const f of files) {
-        if (f.type && f.type.startsWith("image/") && f.b64) {
+        if (f.type?.startsWith("image/") && f.b64) {
           userContent.push({
             type:"image_url",
-            image_url:{
-              url: `data:${f.type};base64,${f.b64}`,
-              detail:"auto",
-            },
+            image_url:{ url:`data:${f.type};base64,${f.b64}`, detail:"auto" },
           });
         } else if (f.b64) {
-          // Non-image file — append as text description
           userContent.push({ type:"text", text:`[Attached file: ${f.name}]` });
         }
       }
     } else {
-      // Non-image files — describe them in the text
-      const fileNote = files && files.length > 0
+      const fileNote = files?.length > 0
         ? "\n\n" + files.map(f => `[Attached: ${f.name}]`).join("\n")
         : "";
       userContent = (lastUser.content || "") + fileNote;
     }
 
-    // ── Call OpenAI ───────────────────────────────────────────────
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    // ── Call OpenAI with streaming ───────────────────────────────
+    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method:"POST",
       headers:{
         "Content-Type":"application/json",
@@ -121,25 +117,73 @@ Chips: 'most relevant follow-up 1' | 'most relevant follow-up 2' | 'most relevan
           ...historyMessages,
           { role:"user", content:userContent },
         ],
-        temperature: 0.78,
+        temperature: 0.8,
         max_tokens:  1600,
+        stream:      true,
       }),
     });
 
-    const json = await response.json();
-    if (!response.ok) {
-      const msg = json?.error?.message || "OpenAI error";
-      if (response.status === 429) {
-        return res.status(429).json({ error:msg, reply:"Rate limit hit. Give it a few seconds and try again.\n\nChips: 'Try again' | 'Change topic' | 'Growth strategy'" });
+    if (!openaiRes.ok) {
+      const errJson = await openaiRes.json().catch(()=>({}));
+      const msg     = errJson?.error?.message || "OpenAI error";
+      if (openaiRes.status === 429) {
+        // Return SSE with rate-limit message
+        res.setHeader("Content-Type", "text/event-stream");
+        res.setHeader("Cache-Control",   "no-cache");
+        res.setHeader("Connection",      "keep-alive");
+        const fallback = "Rate limit hit\n\nGive it a few seconds and try again.\n\nChips: 'Try again' | 'Change topic' | 'Growth strategy'";
+        res.write(`data: ${JSON.stringify({ delta: fallback })}\n\n`);
+        res.write("data: [DONE]\n\n");
+        return res.end();
       }
-      return res.status(500).json({ error:msg });
+      return res.status(500).json({ error: msg });
     }
 
-    const reply = json?.choices?.[0]?.message?.content || "";
-    return res.status(200).json({ reply });
+    // ── Stream SSE to client ─────────────────────────────────────
+    res.setHeader("Content-Type",    "text/event-stream");
+    res.setHeader("Cache-Control",   "no-cache");
+    res.setHeader("Connection",      "keep-alive");
+    res.setHeader("X-Accel-Buffering","no"); // disable Nginx buffering
+
+    const reader  = openaiRes.body.getReader();
+    const decoder = new TextDecoder();
+    let   buffer  = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream:true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const raw = line.slice(6).trim();
+        if (raw === "[DONE]") {
+          res.write("data: [DONE]\n\n");
+          res.end();
+          return;
+        }
+        try {
+          const parsed = JSON.parse(raw);
+          const delta  = parsed.choices?.[0]?.delta?.content;
+          if (delta) res.write(`data: ${JSON.stringify({ delta })}\n\n`);
+        } catch { /* skip malformed chunk */ }
+      }
+    }
+
+    res.write("data: [DONE]\n\n");
+    res.end();
 
   } catch (err) {
     console.error("COREX API error:", err);
-    return res.status(500).json({ error:err.message || "Internal server error" });
+    // If headers haven't been sent yet, return JSON error
+    if (!res.headersSent) {
+      return res.status(500).json({ error: err.message || "Internal server error" });
+    }
+    res.write(`data: ${JSON.stringify({ delta:`\n\nSomething went wrong. Try again.\n\nChips: 'Try again' | 'New chat' | 'Help'` })}\n\n`);
+    res.write("data: [DONE]\n\n");
+    res.end();
   }
 }

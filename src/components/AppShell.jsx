@@ -9,59 +9,14 @@ import GrowthAudit     from "../pages/app/GrowthAudit";
 import Templates       from "../pages/app/Templates";
 import History         from "../pages/app/History";
 import PaymentPage     from "./PaymentPage";
-import ComingSoon      from "./ComingSoon";
-
-// ── coming-soon page configs ──────────────────────────────────────
-const CS_PAGES = {
-  "trend-engine": {
-    title:"Trend Engine", icon:"🔥",
-    description:"Real-time trending topics in your niche, delivered daily with pre-written scripts.",
-    features:["Daily trend alerts","Pre-written reel scripts for each trend","Trending audio recommendations","Competitor content monitoring"],
-    estimatedDate:"Q2 2026",
-  },
-  "brand-deals": {
-    title:"Brand Deal Kit", icon:"🤝",
-    description:"Everything you need to land, price, and close brand partnerships.",
-    features:["Media kit generator","Brand deal pricing calculator","Pitch email templates","Contract templates","Rate negotiation guide"],
-    estimatedDate:"Q2 2026",
-  },
-  "campaign-builder": {
-    title:"Campaign Builder", icon:"🚀",
-    description:"Build full marketing campaigns with strategy, timeline, and KPIs in minutes.",
-    features:["Full campaign strategy generation","Influencer brief creator","Content calendar builder","KPI tracking setup"],
-    estimatedDate:"Q3 2026",
-  },
-  "budget-allocator": {
-    title:"Budget Allocator", icon:"💼",
-    description:"Allocate your marketing budget with AI precision across every channel.",
-    features:["AI-powered budget split","Channel recommendation engine","ROI prediction model","Monthly reallocation suggestions"],
-    estimatedDate:"Q3 2026",
-  },
-  "brand-audit": {
-    title:"Brand Audit", icon:"🛡️",
-    description:"Get a full report on your brand's positioning, messaging, and identity.",
-    features:["Brand positioning analysis","Messaging clarity score","Visual identity review","Competitor comparison report"],
-    estimatedDate:"Q3 2026",
-  },
-  "competitor-intel": {
-    title:"Competitor Intel", icon:"🔍",
-    description:"Know exactly what your competitors are doing before it's too late.",
-    features:["Content strategy analysis","Posting frequency tracking","Engagement benchmark comparison","Gap opportunity finder"],
-    estimatedDate:"Q4 2026",
-  },
-  "reports": {
-    title:"Reports", icon:"📊",
-    description:"Monthly performance reports with growth charts you can actually share.",
-    features:["Monthly performance reports","Growth trajectory charts","Export to PDF","Team sharing"],
-    estimatedDate:"Q4 2026",
-  },
-  "team": {
-    title:"Team Collaboration", icon:"👥",
-    description:"Work with your team inside Corex — share, comment, assign, build together.",
-    features:["Multiple team members","Shared workspace","Comment on responses","Role-based access"],
-    estimatedDate:"Q4 2026",
-  },
-};
+import TrendEngine     from "../pages/app/TrendEngine";
+import BrandDeals      from "../pages/app/BrandDeals";
+import CampaignBuilder from "../pages/app/CampaignBuilder";
+import BudgetAllocator from "../pages/app/BudgetAllocator";
+import BrandAudit      from "../pages/app/BrandAudit";
+import CompetitorIntel from "../pages/app/CompetitorIntel";
+import Reports         from "../pages/app/Reports";
+import Team            from "../pages/app/Team";
 
 export default function AppShell() {
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
@@ -155,11 +110,14 @@ export default function AppShell() {
             <Route path="templates"        element={<Templates />} />
             <Route path="history"          element={<History />} />
             <Route path="payment"          element={<PaymentPage onBack={()=>navigate("/app/chat")} userType={userType} />} />
-
-            {/* Coming soon pages */}
-            {Object.entries(CS_PAGES).map(([slug, cfg]) => (
-              <Route key={slug} path={slug} element={<ComingSoon {...cfg} />} />
-            ))}
+            <Route path="trend-engine"     element={<TrendEngine />} />
+            <Route path="brand-deals"      element={<BrandDeals />} />
+            <Route path="campaign-builder" element={<CampaignBuilder />} />
+            <Route path="budget-allocator" element={<BudgetAllocator />} />
+            <Route path="brand-audit"      element={<BrandAudit />} />
+            <Route path="competitor-intel" element={<CompetitorIntel />} />
+            <Route path="reports"          element={<Reports />} />
+            <Route path="team"             element={<Team />} />
 
             <Route path="*" element={<Navigate to="chat" replace />} />
           </Routes>
