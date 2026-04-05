@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useScrollReveal } from "../hooks/useScrollReveal";
 
-function handleGetStarted(navigate) {
-  if (localStorage.getItem("isLoggedIn") === "true") {
-    navigate("/app/chat");
-  } else {
-    navigate("/app");
-  }
+function handleGetStarted(navigate, presetType) {
+  if (presetType) localStorage.setItem("userType", presetType);
+  const loggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const verified = localStorage.getItem("isVerified")  === "true";
+  if (loggedIn && verified) navigate("/app/chat");
+  else navigate("/app");
 }
 
 /* ─── Navbar ─── */

@@ -5,7 +5,9 @@ import { useScrollReveal } from "../hooks/useScrollReveal";
 
 function handleGetStarted(navigate) {
   localStorage.setItem("userType", "creator");
-  if (localStorage.getItem("isLoggedIn") === "true") navigate("/app/chat");
+  const loggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const verified = localStorage.getItem("isVerified")  === "true";
+  if (loggedIn && verified) navigate("/app/chat");
   else navigate("/app");
 }
 
