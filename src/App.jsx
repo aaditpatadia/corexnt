@@ -1,29 +1,30 @@
-import { Routes, Route } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
-import LandingPage from "./components/LandingPage";
-import AppShell    from "./components/AppShell";
+import { Routes, Route, Navigate } from "react-router-dom";
+import CustomCursor   from "./components/CustomCursor";
+import { ToastProvider, setGlobalToast, useToast } from "./components/Toast";
+import MainLanding    from "./pages/MainLanding";
+import CreatorLanding from "./pages/CreatorLanding";
+import BrandLanding   from "./pages/BrandLanding";
+import AppShell       from "./components/AppShell";
+import { useEffect }  from "react";
 
-/* ── Floating background orbs (shown on every page) ── */
-function Orbs() {
-  return (
-    <>
-      <div className="orb orb-1" />
-      <div className="orb orb-2" />
-      <div className="orb orb-3" />
-    </>
-  );
+function ToastBridge() {
+  const show = useToast();
+  useEffect(() => { setGlobalToast(show); }, [show]);
+  return null;
 }
 
 export default function App() {
   return (
-    <div className="relative min-h-screen" style={{ background: "var(--bg-base)" }}>
-      <Orbs />
-      <AnimatePresence mode="wait">
-        <Routes>
-          <Route path="/"    element={<LandingPage />} />
-          <Route path="/app" element={<AppShell />}    />
-        </Routes>
-      </AnimatePresence>
-    </div>
+    <ToastProvider>
+      <ToastBridge />
+      <CustomCursor />
+      <Routes>
+        <Route path="/"         element={<MainLanding />} />
+        <Route path="/creators" element={<CreatorLanding />} />
+        <Route path="/brands"   element={<BrandLanding />} />
+        <Route path="/app/*"    element={<AppShell />} />
+        <Route path="*"         element={<Navigate to="/" replace />} />
+      </Routes>
+    </ToastProvider>
   );
 }

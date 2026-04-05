@@ -1,78 +1,145 @@
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  // ── CORS ──────────────────────────────────────────────────────────
+  res.setHeader("Access-Control-Allow-Origin",  "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST")   return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== "POST")   return res.status(405).json({ error:"Method not allowed" });
 
   try {
-    const { message, messages } = req.body;
-    const userMessage = message || (messages && messages[messages.length - 1]?.content) || "";
+    const { messages = [], files = [], userType = "creator", engineMode } = req.body || {};
 
-    if (!userMessage?.trim()) return res.status(400).json({ error: "Message is required" });
+    const lastUser = [...messages].reverse().find(m => m.role === "user");
+    if (!lastUser?.content?.trim() && (!files || files.length === 0)) {
+      return res.status(400).json({ error:"Message is required" });
+    }
 
-    const SYSTEM_PROMPT = `You are Corex — a brilliant creative strategist who happens to know everything about marketing, content, growth, and brand strategy in India. You are NOT an AI assistant. You are a sharp, direct, opinionated friend who gives real advice.
+    // ── System prompt ─────────────────────────────────────────────
+    const ENGINE_ADDONS = {
+      Narrative: "Focus on brand story, positioning, messaging, emotional resonance.",
+      Content:   "Focus on content strategy, formats, hooks, distribution, and platforms.",
+      Growth:    "Focus on growth tactics, acquisition channels, retention metrics, and compounding loops.",
+      Trend:     "Focus on what is trending RIGHT NOW — viral formats, cultural moments, emerging formats.",
+      Creator:   "Focus on creator-specific advice: short-form video, brand deals, audience building, monetisation.",
+    };
+    const engineLine = engineMode && ENGINE_ADDONS[engineMode]
+      ? `\n\nActive engine: ${engineMode}. ${ENGINE_ADDONS[engineMode]}`
+      : "";
 
-HOW YOU TALK:
-- Never start with 'Certainly', 'Great question', 'As an AI', or any robotic opener
-- Talk like a smart friend texting you: direct, warm, occasionally uses 'honestly', 'here's the thing', 'real talk'
-- Ask ONE clarifying question before giving the full plan if the question is vague
-- Short punchy opening sentence, then expand
-- Use Indian examples always: CRED, Zepto, boAt, Dot & Key, Mamaearth, Ranveer Allahbadia, Niharika NM, Dolly Singh, Bhuvan Bam
-- Give real numbers. Never vague. '3-5x' not 'significantly'
-- Never use ** for bold. Never use ## for headings.
-- Write in plain flowing prose with occasional line breaks for breathing room.
+    const userContext = userType === "company"
+      ? "The user is a brand or company — speak to marketing strategy, campaigns, budgets, brand building, and team execution."
+      : "The user is a content creator — speak to audience growth, content formats, monetisation, and platform strategy.";
 
-RESPONSE FORMAT (follow this every time):
+    const SYSTEM_PROMPT = `You are COREX — a world-class creative strategist. You know everything about marketing, content creation, growth, brand strategy, and digital media globally.${engineLine}
 
-[Title — max 8 words, compelling, no colon, no ** no ##]
+${userContext}
 
-[One punchy summary sentence — the single insight]
+HOW YOU COMMUNICATE:
+- Never open with "Certainly", "Great question", "As an AI", or any robotic filler phrase
+- Sound like a brilliant, direct friend who gives real advice — warm but opinionated
+- Use phrases like "here's the thing", "honestly", "real talk" sparingly and naturally
+- Give real numbers. Always specific. "3–5x" not "significantly". "post at 7pm" not "evening"
+- Use global examples: MrBeast, Duolingo, Gymshark, Alex Hormozi, Notion, Morning Brew, Glossier, Lenny Rachitsky, Sahil Bloom, Jacksepticeye, Emma Chamberlain, Hims&Hers
+- Never use ** for bold. Never use ## for headings. No markdown formatting at all.
+- No bullet points starting with "-" or "•". Use numbered lists only when listing steps.
+- Write in flowing conversational prose. Like a voice note transcribed.
 
-[3-5 paragraphs of conversational strategic advice. Mix data, psychology, Indian examples. Feel like a WhatsApp voice note transcribed. NO asterisks, NO hash symbols.]
+RESPONSE FORMAT — follow this structure every single time:
+
+[Title — max 8 words, compelling, no punctuation symbols, no ** no ##]
+
+[One punchy sentence — the single core insight]
+
+[3–5 paragraphs of conversational strategic advice. Mix data, psychology, global examples. Feels like a smart friend talking to you. Absolutely zero asterisks, zero hash symbols.]
 
 Action Steps:
-1. [Specific action — include a number/metric/timeframe]
-2. [Specific action — include a number/metric/timeframe]
-3. [Specific action — include a number/metric/timeframe]
-4. [Specific action — include a number/metric/timeframe]
-5. [Specific action — include a number/metric/timeframe]
+1. [Specific action with a number, metric, or timeframe]
+2. [Specific action with a number, metric, or timeframe]
+3. [Specific action with a number, metric, or timeframe]
+4. [Specific action with a number, metric, or timeframe]
+5. [Specific action with a number, metric, or timeframe]
 
 Real Example:
-[One Indian brand or creator. Real numbers. What they did. What happened. No asterisks.]
+[One real global creator or brand. Specific numbers. What they did. What happened. Zero asterisks.]
 
 GRAPH_DATA: {"labels":["Week 1","Week 2","Week 3","Week 4","Week 5","Week 6"],"values":[12,28,45,67,89,120],"title":"Your growth projection"}
 
-Chips: 'most relevant follow up 1' | 'most relevant follow up 2' | 'most relevant follow up 3'`;
+Chips: 'most relevant follow-up 1' | 'most relevant follow-up 2' | 'most relevant follow-up 3'`;
 
-    const history = Array.isArray(messages) && messages.length > 1
-      ? messages.slice(0, -1).map((m) => ({ role: m.role, content: m.content }))
-      : [];
+    // ── Decide model and build message content ────────────────────
+    const hasImages = files && files.length > 0 &&
+      files.some(f => f.type && f.type.startsWith("image/"));
 
+    const model = hasImages ? "gpt-4o" : "gpt-4o-mini";
+
+    // Build history (everything except last user message)
+    const historyMessages = messages.slice(0, -1).map(m => ({
+      role: m.role,
+      content: m.content || "",
+    }));
+
+    // Build last user message content
+    let userContent;
+    if (hasImages) {
+      userContent = [];
+      if (lastUser.content?.trim()) {
+        userContent.push({ type:"text", text:lastUser.content });
+      }
+      for (const f of files) {
+        if (f.type && f.type.startsWith("image/") && f.b64) {
+          userContent.push({
+            type:"image_url",
+            image_url:{
+              url: `data:${f.type};base64,${f.b64}`,
+              detail:"auto",
+            },
+          });
+        } else if (f.b64) {
+          // Non-image file — append as text description
+          userContent.push({ type:"text", text:`[Attached file: ${f.name}]` });
+        }
+      }
+    } else {
+      // Non-image files — describe them in the text
+      const fileNote = files && files.length > 0
+        ? "\n\n" + files.map(f => `[Attached: ${f.name}]`).join("\n")
+        : "";
+      userContent = (lastUser.content || "") + fileNote;
+    }
+
+    // ── Call OpenAI ───────────────────────────────────────────────
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        Authorization:`Bearer ${process.env.OPENAI_API_KEY}`,
       },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          ...history,
-          { role: "user", content: userMessage },
+      body:JSON.stringify({
+        model,
+        messages:[
+          { role:"system", content:SYSTEM_PROMPT },
+          ...historyMessages,
+          { role:"user", content:userContent },
         ],
         temperature: 0.78,
-        max_tokens: 1400,
+        max_tokens:  1600,
       }),
     });
 
-    const data = await response.json();
-    if (!response.ok) return res.status(500).json({ error: data.error?.message || "OpenAI error" });
+    const json = await response.json();
+    if (!response.ok) {
+      const msg = json?.error?.message || "OpenAI error";
+      if (response.status === 429) {
+        return res.status(429).json({ error:msg, reply:"Rate limit hit. Give it a few seconds and try again.\n\nChips: 'Try again' | 'Change topic' | 'Growth strategy'" });
+      }
+      return res.status(500).json({ error:msg });
+    }
 
-    const reply = data?.choices?.[0]?.message?.content || "";
+    const reply = json?.choices?.[0]?.message?.content || "";
     return res.status(200).json({ reply });
+
   } catch (err) {
-    return res.status(500).json({ error: err.message || "Corex failed" });
+    console.error("COREX API error:", err);
+    return res.status(500).json({ error:err.message || "Internal server error" });
   }
 }
