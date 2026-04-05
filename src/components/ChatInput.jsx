@@ -138,7 +138,7 @@ export default function ChatInput({ onSend, disabled, userType }) {
       <AnimatePresence>
         {files.length > 0 && (
           <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
-            className="flex items-center gap-2 px-5 pt-2 pb-1 flex-wrap">
+            style={{ padding:"8px max(24px, 20%) 4px", display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
             {files.map((f, i) => (
               <div key={i} className="flex items-center gap-1.5 pr-2 pl-1 py-1 rounded-xl"
                 style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)" }}>
@@ -162,8 +162,8 @@ export default function ChatInput({ onSend, disabled, userType }) {
         )}
       </AnimatePresence>
 
-      {/* Input container */}
-      <div className="px-4 py-3">
+      {/* Input container — wide margins matching message area */}
+      <div style={{ padding:"10px max(24px, 20%) 12px" }}>
         <div className="flex items-end gap-2 px-3 py-2.5 rounded-2xl"
           style={{
             background:"rgba(255,255,255,0.05)",

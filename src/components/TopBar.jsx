@@ -79,7 +79,7 @@ export default function TopBar({ userType, userName, userEmail, onUpgrade, onLoa
   return (
     <>
       <div className="flex-shrink-0 flex items-center justify-between px-5 relative z-20"
-        style={{ height:52, background:"rgba(5,10,6,0.95)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
+        style={{ height:48, background:"transparent", backdropFilter:"none", WebkitBackdropFilter:"none" }}>
 
         {/* Left — Logo */}
         <button onClick={() => navigate("/app/chat")}

@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import ChatInput    from "../../components/ChatInput";
 import ResponseCard from "../../components/ResponseCard";
-import { useToast } from "../../components/Toast";
+import { stripMarkdown } from "../../utils/parseResponse";
 
 /* ── Helpers ── */
 function getGreeting(name) {
@@ -14,150 +13,120 @@ function getGreeting(name) {
 
 function saveToHistory(firstUserMsg, allMessages, userType) {
   try {
-    const hist = JSON.parse(localStorage.getItem("corex_history") || "[]");
-    const sid  = sessionStorage.getItem("corex_session_id") || Date.now().toString();
+    const hist    = JSON.parse(localStorage.getItem("corex_history") || "[]");
+    const sid     = sessionStorage.getItem("corex_session_id") || Date.now().toString();
     const existing = hist.findIndex(h => h.id === sid);
-    const safeMessages = allMessages.map(m => ({
-      ...m,
-      files: m.files?.map(f => ({ name:f.name, type:f.type, preview:f.preview })) ?? [],
+    const safe    = allMessages.map(m => ({
+      ...m, files: m.files?.map(f => ({ name:f.name, type:f.type, preview:f.preview })) ?? [],
     }));
-    const entry = {
-      id: sid,
-      title: firstUserMsg.slice(0, 60),
-      messages: safeMessages,
-      userType,
-      timestamp: Date.now(),
-    };
-    if (existing >= 0) hist[existing] = entry;
-    else hist.unshift(entry);
-    localStorage.setItem("corex_history", JSON.stringify(hist.slice(0, 50)));
+    const entry = { id:sid, title:firstUserMsg.slice(0,60), messages:safe, userType, timestamp:Date.now() };
+    if (existing >= 0) hist[existing] = entry; else hist.unshift(entry);
+    localStorage.setItem("corex_history", JSON.stringify(hist.slice(0,50)));
   } catch {}
 }
 
-/* ── Streaming loading indicator ── */
-function ThinkingDots({ userType }) {
-  const color = userType !== "company" ? "#2dd668" : "#a78bfa";
-  return (
-    <div className="flex items-center gap-1 py-1">
-      {[0,1,2].map(i => (
-        <motion.div key={i}
-          animate={{ opacity:[0.3,1,0.3], y:[0,-3,0] }}
-          transition={{ duration:1.2, repeat:Infinity, delay:i*0.2 }}
-          className="w-1.5 h-1.5 rounded-full"
-          style={{ background:color }}/>
-      ))}
-    </div>
-  );
-}
-
-/* ── StreamingCard — shows raw text while streaming ── */
+/* ── Streaming card ── */
 function StreamingCard({ message, userType }) {
   const isCreator   = userType !== "company";
   const accentColor = isCreator ? "#2dd668" : "#a78bfa";
   const accentRgba  = isCreator ? "rgba(45,214,104," : "rgba(124,58,237,";
 
-  const displayText = (message.content || "")
-    .replace(/\*{1,3}([^*\n]+)\*{1,3}/g, "$1")
-    .replace(/\*+/g, "")
-    .replace(/^#{1,6}\s+/gm, "")
-    .replace(/GRAPH_DATA:[\s\S]*$/m, "")
-    .replace(/Chips:.*$/m, "")
-    .trim();
+  const text = stripMarkdown(
+    (message.content || "")
+      .replace(/GRAPH_DATA:[\s\S]*$/m, "")
+      .replace(/Chips:.*$/m, "")
+      .trim()
+  );
 
   return (
-    <motion.div initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }}
-      className="w-full" style={{ maxWidth:"75%" }}>
-      <div className="flex items-center gap-1.5 mb-2">
-        <div className="w-5 h-5 rounded-md flex items-center justify-center"
-          style={{ background:`${accentRgba}0.12)`, border:`1px solid ${accentRgba}0.25)` }}>
-          <svg width="10" height="10" viewBox="0 0 32 32" fill="none">
-            <path d="M8 16c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke={accentColor} strokeWidth="3" strokeLinecap="round"/>
+    <motion.div initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} className="w-full">
+      {/* Label */}
+      <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:10 }}>
+        <div style={{ width:16, height:16, borderRadius:4, background:`${accentRgba}0.12)`, display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <svg width="9" height="9" viewBox="0 0 32 32" fill="none">
+            <path d="M8 16c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke={accentColor} strokeWidth="3.5" strokeLinecap="round"/>
             <circle cx="16" cy="21" r="4" fill={accentColor}/>
           </svg>
         </div>
-        <span className="text-xs font-semibold uppercase tracking-widest"
-          style={{ color:`${accentRgba}0.65)`, fontFamily:"var(--font-body)" }}>Corex</span>
+        <span style={{ fontSize:10, fontWeight:600, letterSpacing:"2px", textTransform:"uppercase", color:accentColor, fontFamily:"var(--font-body)" }}>COREX</span>
       </div>
-      {displayText ? (
-        <div className="text-sm leading-relaxed whitespace-pre-wrap typing-cursor"
-          style={{ color:"rgba(255,255,255,0.75)", fontFamily:"var(--font-body)", lineHeight:1.75 }}>
-          {displayText}
+      {/* Text or dots */}
+      {text ? (
+        <div className="typing-cursor" style={{ fontSize:15, lineHeight:1.75, color:"rgba(255,255,255,0.78)", fontFamily:"var(--font-body)", whiteSpace:"pre-wrap" }}>
+          {text}
         </div>
       ) : (
-        <ThinkingDots userType={userType}/>
+        <div style={{ display:"flex", gap:4, paddingTop:4 }}>
+          {[0,1,2].map(i=>(
+            <motion.div key={i}
+              animate={{ opacity:[0.3,1,0.3], y:[0,-3,0] }}
+              transition={{ duration:1.2, repeat:Infinity, delay:i*0.2 }}
+              style={{ width:6, height:6, borderRadius:"50%", background:accentColor }}/>
+          ))}
+        </div>
       )}
     </motion.div>
   );
 }
 
-/* ── Welcome screen (Dia-style) ── */
+/* ── Welcome screen ── */
 function WelcomeScreen({ userType, userName, onChip }) {
   const isCreator   = userType !== "company";
   const accentColor = isCreator ? "#2dd668" : "#a78bfa";
   const accentRgba  = isCreator ? "rgba(45,214,104," : "rgba(124,58,237,";
-  const subtitle    = isCreator
-    ? "Reels, growth, brand deals, trends"
-    : "Campaigns, strategy, budgets, intel";
-  const chips = isCreator ? [
-    "Write me a viral reel script",
-    "Audit my Instagram growth",
-    "What's trending this week?",
-    "Price my brand deal",
-  ] : [
-    "Build a campaign strategy",
-    "Allocate my marketing budget",
-    "Audit our brand positioning",
-    "Analyse our competitors",
-  ];
+  const subtitle    = isCreator ? "Reels · Growth · Brand Deals · Trends" : "Campaigns · Strategy · Budgets · Intel";
+  const chips       = isCreator
+    ? ["Write me a viral reel script", "Audit my Instagram growth", "What's trending this week?", "Price my brand deal"]
+    : ["Build a campaign strategy", "Allocate my marketing budget", "Audit our brand positioning", "Analyse our competitors"];
 
   return (
-    <div className="flex flex-col items-center justify-center h-full px-6 select-none" style={{ minHeight:"60vh" }}>
-      <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }}
-        transition={{ duration:0.5, ease:[0.16,1,0.3,1] }}
-        className="flex flex-col items-center text-center">
+    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:"60vh", padding:"40px 24px", textAlign:"center" }}>
+      <motion.div initial={{ opacity:0, scale:0.9 }} animate={{ opacity:1, scale:1 }} transition={{ duration:0.4, ease:[0.16,1,0.3,1] }}>
 
         {/* Logo mark */}
-        <motion.div initial={{ scale:0.8, opacity:0 }} animate={{ scale:1, opacity:1 }}
-          transition={{ delay:0.05, type:"spring", stiffness:260, damping:20 }} className="mb-6">
-          <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
-            <rect width="32" height="32" rx="9" fill={`${accentRgba}0.08)`} stroke={`${accentRgba}0.3)`} strokeWidth="1"/>
+        <div style={{ marginBottom:20 }}>
+          <svg width="40" height="40" viewBox="0 0 32 32" fill="none">
+            <rect width="32" height="32" rx="9" fill={`${accentRgba}0.08)`} stroke={`${accentRgba}0.25)`} strokeWidth="1"/>
             <path d="M8 16c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke={accentColor} strokeWidth="2.2" strokeLinecap="round"/>
             <circle cx="16" cy="21" r="3.5" fill={accentColor}/>
           </svg>
-        </motion.div>
+        </div>
 
-        <motion.h1 initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
-          style={{ fontFamily:"var(--font-display)", fontSize:"clamp(22px,3vw,32px)", fontWeight:700, color:"rgba(255,255,255,0.9)", lineHeight:1.2, marginBottom:10 }}>
+        {/* Greeting */}
+        <motion.p initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.05 }}
+          style={{ fontSize:15, color:"rgba(255,255,255,0.35)", fontFamily:"var(--font-body)", marginBottom:8 }}>
           {getGreeting(userName)}
+        </motion.p>
+
+        {/* Main heading */}
+        <motion.h1 initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
+          style={{ fontFamily:"var(--font-display)", fontSize:"clamp(26px,3.5vw,36px)", fontWeight:700, color:"rgba(255,255,255,0.92)", lineHeight:1.2, marginBottom:8 }}>
+          What will you create today?
         </motion.h1>
 
-        <motion.h2 initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.15 }}
-          style={{ fontFamily:"var(--font-display)", fontSize:"clamp(18px,2.4vw,26px)", fontWeight:600, color:"rgba(255,255,255,0.45)", lineHeight:1.3, marginBottom:8 }}>
-          What do you want to create today?
-        </motion.h2>
-
-        <motion.p initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.2 }}
-          className="text-sm mb-10" style={{ color:"rgba(255,255,255,0.25)", fontFamily:"var(--font-body)" }}>
+        {/* Subtitle */}
+        <motion.p initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.15 }}
+          style={{ fontSize:13, color:"rgba(255,255,255,0.28)", fontFamily:"var(--font-body)", marginBottom:32, letterSpacing:"0.5px" }}>
           {subtitle}
         </motion.p>
 
-        {/* 2×2 suggestion chips */}
-        <motion.div initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }}
-          transition={{ delay:0.25 }} className="grid grid-cols-2 gap-3 w-full max-w-sm">
+        {/* 2×2 chips */}
+        <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.2 }}
+          style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, maxWidth:480, width:"100%" }}>
           {chips.map((chip, i) => (
             <motion.button key={chip}
-              initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }}
-              transition={{ delay:0.25 + i * 0.05 }}
-              whileHover={{ y:-3 }} whileTap={{ scale:0.97 }}
+              initial={{ opacity:0, scale:0.97 }} animate={{ opacity:1, scale:1 }}
+              transition={{ delay:0.2 + i*0.04 }}
+              whileHover={{ y:-2 }} whileTap={{ scale:0.97 }}
               onClick={() => onChip(chip)}
-              className="p-3.5 rounded-2xl text-left text-sm font-medium"
               style={{
-                background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)",
-                color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)", lineHeight:1.4,
-                transition:"all 0.25s cubic-bezier(0.34,1.56,0.64,1)",
+                padding:"14px 20px", borderRadius:14, textAlign:"left", fontSize:13,
+                fontFamily:"var(--font-body)", background:"rgba(255,255,255,0.04)",
+                border:"1px solid rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.65)",
+                cursor:"none", transition:"all 0.2s ease", lineHeight:1.4,
               }}
-              onMouseEnter={e=>{ e.currentTarget.style.background=`${accentRgba}0.06)`; e.currentTarget.style.borderColor=`${accentRgba}0.18)`; e.currentTarget.style.color="rgba(255,255,255,0.88)"; }}
-              onMouseLeave={e=>{ e.currentTarget.style.background="rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor="rgba(255,255,255,0.08)"; e.currentTarget.style.color="rgba(255,255,255,0.6)"; }}>
+              onMouseEnter={e=>{ e.currentTarget.style.background=`${accentRgba}0.06)`; e.currentTarget.style.borderColor=`${accentRgba}0.2)`; e.currentTarget.style.color="rgba(255,255,255,0.9)"; }}
+              onMouseLeave={e=>{ e.currentTarget.style.background="rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor="rgba(255,255,255,0.08)"; e.currentTarget.style.color="rgba(255,255,255,0.65)"; }}>
               {chip}
             </motion.button>
           ))}
@@ -168,44 +137,32 @@ function WelcomeScreen({ userType, userName, onChip }) {
 }
 
 /* ── Main ChatDashboard ── */
-export default function ChatDashboard({ userType, userName, onUpgrade, initialMessages }) {
-  const toast   = useToast();
+export default function ChatDashboard({ userType, userName }) {
   const isCreator = userType !== "company";
 
   const [messages, setMessages] = useState(() => {
-    if (initialMessages) return initialMessages;
-    try {
-      const saved = sessionStorage.getItem("corex_chat");
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
+    try { const s = sessionStorage.getItem("corex_chat"); return s ? JSON.parse(s) : []; } catch { return []; }
   });
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
 
-  // Mode-specific backgrounds
+  // Mode backgrounds
   const bgStyle = isCreator
-    ? { background:`radial-gradient(ellipse at 30% 20%, rgba(45,214,104,0.04) 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(45,214,104,0.03) 0%, transparent 60%), #080c09` }
-    : { background:`radial-gradient(ellipse at 30% 20%, rgba(124,58,237,0.04) 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(79,70,229,0.03) 0%, transparent 60%), #06040f` };
+    ? { background:"radial-gradient(ellipse at 20% 10%, rgba(45,214,104,0.05) 0%, transparent 50%), radial-gradient(ellipse at 80% 90%, rgba(45,214,104,0.03) 0%, transparent 50%), #080c09" }
+    : { background:"radial-gradient(ellipse at 20% 10%, rgba(124,58,237,0.05) 0%, transparent 50%), radial-gradient(ellipse at 80% 90%, rgba(79,70,229,0.03) 0%, transparent 50%), #06040f" };
 
   useEffect(() => {
-    if (!sessionStorage.getItem("corex_session_id")) {
-      sessionStorage.setItem("corex_session_id", Date.now().toString());
-    }
-    if (!localStorage.getItem("corex_joined")) {
-      localStorage.setItem("corex_joined", new Date().toLocaleDateString("en-US", { month:"short", year:"numeric" }));
-    }
+    if (!sessionStorage.getItem("corex_session_id")) sessionStorage.setItem("corex_session_id", Date.now().toString());
+    if (!localStorage.getItem("corex_joined")) localStorage.setItem("corex_joined", new Date().toLocaleDateString("en-US",{month:"short",year:"numeric"}));
   }, []);
 
-  // Check prefill from TrendEngine / Templates
+  // Prefill from TrendEngine / Templates
   useEffect(() => {
-    const prefill = sessionStorage.getItem("corex_prefill");
-    if (prefill) {
-      sessionStorage.removeItem("corex_prefill");
-      setTimeout(() => sendMessage(prefill, []), 150);
-    }
+    const p = sessionStorage.getItem("corex_prefill");
+    if (p) { sessionStorage.removeItem("corex_prefill"); setTimeout(()=>sendMessage(p,[]),150); }
   }, []);
 
-  // Expose loadConversation via window for TopBar history drawer
+  // Expose load conversation for history drawer
   useEffect(() => {
     window.__corex_loadConversation = (conv) => {
       if (conv?.messages) {
@@ -216,58 +173,53 @@ export default function ChatDashboard({ userType, userName, onUpgrade, initialMe
     };
   }, []);
 
-  // Persist to session (no b64)
+  // Persist session (no b64)
   useEffect(() => {
     try {
-      const safe = messages.map(m => ({
-        ...m,
-        files: m.files?.map(f => ({ name:f.name, type:f.type, preview:f.preview })) ?? [],
-      }));
-      sessionStorage.setItem("corex_chat", JSON.stringify(safe));
+      sessionStorage.setItem("corex_chat", JSON.stringify(
+        messages.map(m => ({ ...m, files:m.files?.map(f=>({name:f.name,type:f.type,preview:f.preview}))??[] }))
+      ));
     } catch {}
   }, [messages]);
 
   // Scroll to bottom
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior:"smooth" });
-  }, [messages]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:"smooth" }); }, [messages]);
 
   function trackUsage() {
     const key = `corex_messages_${new Date().toISOString().slice(0,10)}`;
-    const used = parseInt(localStorage.getItem(key) || "0", 10);
-    localStorage.setItem(key, (used + 1).toString());
+    localStorage.setItem(key, (parseInt(localStorage.getItem(key)||"0",10)+1).toString());
   }
 
-  const sendMessage = useCallback(async (text, files = []) => {
+  const sendMessage = useCallback(async (text, files=[]) => {
     if ((!text?.trim() && !files.length) || loading) return;
 
-    const displayFiles = files.map(({ name, type, preview }) => ({ name, type, preview }));
-    const apiFiles     = files.map(({ name, type, b64 })     => ({ name, type, b64 }));
-
-    const userMsg   = { id:Date.now(), role:"user", content:text, files:displayFiles };
-    const streamId  = Date.now() + 1;
-    const placeholder = { id:streamId, role:"assistant", content:"", streaming:true };
+    const displayFiles = files.map(({name,type,preview})=>({name,type,preview}));
+    const apiFiles     = files.map(({name,type,b64})=>({name,type,b64}));
+    const userMsg      = { id:Date.now(), role:"user", content:text, files:displayFiles };
+    const streamId     = Date.now()+1;
+    const placeholder  = { id:streamId, role:"assistant", content:"", streaming:true };
 
     setMessages(prev => [...prev, userMsg, placeholder]);
     setLoading(true);
     trackUsage();
 
-    const allMsgs = [...messages, userMsg];
-    let fullText = "";
+    // FIX 4: send last 10 messages as full conversation context
+    const fullHistory = [...messages, userMsg];
+    const contextWindow = fullHistory.slice(-10);
 
+    let fullText = "";
     try {
       const res = await fetch("/api/chat", {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body:JSON.stringify({
-          messages: allMsgs.map(m => ({ role:m.role, content:m.content })),
+          messages: contextWindow.map(m => ({ role:m.role, content:m.content||"" })),
           files:    apiFiles,
           userType,
         }),
       });
 
       const ct = res.headers.get("Content-Type") || "";
-
       if (ct.includes("text/event-stream")) {
         const reader  = res.body.getReader();
         const decoder = new TextDecoder();
@@ -276,7 +228,7 @@ export default function ChatDashboard({ userType, userName, onUpgrade, initialMe
           const { done, value } = await reader.read();
           if (done) break;
           buf += decoder.decode(value, { stream:true });
-          const lines = buf.split("\n"); buf = lines.pop() ?? "";
+          const lines = buf.split("\n"); buf = lines.pop()??"";
           for (const line of lines) {
             if (!line.startsWith("data: ")) continue;
             const raw = line.slice(6).trim();
@@ -286,10 +238,10 @@ export default function ChatDashboard({ userType, userName, onUpgrade, initialMe
               if (p.delta) {
                 fullText += p.delta;
                 setMessages(prev => {
-                  const updated = [...prev];
-                  const idx = updated.findIndex(m => m.id === streamId);
-                  if (idx !== -1) updated[idx] = { ...updated[idx], content:fullText };
-                  return updated;
+                  const u = [...prev];
+                  const idx = u.findIndex(m=>m.id===streamId);
+                  if (idx!==-1) u[idx]={...u[idx],content:fullText};
+                  return u;
                 });
               }
             } catch {}
@@ -300,17 +252,17 @@ export default function ChatDashboard({ userType, userName, onUpgrade, initialMe
         fullText = d.reply || "Something went wrong.";
       }
     } catch {
-      fullText = "Connection error. Try again.\n\nChips: 'Try again' | 'New chat' | 'Help'";
+      fullText = "Connection error. Please try again.\n\nChips: 'Try again' | 'New chat' | 'Help'";
     }
 
     setMessages(prev => {
-      const updated = [...prev];
-      const idx = updated.findIndex(m => m.id === streamId);
-      if (idx !== -1) updated[idx] = { ...updated[idx], content:fullText, streaming:false };
-      const finalMsgs = [...updated];
-      const firstUser = finalMsgs.find(m => m.role === "user");
-      if (firstUser) saveToHistory(firstUser.content, finalMsgs, userType);
-      return finalMsgs;
+      const u = [...prev];
+      const idx = u.findIndex(m=>m.id===streamId);
+      if (idx!==-1) u[idx]={ ...u[idx], content:fullText, streaming:false };
+      const final = [...u];
+      const first = final.find(m=>m.role==="user");
+      if (first) saveToHistory(first.content, final, userType);
+      return final;
     });
     setLoading(false);
   }, [messages, loading, userType]);
@@ -318,23 +270,21 @@ export default function ChatDashboard({ userType, userName, onUpgrade, initialMe
   const clearChat = () => {
     setMessages([]);
     sessionStorage.removeItem("corex_chat");
-    sessionStorage.removeItem("corex_session_id");
     sessionStorage.setItem("corex_session_id", Date.now().toString());
   };
 
-  return (
-    <div className="flex flex-col h-full relative" style={bgStyle}>
+  // Wide margin padding — like Dia
+  const contentPad = { paddingLeft:"max(24px, 15%)", paddingRight:"max(24px, 15%)" };
 
-      {/* Message area */}
+  return (
+    <div className="flex flex-col h-full" style={bgStyle}>
+
+      {/* Messages */}
       <div className="flex-1 overflow-y-auto scroll-area" style={{ paddingTop:8 }}>
         {messages.length === 0 ? (
-          <WelcomeScreen
-            userType={userType}
-            userName={userName}
-            onChip={(chip) => sendMessage(chip, [])}
-          />
+          <WelcomeScreen userType={userType} userName={userName} onChip={chip=>sendMessage(chip,[])}/>
         ) : (
-          <div className="max-w-2xl mx-auto px-5 space-y-6 pb-4 pt-4">
+          <div style={{ maxWidth:680, margin:"0 auto", padding:"16px 24px 8px", display:"flex", flexDirection:"column", gap:20 }}>
             <AnimatePresence>
               {messages.map(msg =>
                 msg.streaming
@@ -342,16 +292,12 @@ export default function ChatDashboard({ userType, userName, onUpgrade, initialMe
                   : <ResponseCard
                       key={msg.id}
                       message={msg}
-                      animate={false}
                       userType={userType}
-                      onChip={(chip) => sendMessage(chip, [])}
-                      onRegenerate={() => {
-                        const prevMsgs = messages.slice(0, -1);
-                        const lastUser = [...prevMsgs].reverse().find(m => m.role === "user");
-                        if (lastUser) {
-                          setMessages(prevMsgs.filter(m => m.id !== msg.id));
-                          setTimeout(() => sendMessage(lastUser.content, []), 50);
-                        }
+                      onChip={chip=>sendMessage(chip,[])}
+                      onRegenerate={()=>{
+                        const prev = messages.slice(0,-1);
+                        const last = [...prev].reverse().find(m=>m.role==="user");
+                        if (last) { setMessages(prev.filter(m=>m.id!==msg.id)); setTimeout(()=>sendMessage(last.content,[]),50); }
                       }}
                     />
               )}
@@ -363,10 +309,9 @@ export default function ChatDashboard({ userType, userName, onUpgrade, initialMe
 
       {/* New chat link */}
       {messages.length > 0 && (
-        <div className="flex-shrink-0 flex items-center justify-center pt-2">
+        <div style={{ textAlign:"center", paddingTop:8 }}>
           <button onClick={clearChat}
-            className="text-xs transition-all"
-            style={{ color:"rgba(255,255,255,0.18)", fontFamily:"var(--font-body)" }}
+            style={{ fontSize:11, color:"rgba(255,255,255,0.18)", fontFamily:"var(--font-body)", background:"none", border:"none", cursor:"none" }}
             onMouseEnter={e=>e.currentTarget.style.color="rgba(255,255,255,0.4)"}
             onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.18)"}>
             + New chat
@@ -377,8 +322,8 @@ export default function ChatDashboard({ userType, userName, onUpgrade, initialMe
       {/* Input */}
       <div className="flex-shrink-0">
         <ChatInput onSend={sendMessage} disabled={loading} userType={userType}/>
-        <div className="text-center pb-2.5" style={{ fontSize:10, color:"rgba(255,255,255,0.14)", fontFamily:"var(--font-body)" }}>
-          send · shift+enter new line · Corex v5.2
+        <div style={{ textAlign:"center", paddingBottom:10, fontSize:10, color:"rgba(255,255,255,0.18)", fontFamily:"var(--font-body)" }}>
+          ↵ send &nbsp;·&nbsp; ⇧↵ new line &nbsp;·&nbsp; Corex v5.2
         </div>
       </div>
     </div>

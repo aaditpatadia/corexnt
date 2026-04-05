@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bar, Line } from "react-chartjs-2";
 import {
@@ -9,57 +9,37 @@ import { parseResponse, shouldShowChart, stripMarkdown } from "../utils/parseRes
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip, Filler);
 
-/* ── Save report to localStorage ── */
+/* ── Save to reports ── */
 function saveReport(content, title) {
   try {
     const existing = JSON.parse(localStorage.getItem("corex_reports") || "[]");
-    const EMOJIS = ["📊","📈","🎯","💡","🚀","🛡️","🔍","💼","📋","⚡"];
-    const emoji  = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+    const EMOJIS   = ["📊","📈","🎯","💡","🚀","🛡️","🔍","💼","📋","⚡"];
     localStorage.setItem("corex_reports", JSON.stringify([
       ...existing,
-      { id:Date.now(), savedAt:Date.now(), title: title || "COREX Response", content, emoji },
+      { id:Date.now(), savedAt:Date.now(), title:title||"COREX Response", content, emoji:EMOJIS[existing.length%EMOJIS.length] },
     ]));
     return true;
   } catch { return false; }
 }
 
 /* ── Chart builder ── */
-function buildChartData(graphData, type = "bar", isCreator = true) {
-  const color = isCreator ? "rgba(45,214,104," : "rgba(124,58,237,";
+function buildChart(graphData, type, isCreator) {
+  const accent = isCreator ? "#2dd668" : "#a78bfa";
+  const accentA = isCreator ? "rgba(45,214,104," : "rgba(124,58,237,";
   const data = {
     labels: graphData.labels,
     datasets: [{
       data: graphData.values,
       ...(type === "bar"
-        ? { backgroundColor:`${color}0.75)`, borderRadius:5, borderSkipped:false }
-        : {
-            borderColor: isCreator ? "#2dd668" : "#a78bfa",
-            borderWidth:2.5,
-            pointBackgroundColor: isCreator ? "#2dd668" : "#a78bfa",
-            pointRadius:4,
-            fill:true,
-            backgroundColor:`${color}0.08)`,
-            tension:0.4,
-          }
-      ),
+        ? { backgroundColor:`${accentA}0.7)`, borderRadius:6, borderSkipped:false }
+        : { borderColor:accent, borderWidth:2, pointBackgroundColor:accent, pointRadius:3, fill:true, backgroundColor:`${accentA}0.07)`, tension:0.4 }),
     }],
   };
   const options = {
-    responsive:true, maintainAspectRatio:false,
-    animation:{ duration:700 },
-    plugins:{
-      legend:{ display:false },
-      tooltip:{
-        backgroundColor:"rgba(5,10,6,0.95)", borderColor:`${color}0.3)`, borderWidth:1,
-        titleColor:"#f0faf2", bodyColor:"rgba(240,250,242,0.7)", padding:10,
-      },
-    },
+    responsive:true, maintainAspectRatio:false, animation:{ duration:600 },
+    plugins:{ legend:{ display:false }, tooltip:{ backgroundColor:"rgba(5,10,6,0.95)", borderColor:`${accentA}0.25)`, borderWidth:1, titleColor:"#f0faf2", bodyColor:"rgba(240,250,242,0.6)", padding:8 } },
     scales:{
-      x:{
-        grid:{ color:`${color}0.06)` },
-        ticks:{ color:"rgba(240,250,242,0.35)", font:{ size:11, family:"var(--font-body)" } },
-        border:{ color:"transparent" },
-      },
+      x:{ grid:{ color:"rgba(255,255,255,0.04)" }, ticks:{ color:"rgba(255,255,255,0.3)", font:{ size:10, family:"var(--font-body)" } }, border:{ color:"transparent" } },
       y:{ display:false },
     },
   };
@@ -67,31 +47,25 @@ function buildChartData(graphData, type = "bar", isCreator = true) {
 }
 
 /* ── User bubble ── */
-function UserBubble({ message, userType }) {
+function UserBubble({ message }) {
   const { content, files = [] } = message;
-  const isCreator = userType !== "company";
-  const bubbleBg  = isCreator ? "rgba(45,214,104,0.1)" : "rgba(124,58,237,0.1)";
-  const bubbleBdr = isCreator ? "rgba(45,214,104,0.18)" : "rgba(124,58,237,0.18)";
-
   return (
-    <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} className="flex justify-end">
-      <div style={{ maxWidth:"70%" }} className="space-y-2">
+    <motion.div initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} className="flex justify-end">
+      <div style={{ maxWidth:"65%" }} className="space-y-2">
         {files.length > 0 && (
           <div className="flex flex-wrap gap-2 justify-end">
             {files.map((f, i) => f.preview
-              ? <img key={i} src={f.preview} alt={f.name} className="w-16 h-16 rounded-2xl object-cover"/>
-              : (
-                <div key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs"
-                  style={{ background:bubbleBg, border:`1px solid ${bubbleBdr}`, color:"rgba(240,250,242,0.7)", fontFamily:"var(--font-body)" }}>
+              ? <img key={i} src={f.preview} alt={f.name} className="w-14 h-14 rounded-2xl object-cover"/>
+              : <div key={i} className="flex items-center gap-1 px-3 py-1.5 rounded-2xl text-xs"
+                  style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>
                   📎 {f.name}
                 </div>
-              )
             )}
           </div>
         )}
         {content && (
-          <div className="px-4 py-3 text-sm leading-relaxed"
-            style={{ background:bubbleBg, border:`1px solid ${bubbleBdr}`, color:"rgba(255,255,255,0.9)", fontFamily:"var(--font-body)", borderRadius:"18px 18px 4px 18px" }}>
+          <div className="px-4 py-2.5 text-sm leading-relaxed"
+            style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.85)", fontFamily:"var(--font-body)", borderRadius:"20px 20px 4px 20px", fontSize:14 }}>
             {content}
           </div>
         )}
@@ -100,98 +74,100 @@ function UserBubble({ message, userType }) {
   );
 }
 
-/* ── COREX assistant response — clean, minimal, no heavy card ── */
-export default function ResponseCard({ message, onChip, onRegenerate, animate=false, userType="creator" }) {
+/* ── Section label ── */
+function SectionLabel({ text }) {
+  return (
+    <p className="mt-4 mb-2" style={{ fontSize:10, fontWeight:600, letterSpacing:"2px", textTransform:"uppercase", color:"rgba(255,255,255,0.3)", fontFamily:"var(--font-body)" }}>
+      {text}
+    </p>
+  );
+}
+
+/* ── COREX response — clean, no card wrapper ── */
+export default function ResponseCard({ message, onChip, onRegenerate, userType = "creator" }) {
   const { role } = message;
-  const isCreator = userType !== "company";
+  const isCreator   = userType !== "company";
+  const accentColor = isCreator ? "#2dd668" : "#a78bfa";
+  const accentRgba  = isCreator ? "rgba(45,214,104," : "rgba(124,58,237,";
+
   const [chartType, setChartType] = useState("bar");
   const [copied,    setCopied]    = useState(false);
   const [saved,     setSaved]     = useState(false);
   const [hovered,   setHovered]   = useState(false);
 
-  if (role === "user") return <UserBubble message={message} userType={userType}/>;
+  if (role === "user") return <UserBubble message={message}/>;
 
-  const parsed = parseResponse(message.content);
-  const { title, cleanBody, steps, example, graphData, chips } = parsed;
-
-  // Only show chart if data is meaningful and from explicit GRAPH_DATA
+  const { title, cleanBody, steps, example, graphData, chips } = parseResponse(message.content);
   const showChart = shouldShowChart(graphData);
-
-  const displayText = stripMarkdown(cleanBody || "");
+  const bodyText  = stripMarkdown(cleanBody || "");
 
   const copy = () => {
-    const parts = [title, displayText, steps.map((s,i) => `${i+1}. ${s}`).join("\n"), example ? `Example: ${example}` : ""].filter(Boolean);
+    const parts = [title, bodyText,
+      steps.length ? "Action Steps:\n" + steps.map((s,i)=>`${i+1}. ${s}`).join("\n") : "",
+      example ? "Real Example:\n" + example : "",
+    ].filter(Boolean);
     navigator.clipboard.writeText(parts.join("\n\n")).catch(()=>{});
-    setCopied(true); setTimeout(() => setCopied(false), 2000);
+    setCopied(true); setTimeout(()=>setCopied(false), 2000);
   };
-
-  const accentColor = isCreator ? "#2dd668" : "#a78bfa";
-  const accentRgba  = isCreator ? "rgba(45,214,104," : "rgba(124,58,237,";
 
   return (
     <motion.div
-      initial={{ opacity:0, y:12 }}
+      initial={{ opacity:0, y:10 }}
       animate={{ opacity:1, y:0 }}
-      transition={{ duration:0.35, ease:[0.16,1,0.3,1] }}
+      transition={{ duration:0.3, ease:[0.16,1,0.3,1] }}
       className="w-full"
-      style={{ maxWidth:"75%" }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}>
+      onMouseEnter={()=>setHovered(true)}
+      onMouseLeave={()=>setHovered(false)}>
 
-      {/* Corex label */}
-      <div className="flex items-center gap-1.5 mb-2">
-        <div className="w-5 h-5 rounded-md flex items-center justify-center"
-          style={{ background:`${accentRgba}0.12)`, border:`1px solid ${accentRgba}0.25)` }}>
-          <svg width="10" height="10" viewBox="0 0 32 32" fill="none">
-            <path d="M8 16c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke={accentColor} strokeWidth="3" strokeLinecap="round"/>
+      {/* COREX label */}
+      <div className="flex items-center gap-1.5 mb-2.5">
+        <div className="w-4 h-4 rounded flex items-center justify-center"
+          style={{ background:`${accentRgba}0.12)` }}>
+          <svg width="9" height="9" viewBox="0 0 32 32" fill="none">
+            <path d="M8 16c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke={accentColor} strokeWidth="3.5" strokeLinecap="round"/>
             <circle cx="16" cy="21" r="4" fill={accentColor}/>
           </svg>
         </div>
-        <span className="text-xs font-semibold uppercase tracking-widest"
-          style={{ color:`${accentRgba}0.65)`, fontFamily:"var(--font-body)" }}>Corex</span>
+        <span style={{ fontSize:10, fontWeight:600, letterSpacing:"2px", textTransform:"uppercase", color:accentColor, fontFamily:"var(--font-body)" }}>
+          COREX
+        </span>
       </div>
 
       {/* Title */}
       {title && (
-        <h3 className="text-base font-bold mb-2 leading-snug"
-          style={{ fontFamily:"var(--font-body)", color:"rgba(255,255,255,0.92)" }}>
+        <h3 style={{ fontSize:16, fontWeight:700, color:"rgba(255,255,255,0.92)", fontFamily:"var(--font-body)", lineHeight:1.35, marginBottom:10 }}>
           {title}
         </h3>
       )}
 
-      {/* Body text — clean prose */}
-      {displayText && (
-        <div className={`text-sm leading-relaxed mb-3 whitespace-pre-wrap ${message.streaming && !message.streaming_done ? "typing-cursor" : ""}`}
-          style={{ color:"rgba(255,255,255,0.75)", fontFamily:"var(--font-body)", lineHeight:1.75 }}>
-          {displayText}
+      {/* Body paragraphs — split on double newline for proper paragraph spacing */}
+      {bodyText && (
+        <div style={{ fontSize:15, lineHeight:1.75, color:"rgba(255,255,255,0.78)", fontFamily:"var(--font-body)" }}>
+          {bodyText.split(/\n\n+/).map((para, i) => (
+            para.trim() && <p key={i} style={{ marginBottom:12 }}>{para.trim()}</p>
+          ))}
         </div>
       )}
 
-      {/* Chart — ONLY when shouldShowChart returns true */}
+      {/* Chart */}
       {showChart && (
-        <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
-          className="mb-4 rounded-2xl overflow-hidden"
-          style={{ background:"rgba(5,10,6,0.6)", border:`1px solid ${accentRgba}0.1)`, height:180, padding:"12px" }}>
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex gap-1 p-0.5 rounded-lg" style={{ background:`${accentRgba}0.06)`, border:`1px solid ${accentRgba}0.1)` }}>
+        <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.08 }}
+          className="my-4 rounded-xl overflow-hidden"
+          style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", padding:"14px 14px 10px" }}>
+          <div className="flex items-center justify-end mb-2">
+            <div className="flex gap-0.5 p-0.5 rounded-lg" style={{ background:"rgba(255,255,255,0.04)" }}>
               {["bar","line"].map(t => (
-                <button key={t} onClick={() => setChartType(t)}
-                  className="px-2 py-0.5 rounded-md text-xs font-medium transition-all capitalize"
-                  style={{
-                    background: chartType===t ? `${accentRgba}0.18)` : "transparent",
-                    color:      chartType===t ? accentColor : "rgba(240,250,242,0.35)",
-                    fontFamily:"var(--font-body)",
-                  }}>
+                <button key={t} onClick={()=>setChartType(t)}
+                  className="px-2 py-0.5 rounded text-xs capitalize transition-all"
+                  style={{ background:chartType===t?`${accentRgba}0.15)`:"transparent", color:chartType===t?accentColor:"rgba(255,255,255,0.3)", fontFamily:"var(--font-body)" }}>
                   {t}
                 </button>
               ))}
             </div>
           </div>
-          <div style={{ height:128 }}>
-            {(() => { const { data, options } = buildChartData(graphData, chartType, isCreator);
-              return chartType === "bar"
-                ? <Bar  data={data} options={options}/>
-                : <Line data={data} options={options}/>;
+          <div style={{ height:140 }}>
+            {(()=>{ const {data,options}=buildChart(graphData,chartType,isCreator);
+              return chartType==="bar"?<Bar data={data} options={options}/>:<Line data={data} options={options}/>;
             })()}
           </div>
         </motion.div>
@@ -199,78 +175,59 @@ export default function ResponseCard({ message, onChip, onRegenerate, animate=fa
 
       {/* Action steps */}
       {steps.length > 0 && (
-        <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.05 }} className="mb-3">
-          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color:`${accentRgba}0.5)`, fontFamily:"var(--font-body)" }}>
-            Action Steps
-          </p>
-          <div className="space-y-1.5">
+        <div>
+          <SectionLabel text="Action Steps"/>
+          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
             {steps.map((s, i) => (
-              <div key={i} className="flex items-start gap-2.5 text-sm" style={{ color:"rgba(255,255,255,0.7)", fontFamily:"var(--font-body)" }}>
-                <span className="flex-shrink-0 text-xs font-bold mt-0.5" style={{ color:accentColor }}>
-                  {i + 1}.
-                </span>
-                <span className="leading-relaxed">{stripMarkdown(s)}</span>
+              <div key={i} style={{ display:"flex", gap:10, alignItems:"flex-start", fontSize:14, color:"rgba(255,255,255,0.72)", fontFamily:"var(--font-body)", lineHeight:1.6 }}>
+                <span style={{ flexShrink:0, fontWeight:700, color:accentColor, fontSize:13, marginTop:2 }}>{i+1}.</span>
+                <span>{stripMarkdown(s)}</span>
               </div>
             ))}
           </div>
-        </motion.div>
+        </div>
       )}
 
-      {/* Real Example */}
+      {/* Real example */}
       {example && (
-        <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.1 }}
-          className="mb-3 px-3 py-2.5 rounded-xl text-sm leading-relaxed"
-          style={{ background:`${accentRgba}0.04)`, borderLeft:`2px solid ${accentRgba}0.3)`, color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>
-          <span className="text-xs font-semibold uppercase tracking-wider block mb-1" style={{ color:`${accentRgba}0.5)`, fontFamily:"var(--font-body)" }}>Real Example</span>
-          {stripMarkdown(example)}
-        </motion.div>
+        <div>
+          <SectionLabel text="Real Example"/>
+          <p style={{ fontSize:14, color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)", lineHeight:1.65, paddingLeft:12, borderLeft:`2px solid ${accentRgba}0.3)` }}>
+            {stripMarkdown(example)}
+          </p>
+        </div>
       )}
 
       {/* Follow-up chips */}
       {chips.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-3">
+        <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginTop:14 }}>
           {chips.map((chip, i) => (
-            <button key={i} onClick={() => onChip?.(chip)}
-              className="px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 chip-hover"
-              style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", color:"rgba(255,255,255,0.55)", fontFamily:"var(--font-body)" }}
-              onMouseEnter={e=>{ e.currentTarget.style.background="rgba(255,255,255,0.08)"; e.currentTarget.style.color="rgba(255,255,255,0.85)"; e.currentTarget.style.borderColor="rgba(255,255,255,0.2)"; }}
-              onMouseLeave={e=>{ e.currentTarget.style.background="rgba(255,255,255,0.04)"; e.currentTarget.style.color="rgba(255,255,255,0.55)"; e.currentTarget.style.borderColor="rgba(255,255,255,0.1)"; }}>
+            <button key={i} onClick={()=>onChip?.(chip)}
+              style={{ padding:"6px 14px", borderRadius:20, fontSize:12, fontFamily:"var(--font-body)", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.55)", cursor:"none", transition:"all 0.18s ease" }}
+              onMouseEnter={e=>{ e.currentTarget.style.background=`${accentRgba}0.08)`; e.currentTarget.style.borderColor=`${accentRgba}0.2)`; e.currentTarget.style.color="rgba(255,255,255,0.85)"; }}
+              onMouseLeave={e=>{ e.currentTarget.style.background="rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor="rgba(255,255,255,0.08)"; e.currentTarget.style.color="rgba(255,255,255,0.55)"; }}>
               {chip}
             </button>
           ))}
         </div>
       )}
 
-      {/* Action buttons — only on hover, very small and muted */}
+      {/* Hover action buttons */}
       <AnimatePresence>
         {hovered && !message.streaming && (
-          <motion.div
-            initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
-            transition={{ duration:0.15 }}
-            className="flex items-center gap-1">
+          <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
+            transition={{ duration:0.12 }}
+            style={{ display:"flex", gap:4, marginTop:8 }}>
             {[
-              {
-                label: copied ? "Copied" : "Copy",
-                onClick: copy,
-                icon:<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>,
-              },
-              {
-                label:"Redo",
-                onClick: onRegenerate,
-                icon:<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>,
-              },
-              {
-                label: saved ? "Saved" : "Save",
-                onClick: () => { if (!saved) { saveReport(message.content, title); setSaved(true); } },
-                icon:<svg width="11" height="11" viewBox="0 0 24 24" fill={saved?"currentColor":"none"} stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>,
-              },
-            ].map(({ label, onClick, icon }) => (
+              { label:copied?"Copied":"Copy",    onClick:copy },
+              { label:"Redo",                    onClick:onRegenerate },
+              { label:saved?"Saved":"Save",      onClick:()=>{ if(!saved){ saveReport(message.content,title); setSaved(true); } } },
+            ].map(({ label, onClick })=>(
               <button key={label} onClick={onClick}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all"
-                style={{ color:"rgba(255,255,255,0.25)", fontFamily:"var(--font-body)" }}
-                onMouseEnter={e=>{ e.currentTarget.style.color="rgba(255,255,255,0.6)"; e.currentTarget.style.background="rgba(255,255,255,0.05)"; }}
-                onMouseLeave={e=>{ e.currentTarget.style.color="rgba(255,255,255,0.25)"; e.currentTarget.style.background="transparent"; }}>
-                {icon}{label}
+                style={{ fontSize:11, fontFamily:"var(--font-body)", color:"rgba(255,255,255,0.22)", padding:"2px 8px", borderRadius:6, background:"transparent", border:"none", cursor:"none", transition:"color 0.15s" }}
+                onMouseEnter={e=>e.currentTarget.style.color="rgba(255,255,255,0.55)"}
+                onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.22)"}>
+                {label}
               </button>
             ))}
           </motion.div>
