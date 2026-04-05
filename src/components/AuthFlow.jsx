@@ -113,8 +113,16 @@ function Onboarding({ onSelect }) {
 }
 
 /* ─── Signup ─── */
+const COUNTRY_CODES = [
+  { code:"+91", flag:"🇮🇳", label:"India" },
+  { code:"+1",  flag:"🇺🇸", label:"USA / Canada" },
+  { code:"+44", flag:"🇬🇧", label:"UK" },
+  { code:"+61", flag:"🇦🇺", label:"Australia" },
+  { code:"+65", flag:"🇸🇬", label:"Singapore" },
+];
+
 function Signup({ userType, onSuccess, onLoginClick, onBack }) {
-  const [form, setForm] = useState({ name:"", email:"", phone:"", password:"" });
+  const [form, setForm] = useState({ name:"", email:"", phone:"", password:"", countryCode:"+91" });
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -193,7 +201,13 @@ function Signup({ userType, onSuccess, onLoginClick, onBack }) {
             <div>
               <label className="block text-xs font-medium mb-1.5" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>Phone (optional)</label>
               <div className="flex gap-2">
-                <div className="px-3 py-3 rounded-xl text-sm flex-shrink-0" style={{ background:"rgba(20,40,24,0.5)", border:"1px solid rgba(45,214,104,0.15)", color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>+91</div>
+                <select value={form.countryCode} onChange={set("countryCode")}
+                  className="flex-shrink-0 px-2 py-3 rounded-xl text-sm"
+                  style={{ background:"rgba(20,40,24,0.5)", border:"1px solid rgba(45,214,104,0.15)", color:"var(--text-secondary)", fontFamily:"var(--font-body)", outline:"none", cursor:"none" }}>
+                  {COUNTRY_CODES.map(c => (
+                    <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
+                  ))}
+                </select>
                 <input type="tel" value={form.phone} onChange={set("phone")} placeholder="9876543210" className="input-green flex-1 px-4 py-3 rounded-xl text-sm" style={{ fontFamily:"var(--font-body)" }}/>
               </div>
             </div>
