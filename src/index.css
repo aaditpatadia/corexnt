@@ -58,6 +58,8 @@
     background-color: var(--bg-base);
     color: var(--text-primary);
     font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.8;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
@@ -73,6 +75,17 @@
   ::-webkit-scrollbar-thumb { background: rgba(45,214,104,0.3); border-radius: 99px; }
 
   ::selection { background: rgba(45,214,104,0.3); color: #f0faf2; }
+}
+
+/* ─────────────────────────────────────────────
+   Page animations
+───────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up {
+  animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* ─────────────────────────────────────────────
