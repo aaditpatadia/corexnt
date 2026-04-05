@@ -85,7 +85,7 @@ function SectionLabel({ text }) {
 
 /* ── COREX response — clean, no card wrapper ── */
 export default function ResponseCard({ message, onChip, onRegenerate, userType = "creator" }) {
-  const { role } = message;
+  const { role, searchUsed } = message;
   const isCreator   = userType !== "company";
   const accentColor = isCreator ? "#2dd668" : "#a78bfa";
   const accentRgba  = isCreator ? "rgba(45,214,104," : "rgba(124,58,237,";
@@ -131,6 +131,11 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
         <span style={{ fontSize:10, fontWeight:600, letterSpacing:"2px", textTransform:"uppercase", color:accentColor, fontFamily:"var(--font-body)" }}>
           COREX
         </span>
+        {searchUsed && (
+          <span style={{ fontSize:10, fontWeight:600, color:"#2dd668", background:"rgba(45,214,104,0.1)", border:"1px solid rgba(45,214,104,0.2)", borderRadius:20, padding:"1px 7px", fontFamily:"var(--font-body)", letterSpacing:"0.5px" }}>
+            ● Live data
+          </span>
+        )}
       </div>
 
       {/* Title */}

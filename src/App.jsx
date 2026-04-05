@@ -46,7 +46,7 @@ class ErrorBoundary extends Component {
             Back to home
           </button>
           <p style={{ color: "rgba(240,250,242,0.2)", fontSize: 11, marginTop: 32 }}>
-            Corex v5.2 — {this.state.error?.stack?.split("\n")[0] || ""}
+            Corex v5.3 — {this.state.error?.stack?.split("\n")[0] || ""}
           </p>
         </div>
       );
