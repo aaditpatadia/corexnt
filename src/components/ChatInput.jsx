@@ -109,9 +109,9 @@ export default function ChatInput({ onSend, disabled, userType }) {
     <div
       style={{
         position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
-        background: "rgba(8,12,9,0.97)",
+        background: "rgba(245,245,240,0.97)",
         backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
-        borderTop: "1px solid rgba(255,255,255,0.05)",
+        borderTop: "1px solid #e8e8e8",
         padding: "12px 24px 20px",
       }}
       onDragOver={onDragOver}
@@ -124,10 +124,10 @@ export default function ChatInput({ onSend, disabled, userType }) {
           <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
             style={{
               position:"absolute", inset:0, zIndex:10, display:"flex", alignItems:"center", justifyContent:"center",
-              background:`rgba(45,214,104,0.04)`, border:`2px dashed rgba(45,214,104,0.35)`,
+              background:`rgba(26,122,60,0.04)`, border:`2px dashed rgba(26,122,60,0.35)`,
               borderRadius:12, margin:8, pointerEvents:"none",
             }}>
-            <p style={{ fontSize:13, fontWeight:600, color:accentColor, fontFamily:"var(--font-body)" }}>Drop file here</p>
+            <p style={{ fontSize:13, fontWeight:600, color:"#1a7a3c", fontFamily:"var(--font-body)" }}>Drop file here</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -140,16 +140,16 @@ export default function ChatInput({ onSend, disabled, userType }) {
             <motion.div initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
               style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:8 }}>
               {files.map((f, i) => (
-                <div key={i} style={{ display:"flex", alignItems:"center", gap:6, padding:"4px 10px 4px 6px", borderRadius:10, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)" }}>
+                <div key={i} style={{ display:"flex", alignItems:"center", gap:6, padding:"4px 10px 4px 6px", borderRadius:10, background:"#ffffff", border:"1px solid #e0e0e0" }}>
                   {f.preview
                     ? <img src={f.preview} alt={f.name} style={{ width:28, height:28, borderRadius:6, objectFit:"cover" }}/>
-                    : <div style={{ width:28, height:28, borderRadius:6, background:"rgba(255,255,255,0.08)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14 }}>📎</div>
+                    : <div style={{ width:28, height:28, borderRadius:6, background:"#f0f0eb", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14 }}>📎</div>
                   }
-                  <span style={{ fontSize:12, maxWidth:80, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>{f.name}</span>
+                  <span style={{ fontSize:12, maxWidth:80, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", color:"#555555", fontFamily:"var(--font-body)" }}>{f.name}</span>
                   <button onClick={() => setFiles(p => p.filter((_,j)=>j!==i))}
-                    style={{ fontSize:11, width:16, height:16, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", color:"rgba(255,255,255,0.35)", background:"transparent", border:"none", cursor:"none" }}
-                    onMouseEnter={e=>e.currentTarget.style.color="rgba(255,255,255,0.7)"}
-                    onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.35)"}>✕</button>
+                    style={{ fontSize:11, width:16, height:16, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", color:"#aaaaaa", background:"transparent", border:"none", cursor:"pointer" }}
+                    onMouseEnter={e=>e.currentTarget.style.color="#555555"}
+                    onMouseLeave={e=>e.currentTarget.style.color="#aaaaaa"}>✕</button>
                 </div>
               ))}
             </motion.div>
@@ -158,10 +158,10 @@ export default function ChatInput({ onSend, disabled, userType }) {
 
         {/* Input wrapper */}
         <div style={{
-          background: focused ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.04)",
+          background: focused ? "#ffffff" : "#f0f0eb",
           border: focused
-            ? `1px solid ${dragging ? "rgba(45,214,104,0.5)" : "rgba(45,214,104,0.3)"}`
-            : `1px solid ${dragging ? "rgba(45,214,104,0.4)" : "rgba(255,255,255,0.08)"}`,
+            ? `1px solid ${dragging ? "rgba(26,122,60,0.5)" : "rgba(26,122,60,0.35)"}`
+            : `1px solid ${dragging ? "rgba(26,122,60,0.4)" : "#e0e0e0"}`,
           borderRadius: 16,
           display: "flex",
           alignItems: "flex-end",
@@ -175,12 +175,12 @@ export default function ChatInput({ onSend, disabled, userType }) {
             onClick={() => fileRef.current?.click()}
             disabled={files.length >= MAX_FILES}
             style={{
-              fontSize: 18, color: "rgba(255,255,255,0.3)", padding: 4, background: "transparent",
-              border: "none", cursor: "none", alignSelf: "flex-end", marginBottom: 2,
+              fontSize: 18, color: "#aaaaaa", padding: 4, background: "transparent",
+              border: "none", cursor: "pointer", alignSelf: "flex-end", marginBottom: 2,
               opacity: files.length >= MAX_FILES ? 0.3 : 1, transition: "color 0.15s",
             }}
-            onMouseEnter={e=>{ if (files.length < MAX_FILES) e.currentTarget.style.color="rgba(45,214,104,0.7)"; }}
-            onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.3)"}>
+            onMouseEnter={e=>{ if (files.length < MAX_FILES) e.currentTarget.style.color="#1a7a3c"; }}
+            onMouseLeave={e=>e.currentTarget.style.color="#aaaaaa"}>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
               <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
             </svg>
@@ -200,8 +200,8 @@ export default function ChatInput({ onSend, disabled, userType }) {
             rows={1}
             style={{
               flex: 1, resize: "none", background: "transparent", border: "none", outline: "none",
-              fontSize: 16, color: "rgba(255,255,255,0.88)",
-              caretColor: accentColor, lineHeight: 1.5,
+              fontSize: 16, color: "#1a1a1a",
+              caretColor: "#1a7a3c", lineHeight: 1.5,
               minHeight: 24, maxHeight: 120, overflowY: "auto",
               fontFamily: "var(--font-body)",
             }}/>
@@ -211,12 +211,12 @@ export default function ChatInput({ onSend, disabled, userType }) {
             {/* Mic */}
             <button onClick={toggleVoice}
               style={{
-                fontSize:18, color: listening ? "#ef4444" : "rgba(255,255,255,0.3)",
-                padding:4, background:"transparent", border:"none", cursor:"none",
+                fontSize:18, color: listening ? "#ef4444" : "#aaaaaa",
+                padding:4, background:"transparent", border:"none", cursor:"pointer",
                 alignSelf:"flex-end", marginBottom:2, transition:"color 0.15s",
               }}
-              onMouseEnter={e=>{ if (!listening) e.currentTarget.style.color="rgba(45,214,104,0.7)"; }}
-              onMouseLeave={e=>{ if (!listening) e.currentTarget.style.color="rgba(255,255,255,0.3)"; }}>
+              onMouseEnter={e=>{ if (!listening) e.currentTarget.style.color="#1a7a3c"; }}
+              onMouseLeave={e=>{ if (!listening) e.currentTarget.style.color="#aaaaaa"; }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
                 <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
@@ -244,7 +244,7 @@ export default function ChatInput({ onSend, disabled, userType }) {
         </div>
 
         {/* Hint */}
-        <p style={{ marginTop:8, fontSize:11, color:"rgba(255,255,255,0.2)", textAlign:"center", fontFamily:"var(--font-body)" }}>
+        <p style={{ marginTop:8, fontSize:11, color:"#bbbbbb", textAlign:"center", fontFamily:"var(--font-body)" }}>
           ↵ send &nbsp;·&nbsp; ⇧↵ new line &nbsp;·&nbsp; Corex v5.3
         </p>
       </div>
