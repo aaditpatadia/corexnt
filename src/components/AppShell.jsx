@@ -37,23 +37,7 @@ export default function AppShell() {
     }
   }, [location.pathname]);
 
-  if (!isLoggedIn || !isVerified) {
-    return <AuthFlow onSuccess={() => {
-      // After login: check for profile, go to profile-setup or dashboard
-      const skipProfile = localStorage.getItem("corex_skip_profile") === "true";
-      const profileDone = localStorage.getItem("corex_profile_done") === "true";
-      if (!skipProfile && !profileDone && !hasProfile()) {
-        navigate("/app/profile-setup", { replace: true });
-      } else {
-        navigate("/app/dashboard", { replace: true });
-      }
-    }} />;
-  }
-
-  const userType  = localStorage.getItem("userType")  || "creator";
-  const userName  = localStorage.getItem("userName")  || "";
-  const userEmail = localStorage.getItem("userEmail") || "";
-
+  // These hooks must be declared before any early return (rules of hooks)
   const handleLoadConversation = useCallback((conv) => {
     if (typeof window.__corex_loadConversation === "function") {
       window.__corex_loadConversation(conv);
@@ -71,6 +55,23 @@ export default function AppShell() {
       navigate("/app/chat");
     }
   }, [location.pathname, navigate]);
+
+  if (!isLoggedIn || !isVerified) {
+    return <AuthFlow onSuccess={() => {
+      // After login: check for profile, go to profile-setup or dashboard
+      const skipProfile = localStorage.getItem("corex_skip_profile") === "true";
+      const profileDone = localStorage.getItem("corex_profile_done") === "true";
+      if (!skipProfile && !profileDone && !hasProfile()) {
+        navigate("/app/profile-setup", { replace: true });
+      } else {
+        navigate("/app/dashboard", { replace: true });
+      }
+    }} />;
+  }
+
+  const userType  = localStorage.getItem("userType")  || "creator";
+  const userName  = localStorage.getItem("userName")  || "";
+  const userEmail = localStorage.getItem("userEmail") || "";
 
   // Default route: dashboard (profile-setup if no profile and not skipped)
   const defaultRoute = (() => {
