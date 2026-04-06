@@ -109,9 +109,8 @@ export default function ChatInput({ onSend, disabled, userType }) {
     <div
       style={{
         position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
-        background: "rgba(245,245,240,0.97)",
-        backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
-        borderTop: "1px solid #e8e8e8",
+        background: "#ffffff",
+        borderTop: "1px solid #e8e8e3",
         padding: "12px 24px 20px",
       }}
       onDragOver={onDragOver}
@@ -158,10 +157,10 @@ export default function ChatInput({ onSend, disabled, userType }) {
 
         {/* Input wrapper */}
         <div style={{
-          background: focused ? "#ffffff" : "#f0f0eb",
+          background: focused ? "#ffffff" : "#f5f5f0",
           border: focused
-            ? `1px solid ${dragging ? "rgba(26,122,60,0.5)" : "rgba(26,122,60,0.35)"}`
-            : `1px solid ${dragging ? "rgba(26,122,60,0.4)" : "#e0e0e0"}`,
+            ? `1px solid ${dragging ? "#1a7a3c" : "#1a7a3c"}`
+            : `1px solid ${dragging ? "#1a7a3c" : "#e0e0da"}`,
           borderRadius: 16,
           display: "flex",
           alignItems: "flex-end",
@@ -232,8 +231,8 @@ export default function ChatInput({ onSend, disabled, userType }) {
               style={{
                 width: 36, height: 36, borderRadius: 10, border: "none", cursor: "none",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                background: canSend ? "#2dd668" : "rgba(255,255,255,0.08)",
-                color: canSend ? "#080c09" : "rgba(255,255,255,0.3)",
+                background: canSend ? "#1a7a3c" : "#e8e8e3",
+                color: canSend ? "#ffffff" : "#aaaaaa",
                 transition: "background 0.2s, color 0.2s",
               }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">

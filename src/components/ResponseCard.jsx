@@ -3,11 +3,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Bar, Line } from "react-chartjs-2";
 import {
   Chart as ChartJS, CategoryScale, LinearScale,
-  BarElement, LineElement, PointElement, Tooltip, Filler,
+  BarElement, LineElement, PointElement, Tooltip, Filler, Legend,
 } from "chart.js";
 import { parseResponse, shouldShowChart, stripMarkdown } from "../utils/parseResponse";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip, Filler);
+ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip, Filler, Legend);
+
+const BAR_COLORS = ["#4f9cf9","#f97316","#22c55e","#a855f7","#f43f5e","#eab308"];
 
 /* ── Save to reports ── */
 function saveReport(content, title) {
@@ -23,27 +25,62 @@ function saveReport(content, title) {
 }
 
 /* ── Chart builder ── */
-function buildChart(graphData, type, isCreator) {
-  const accent  = isCreator ? "#2dd668" : "#a78bfa";
-  const accentA = isCreator ? "rgba(45,214,104," : "rgba(124,58,237,";
-  const data = {
+function buildChart(graphData) {
+  const isMulti   = Array.isArray(graphData.datasets) && graphData.datasets.length > 1;
+  const multiColors = ["#4f9cf9","#f97316","#888888"];
+
+  const datasets = isMulti
+    ? graphData.datasets.map((ds, i) => ({
+        label: ds.label || `Dataset ${i+1}`,
+        data:  ds.values,
+        backgroundColor: multiColors[i] || BAR_COLORS[i],
+        borderColor:     multiColors[i] || BAR_COLORS[i],
+        borderRadius: 6,
+        borderSkipped: false,
+      }))
+    : [{
+        data:            graphData.values,
+        backgroundColor: graphData.values.map((_, i) => BAR_COLORS[i % BAR_COLORS.length]),
+        borderRadius:    6,
+        borderSkipped:   false,
+      }];
+
+  const barData  = { labels: graphData.labels, datasets };
+  const lineData = {
     labels: graphData.labels,
-    datasets: [{
-      data: graphData.values,
-      ...(type === "bar"
-        ? { backgroundColor:`${accentA}0.7)`, borderRadius:6, borderSkipped:false }
-        : { borderColor:accent, borderWidth:2, pointBackgroundColor:accent, pointRadius:3, fill:true, backgroundColor:`${accentA}0.07)`, tension:0.4 }),
-    }],
+    datasets: isMulti
+      ? graphData.datasets.map((ds, i) => ({
+          label:              ds.label || `Dataset ${i+1}`,
+          data:               ds.values,
+          borderColor:        multiColors[i] || BAR_COLORS[i],
+          backgroundColor:    `${multiColors[i] || BAR_COLORS[i]}1a`,
+          pointBackgroundColor: multiColors[i] || BAR_COLORS[i],
+          pointRadius: 5, pointHoverRadius: 7,
+          fill: true, tension: 0.4, borderWidth: 2,
+        }))
+      : [{
+          data:               graphData.values,
+          borderColor:        "#4f9cf9",
+          backgroundColor:    "rgba(79,156,249,0.1)",
+          pointBackgroundColor: "#4f9cf9",
+          pointRadius: 5, pointHoverRadius: 7,
+          fill: true, tension: 0.4, borderWidth: 2,
+        }],
   };
+
   const options = {
-    responsive:true, maintainAspectRatio:false, animation:{ duration:600 },
-    plugins:{ legend:{ display:false }, tooltip:{ backgroundColor:"rgba(5,10,6,0.95)", borderColor:`${accentA}0.25)`, borderWidth:1, titleColor:"#f0faf2", bodyColor:"rgba(240,250,242,0.6)", padding:8 } },
-    scales:{
-      x:{ grid:{ color:"rgba(255,255,255,0.04)" }, ticks:{ color:"rgba(255,255,255,0.3)", font:{ size:10, family:"var(--font-body)" } }, border:{ color:"transparent" } },
-      y:{ display:false },
+    responsive: true, maintainAspectRatio: false, animation: { duration: 600 },
+    plugins: {
+      legend: { display: isMulti, position: "top", labels: { color:"#1a1a1a", font:{ size:12, family:"var(--font-body)" }, boxWidth:12, padding:16 } },
+      tooltip: { backgroundColor:"#1a1a1a", titleColor:"#ffffff", bodyColor:"#dddddd", padding:10, cornerRadius:8 },
+    },
+    scales: {
+      x: { grid:{ color:"rgba(0,0,0,0.06)" }, ticks:{ color:"#888888", font:{ size:12, family:"var(--font-body)" } }, border:{ color:"transparent" } },
+      y: { grid:{ color:"rgba(0,0,0,0.06)" }, ticks:{ color:"#888888", font:{ size:12, family:"var(--font-body)" } }, border:{ color:"transparent" } },
     },
   };
-  return { data, options };
+
+  return { barData, lineData, options };
 }
 
 /* ── User bubble ── */
@@ -57,7 +94,7 @@ function UserBubble({ message }) {
           <div style={{ display:"flex", flexWrap:"wrap", gap:8, justifyContent:"flex-end", marginBottom:6 }}>
             {files.map((f, i) => f.preview
               ? <img key={i} src={f.preview} alt={f.name} style={{ width:56, height:56, borderRadius:16, objectFit:"cover" }}/>
-              : <div key={i} style={{ display:"flex", alignItems:"center", gap:4, padding:"6px 12px", borderRadius:16, fontSize:12, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>
+              : <div key={i} style={{ display:"flex", alignItems:"center", gap:4, padding:"6px 12px", borderRadius:16, fontSize:12, background:"#f0f0eb", border:"1px solid #e8e8e3", color:"#555555", fontFamily:"var(--font-body)" }}>
                   📎 {f.name}
                 </div>
             )}
@@ -65,10 +102,11 @@ function UserBubble({ message }) {
         )}
         {content && (
           <div style={{
-            background:"#ffffff", border:"1px solid #e0e0e0",
+            background:"#ffffff", border:"1px solid #e8e8e3",
             borderRadius:"20px 20px 4px 20px", padding:"12px 18px",
             fontSize:16, color:"#1a1a1a", lineHeight:1.6,
             fontFamily:"var(--font-body)",
+            boxShadow:"0 1px 3px rgba(0,0,0,0.06)",
           }}>
             {content}
           </div>
@@ -81,14 +119,10 @@ function UserBubble({ message }) {
 /* ── COREX response ── */
 export default function ResponseCard({ message, onChip, onRegenerate, userType = "creator" }) {
   const { role, searchUsed } = message;
-  const isCreator   = userType !== "company";
-  const accentColor = isCreator ? "#2dd668" : "#a78bfa";
-  const accentRgba  = isCreator ? "rgba(45,214,104," : "rgba(124,58,237,";
 
-  const [chartType, setChartType] = useState("bar");
-  const [copied,    setCopied]    = useState(false);
-  const [saved,     setSaved]     = useState(false);
-  const [hovered,   setHovered]   = useState(false);
+  const [copied,  setCopied]  = useState(false);
+  const [saved,   setSaved]   = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   if (role === "user") return <UserBubble message={message}/>;
 
@@ -119,7 +153,7 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
           COREX
         </span>
         {searchUsed && (
-          <span style={{ fontSize:10, fontWeight:600, color:"#2dd668", background:"rgba(45,214,104,0.1)", border:"1px solid rgba(45,214,104,0.2)", borderRadius:20, padding:"1px 7px", fontFamily:"var(--font-body)", letterSpacing:"0.5px" }}>
+          <span style={{ fontSize:10, fontWeight:600, color:"#1a7a3c", background:"#e8f5ee", border:"1px solid #c8e6d4", borderRadius:20, padding:"1px 7px", fontFamily:"var(--font-body)", letterSpacing:"0.5px" }}>
             ● Live data
           </span>
         )}
@@ -142,31 +176,21 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
       )}
 
       {/* Chart */}
-      {showChart && (
-        <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.08 }}
-          style={{ marginTop:20, background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:12, padding:16 }}>
-          <div style={{ display:"flex", justifyContent:"flex-end", marginBottom:8 }}>
-            <div style={{ display:"flex", gap:2, padding:2, borderRadius:8, background:"rgba(255,255,255,0.04)" }}>
-              {["bar","line"].map(t => (
-                <button key={t} onClick={()=>setChartType(t)}
-                  style={{
-                    padding:"2px 10px", borderRadius:6, fontSize:11, textTransform:"capitalize",
-                    background:chartType===t?`${accentRgba}0.15)`:"transparent",
-                    color:chartType===t?accentColor:"rgba(255,255,255,0.3)",
-                    fontFamily:"var(--font-body)", border:"none", cursor:"none", transition:"all 0.15s",
-                  }}>
-                  {t}
-                </button>
-              ))}
+      {showChart && (()=>{
+        const { barData, lineData, options } = buildChart(graphData);
+        const isMulti = Array.isArray(graphData.datasets) && graphData.datasets.length > 1;
+        const chartType = isMulti ? "line" : "bar";
+        return (
+          <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.08 }}
+            style={{ marginTop:20, background:"#ffffff", border:"1px solid #e8e8e3", borderRadius:12, padding:20 }}>
+            <div style={{ height:200 }}>
+              {chartType === "bar"
+                ? <Bar data={barData} options={options}/>
+                : <Line data={lineData} options={options}/>}
             </div>
-          </div>
-          <div style={{ height:180 }}>
-            {(()=>{ const {data,options}=buildChart(graphData,chartType,isCreator);
-              return chartType==="bar"?<Bar data={data} options={options}/>:<Line data={data} options={options}/>;
-            })()}
-          </div>
-        </motion.div>
-      )}
+          </motion.div>
+        );
+      })()}
 
       {/* Action steps */}
       {steps.length > 0 && (
@@ -179,7 +203,7 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
               <div key={i} style={{ display:"flex", gap:12, marginBottom:10, alignItems:"flex-start" }}>
                 <div style={{
                   width:24, height:24, borderRadius:"50%", flexShrink:0,
-                  background:"rgba(26,122,60,0.1)", border:"1px solid rgba(26,122,60,0.25)",
+                  background:"#e8f5ee", border:"1px solid #c8e6d4",
                   color:"#1a7a3c", fontSize:12, fontWeight:600,
                   display:"flex", alignItems:"center", justifyContent:"center",
                   fontFamily:"var(--font-body)",
@@ -202,9 +226,9 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
             REAL EXAMPLE
           </p>
           <p style={{
-            fontSize:15, color:"#555555", lineHeight:1.7,
-            padding:"14px 16px", background:"rgba(26,122,60,0.04)",
-            borderLeft:"2px solid rgba(26,122,60,0.3)", borderRadius:"0 8px 8px 0",
+            fontSize:15, color:"#444444", lineHeight:1.7,
+            padding:"14px 16px", background:"#ffffff",
+            borderLeft:"3px solid #1a7a3c", borderRadius:"0 8px 8px 0",
             fontFamily:"var(--font-body)",
           }}>
             {stripMarkdown(example)}
@@ -219,11 +243,11 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
             <button key={i} onClick={()=>onChip?.(chip)}
               style={{
                 padding:"7px 16px", borderRadius:20, fontSize:13, fontFamily:"var(--font-body)",
-                background:"#ffffff", border:"1px solid #e0e0e0",
+                background:"#ffffff", border:"1px solid #e0e0da",
                 color:"#444444", cursor:"pointer", transition:"all 0.2s ease",
               }}
-              onMouseEnter={e=>{ e.currentTarget.style.background="rgba(26,122,60,0.06)"; e.currentTarget.style.borderColor="rgba(26,122,60,0.25)"; e.currentTarget.style.color="#1a7a3c"; e.currentTarget.style.transform="translateY(-1px)"; }}
-              onMouseLeave={e=>{ e.currentTarget.style.background="#ffffff"; e.currentTarget.style.borderColor="#e0e0e0"; e.currentTarget.style.color="#444444"; e.currentTarget.style.transform=""; }}>
+              onMouseEnter={e=>{ e.currentTarget.style.background="#e8f5ee"; e.currentTarget.style.borderColor="#1a7a3c"; e.currentTarget.style.color="#1a7a3c"; }}
+              onMouseLeave={e=>{ e.currentTarget.style.background="#ffffff"; e.currentTarget.style.borderColor="#e0e0da"; e.currentTarget.style.color="#444444"; }}>
               {chip}
             </button>
           ))}
