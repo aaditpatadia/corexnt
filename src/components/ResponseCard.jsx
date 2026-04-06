@@ -65,9 +65,9 @@ function UserBubble({ message }) {
         )}
         {content && (
           <div style={{
-            background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)",
+            background:"#ffffff", border:"1px solid #e0e0e0",
             borderRadius:"20px 20px 4px 20px", padding:"12px 18px",
-            fontSize:16, color:"rgba(255,255,255,0.88)", lineHeight:1.6,
+            fontSize:16, color:"#1a1a1a", lineHeight:1.6,
             fontFamily:"var(--font-body)",
           }}>
             {content}
@@ -115,7 +115,7 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
 
       {/* COREX label */}
       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
-        <span style={{ fontSize:11, fontWeight:600, letterSpacing:"2px", textTransform:"uppercase", color:accentColor, fontFamily:"var(--font-body)" }}>
+        <span style={{ fontSize:11, fontWeight:600, letterSpacing:"2px", textTransform:"uppercase", color:"#1a7a3c", fontFamily:"var(--font-body)" }}>
           COREX
         </span>
         {searchUsed && (
@@ -127,14 +127,14 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
 
       {/* Title */}
       {title && (
-        <h3 style={{ fontSize:17, fontWeight:700, color:"rgba(255,255,255,0.92)", fontFamily:"var(--font-body)", lineHeight:1.35, marginBottom:12 }}>
+        <h3 style={{ fontSize:17, fontWeight:700, color:"#1a1a1a", fontFamily:"var(--font-body)", lineHeight:1.35, marginBottom:12 }}>
           {title}
         </h3>
       )}
 
       {/* Body paragraphs */}
       {bodyText && (
-        <div style={{ fontSize:16, lineHeight:1.8, color:"rgba(255,255,255,0.82)", fontFamily:"var(--font-body)" }}>
+        <div style={{ fontSize:16, lineHeight:1.8, color:"#1a1a1a", fontFamily:"var(--font-body)" }}>
           {bodyText.split(/\n\n+/).map((para, i) => (
             para.trim() && <p key={i} style={{ marginBottom:14 }}>{para.trim()}</p>
           ))}
@@ -171,7 +171,7 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
       {/* Action steps */}
       {steps.length > 0 && (
         <div style={{ marginTop:20 }}>
-          <p style={{ fontSize:11, fontWeight:600, letterSpacing:"2px", textTransform:"uppercase", color:"rgba(255,255,255,0.35)", fontFamily:"var(--font-body)", marginBottom:10 }}>
+          <p style={{ fontSize:11, fontWeight:600, letterSpacing:"2px", textTransform:"uppercase", color:"#888888", fontFamily:"var(--font-body)", marginBottom:10 }}>
             ACTION STEPS
           </p>
           <div style={{ display:"flex", flexDirection:"column", gap:0 }}>
@@ -179,14 +179,14 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
               <div key={i} style={{ display:"flex", gap:12, marginBottom:10, alignItems:"flex-start" }}>
                 <div style={{
                   width:24, height:24, borderRadius:"50%", flexShrink:0,
-                  background:"rgba(45,214,104,0.12)", border:"1px solid rgba(45,214,104,0.3)",
-                  color:"#2dd668", fontSize:12, fontWeight:600,
+                  background:"rgba(26,122,60,0.1)", border:"1px solid rgba(26,122,60,0.25)",
+                  color:"#1a7a3c", fontSize:12, fontWeight:600,
                   display:"flex", alignItems:"center", justifyContent:"center",
                   fontFamily:"var(--font-body)",
                 }}>
                   {i+1}
                 </div>
-                <span style={{ fontSize:15, color:"rgba(255,255,255,0.75)", lineHeight:1.6, paddingTop:3, fontFamily:"var(--font-body)" }}>
+                <span style={{ fontSize:15, color:"#333333", lineHeight:1.6, paddingTop:3, fontFamily:"var(--font-body)" }}>
                   {stripMarkdown(s)}
                 </span>
               </div>
@@ -198,13 +198,13 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
       {/* Real example */}
       {example && (
         <div style={{ marginTop:20 }}>
-          <p style={{ fontSize:11, fontWeight:600, letterSpacing:"2px", textTransform:"uppercase", color:"rgba(255,255,255,0.35)", fontFamily:"var(--font-body)", marginBottom:10 }}>
+          <p style={{ fontSize:11, fontWeight:600, letterSpacing:"2px", textTransform:"uppercase", color:"#888888", fontFamily:"var(--font-body)", marginBottom:10 }}>
             REAL EXAMPLE
           </p>
           <p style={{
-            fontSize:15, color:"rgba(255,255,255,0.65)", lineHeight:1.7,
-            padding:"14px 16px", background:"rgba(255,255,255,0.02)",
-            borderLeft:`2px solid ${accentRgba}0.3)`, borderRadius:"0 8px 8px 0",
+            fontSize:15, color:"#555555", lineHeight:1.7,
+            padding:"14px 16px", background:"rgba(26,122,60,0.04)",
+            borderLeft:"2px solid rgba(26,122,60,0.3)", borderRadius:"0 8px 8px 0",
             fontFamily:"var(--font-body)",
           }}>
             {stripMarkdown(example)}
@@ -219,11 +219,11 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
             <button key={i} onClick={()=>onChip?.(chip)}
               style={{
                 padding:"7px 16px", borderRadius:20, fontSize:13, fontFamily:"var(--font-body)",
-                background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)",
-                color:"rgba(255,255,255,0.65)", cursor:"none", transition:"all 0.2s ease",
+                background:"#ffffff", border:"1px solid #e0e0e0",
+                color:"#444444", cursor:"pointer", transition:"all 0.2s ease",
               }}
-              onMouseEnter={e=>{ e.currentTarget.style.background=`${accentRgba}0.08)`; e.currentTarget.style.borderColor=`${accentRgba}0.25)`; e.currentTarget.style.color="rgba(255,255,255,0.9)"; e.currentTarget.style.transform="translateY(-1px)"; }}
-              onMouseLeave={e=>{ e.currentTarget.style.background="rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor="rgba(255,255,255,0.08)"; e.currentTarget.style.color="rgba(255,255,255,0.65)"; e.currentTarget.style.transform=""; }}>
+              onMouseEnter={e=>{ e.currentTarget.style.background="rgba(26,122,60,0.06)"; e.currentTarget.style.borderColor="rgba(26,122,60,0.25)"; e.currentTarget.style.color="#1a7a3c"; e.currentTarget.style.transform="translateY(-1px)"; }}
+              onMouseLeave={e=>{ e.currentTarget.style.background="#ffffff"; e.currentTarget.style.borderColor="#e0e0e0"; e.currentTarget.style.color="#444444"; e.currentTarget.style.transform=""; }}>
               {chip}
             </button>
           ))}
@@ -242,9 +242,9 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
               { label:saved?"Saved ✓":"Save",     onClick:()=>{ if(!saved){ saveReport(message.content,title); setSaved(true); } } },
             ].map(({ label, onClick })=>(
               <button key={label} onClick={onClick}
-                style={{ fontSize:13, fontFamily:"var(--font-body)", color:"rgba(255,255,255,0.35)", background:"transparent", border:"none", cursor:"none", transition:"color 0.15s", display:"flex", alignItems:"center", gap:5, padding:0 }}
-                onMouseEnter={e=>e.currentTarget.style.color="rgba(255,255,255,0.7)"}
-                onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.35)"}>
+                style={{ fontSize:13, fontFamily:"var(--font-body)", color:"#aaaaaa", background:"transparent", border:"none", cursor:"pointer", transition:"color 0.15s", display:"flex", alignItems:"center", gap:5, padding:0 }}
+                onMouseEnter={e=>e.currentTarget.style.color="#1a7a3c"}
+                onMouseLeave={e=>e.currentTarget.style.color="#aaaaaa"}>
                 {label}
               </button>
             ))}
