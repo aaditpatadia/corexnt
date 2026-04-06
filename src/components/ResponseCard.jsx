@@ -24,7 +24,7 @@ function saveReport(content, title) {
 
 /* ── Chart builder ── */
 function buildChart(graphData, type, isCreator) {
-  const accent = isCreator ? "#2dd668" : "#a78bfa";
+  const accent  = isCreator ? "#2dd668" : "#a78bfa";
   const accentA = isCreator ? "rgba(45,214,104," : "rgba(124,58,237,";
   const data = {
     labels: graphData.labels,
@@ -50,22 +50,26 @@ function buildChart(graphData, type, isCreator) {
 function UserBubble({ message }) {
   const { content, files = [] } = message;
   return (
-    <motion.div initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} className="flex justify-end">
-      <div style={{ maxWidth:"65%" }} className="space-y-2">
+    <motion.div initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }}
+      style={{ display:"flex", justifyContent:"flex-end", marginBottom:20 }}>
+      <div style={{ maxWidth:"65%" }}>
         {files.length > 0 && (
-          <div className="flex flex-wrap gap-2 justify-end">
+          <div style={{ display:"flex", flexWrap:"wrap", gap:8, justifyContent:"flex-end", marginBottom:6 }}>
             {files.map((f, i) => f.preview
-              ? <img key={i} src={f.preview} alt={f.name} className="w-14 h-14 rounded-2xl object-cover"/>
-              : <div key={i} className="flex items-center gap-1 px-3 py-1.5 rounded-2xl text-xs"
-                  style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>
+              ? <img key={i} src={f.preview} alt={f.name} style={{ width:56, height:56, borderRadius:16, objectFit:"cover" }}/>
+              : <div key={i} style={{ display:"flex", alignItems:"center", gap:4, padding:"6px 12px", borderRadius:16, fontSize:12, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>
                   📎 {f.name}
                 </div>
             )}
           </div>
         )}
         {content && (
-          <div className="px-4 py-2.5 text-sm leading-relaxed"
-            style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.85)", fontFamily:"var(--font-body)", borderRadius:"20px 20px 4px 20px", fontSize:14 }}>
+          <div style={{
+            background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)",
+            borderRadius:"20px 20px 4px 20px", padding:"12px 18px",
+            fontSize:16, color:"rgba(255,255,255,0.88)", lineHeight:1.6,
+            fontFamily:"var(--font-body)",
+          }}>
             {content}
           </div>
         )}
@@ -74,16 +78,7 @@ function UserBubble({ message }) {
   );
 }
 
-/* ── Section label ── */
-function SectionLabel({ text }) {
-  return (
-    <p className="mt-4 mb-2" style={{ fontSize:10, fontWeight:600, letterSpacing:"2px", textTransform:"uppercase", color:"rgba(255,255,255,0.3)", fontFamily:"var(--font-body)" }}>
-      {text}
-    </p>
-  );
-}
-
-/* ── COREX response — clean, no card wrapper ── */
+/* ── COREX response ── */
 export default function ResponseCard({ message, onChip, onRegenerate, userType = "creator" }) {
   const { role, searchUsed } = message;
   const isCreator   = userType !== "company";
@@ -112,23 +107,15 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
 
   return (
     <motion.div
-      initial={{ opacity:0, y:10 }}
-      animate={{ opacity:1, y:0 }}
+      initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }}
       transition={{ duration:0.3, ease:[0.16,1,0.3,1] }}
-      className="w-full"
+      style={{ display:"flex", flexDirection:"column", marginBottom:28 }}
       onMouseEnter={()=>setHovered(true)}
       onMouseLeave={()=>setHovered(false)}>
 
       {/* COREX label */}
-      <div className="flex items-center gap-1.5 mb-2.5">
-        <div className="w-4 h-4 rounded flex items-center justify-center"
-          style={{ background:`${accentRgba}0.12)` }}>
-          <svg width="9" height="9" viewBox="0 0 32 32" fill="none">
-            <path d="M8 16c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke={accentColor} strokeWidth="3.5" strokeLinecap="round"/>
-            <circle cx="16" cy="21" r="4" fill={accentColor}/>
-          </svg>
-        </div>
-        <span style={{ fontSize:10, fontWeight:600, letterSpacing:"2px", textTransform:"uppercase", color:accentColor, fontFamily:"var(--font-body)" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
+        <span style={{ fontSize:11, fontWeight:600, letterSpacing:"2px", textTransform:"uppercase", color:accentColor, fontFamily:"var(--font-body)" }}>
           COREX
         </span>
         {searchUsed && (
@@ -140,16 +127,16 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
 
       {/* Title */}
       {title && (
-        <h3 style={{ fontSize:16, fontWeight:700, color:"rgba(255,255,255,0.92)", fontFamily:"var(--font-body)", lineHeight:1.35, marginBottom:10 }}>
+        <h3 style={{ fontSize:17, fontWeight:700, color:"rgba(255,255,255,0.92)", fontFamily:"var(--font-body)", lineHeight:1.35, marginBottom:12 }}>
           {title}
         </h3>
       )}
 
-      {/* Body paragraphs — split on double newline for proper paragraph spacing */}
+      {/* Body paragraphs */}
       {bodyText && (
-        <div style={{ fontSize:15, lineHeight:1.75, color:"rgba(255,255,255,0.78)", fontFamily:"var(--font-body)" }}>
+        <div style={{ fontSize:16, lineHeight:1.8, color:"rgba(255,255,255,0.82)", fontFamily:"var(--font-body)" }}>
           {bodyText.split(/\n\n+/).map((para, i) => (
-            para.trim() && <p key={i} style={{ marginBottom:12 }}>{para.trim()}</p>
+            para.trim() && <p key={i} style={{ marginBottom:14 }}>{para.trim()}</p>
           ))}
         </div>
       )}
@@ -157,20 +144,23 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
       {/* Chart */}
       {showChart && (
         <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.08 }}
-          className="my-4 rounded-xl overflow-hidden"
-          style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", padding:"14px 14px 10px" }}>
-          <div className="flex items-center justify-end mb-2">
-            <div className="flex gap-0.5 p-0.5 rounded-lg" style={{ background:"rgba(255,255,255,0.04)" }}>
+          style={{ marginTop:20, background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:12, padding:16 }}>
+          <div style={{ display:"flex", justifyContent:"flex-end", marginBottom:8 }}>
+            <div style={{ display:"flex", gap:2, padding:2, borderRadius:8, background:"rgba(255,255,255,0.04)" }}>
               {["bar","line"].map(t => (
                 <button key={t} onClick={()=>setChartType(t)}
-                  className="px-2 py-0.5 rounded text-xs capitalize transition-all"
-                  style={{ background:chartType===t?`${accentRgba}0.15)`:"transparent", color:chartType===t?accentColor:"rgba(255,255,255,0.3)", fontFamily:"var(--font-body)" }}>
+                  style={{
+                    padding:"2px 10px", borderRadius:6, fontSize:11, textTransform:"capitalize",
+                    background:chartType===t?`${accentRgba}0.15)`:"transparent",
+                    color:chartType===t?accentColor:"rgba(255,255,255,0.3)",
+                    fontFamily:"var(--font-body)", border:"none", cursor:"none", transition:"all 0.15s",
+                  }}>
                   {t}
                 </button>
               ))}
             </div>
           </div>
-          <div style={{ height:140 }}>
+          <div style={{ height:180 }}>
             {(()=>{ const {data,options}=buildChart(graphData,chartType,isCreator);
               return chartType==="bar"?<Bar data={data} options={options}/>:<Line data={data} options={options}/>;
             })()}
@@ -180,13 +170,25 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
 
       {/* Action steps */}
       {steps.length > 0 && (
-        <div>
-          <SectionLabel text="Action Steps"/>
-          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+        <div style={{ marginTop:20 }}>
+          <p style={{ fontSize:11, fontWeight:600, letterSpacing:"2px", textTransform:"uppercase", color:"rgba(255,255,255,0.35)", fontFamily:"var(--font-body)", marginBottom:10 }}>
+            ACTION STEPS
+          </p>
+          <div style={{ display:"flex", flexDirection:"column", gap:0 }}>
             {steps.map((s, i) => (
-              <div key={i} style={{ display:"flex", gap:10, alignItems:"flex-start", fontSize:14, color:"rgba(255,255,255,0.72)", fontFamily:"var(--font-body)", lineHeight:1.6 }}>
-                <span style={{ flexShrink:0, fontWeight:700, color:accentColor, fontSize:13, marginTop:2 }}>{i+1}.</span>
-                <span>{stripMarkdown(s)}</span>
+              <div key={i} style={{ display:"flex", gap:12, marginBottom:10, alignItems:"flex-start" }}>
+                <div style={{
+                  width:24, height:24, borderRadius:"50%", flexShrink:0,
+                  background:"rgba(45,214,104,0.12)", border:"1px solid rgba(45,214,104,0.3)",
+                  color:"#2dd668", fontSize:12, fontWeight:600,
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  fontFamily:"var(--font-body)",
+                }}>
+                  {i+1}
+                </div>
+                <span style={{ fontSize:15, color:"rgba(255,255,255,0.75)", lineHeight:1.6, paddingTop:3, fontFamily:"var(--font-body)" }}>
+                  {stripMarkdown(s)}
+                </span>
               </div>
             ))}
           </div>
@@ -195,9 +197,16 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
 
       {/* Real example */}
       {example && (
-        <div>
-          <SectionLabel text="Real Example"/>
-          <p style={{ fontSize:14, color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)", lineHeight:1.65, paddingLeft:12, borderLeft:`2px solid ${accentRgba}0.3)` }}>
+        <div style={{ marginTop:20 }}>
+          <p style={{ fontSize:11, fontWeight:600, letterSpacing:"2px", textTransform:"uppercase", color:"rgba(255,255,255,0.35)", fontFamily:"var(--font-body)", marginBottom:10 }}>
+            REAL EXAMPLE
+          </p>
+          <p style={{
+            fontSize:15, color:"rgba(255,255,255,0.65)", lineHeight:1.7,
+            padding:"14px 16px", background:"rgba(255,255,255,0.02)",
+            borderLeft:`2px solid ${accentRgba}0.3)`, borderRadius:"0 8px 8px 0",
+            fontFamily:"var(--font-body)",
+          }}>
             {stripMarkdown(example)}
           </p>
         </div>
@@ -205,33 +214,37 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
 
       {/* Follow-up chips */}
       {chips.length > 0 && (
-        <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginTop:14 }}>
+        <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginTop:16 }}>
           {chips.map((chip, i) => (
             <button key={i} onClick={()=>onChip?.(chip)}
-              style={{ padding:"6px 14px", borderRadius:20, fontSize:12, fontFamily:"var(--font-body)", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.55)", cursor:"none", transition:"all 0.18s ease" }}
-              onMouseEnter={e=>{ e.currentTarget.style.background=`${accentRgba}0.08)`; e.currentTarget.style.borderColor=`${accentRgba}0.2)`; e.currentTarget.style.color="rgba(255,255,255,0.85)"; }}
-              onMouseLeave={e=>{ e.currentTarget.style.background="rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor="rgba(255,255,255,0.08)"; e.currentTarget.style.color="rgba(255,255,255,0.55)"; }}>
+              style={{
+                padding:"7px 16px", borderRadius:20, fontSize:13, fontFamily:"var(--font-body)",
+                background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)",
+                color:"rgba(255,255,255,0.65)", cursor:"none", transition:"all 0.2s ease",
+              }}
+              onMouseEnter={e=>{ e.currentTarget.style.background=`${accentRgba}0.08)`; e.currentTarget.style.borderColor=`${accentRgba}0.25)`; e.currentTarget.style.color="rgba(255,255,255,0.9)"; e.currentTarget.style.transform="translateY(-1px)"; }}
+              onMouseLeave={e=>{ e.currentTarget.style.background="rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor="rgba(255,255,255,0.08)"; e.currentTarget.style.color="rgba(255,255,255,0.65)"; e.currentTarget.style.transform=""; }}>
               {chip}
             </button>
           ))}
         </div>
       )}
 
-      {/* Hover action buttons */}
+      {/* Copy / Redo / Save */}
       <AnimatePresence>
         {hovered && !message.streaming && (
           <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
             transition={{ duration:0.12 }}
-            style={{ display:"flex", gap:4, marginTop:8 }}>
+            style={{ display:"flex", gap:16, marginTop:12 }}>
             {[
-              { label:copied?"Copied":"Copy",    onClick:copy },
-              { label:"Redo",                    onClick:onRegenerate },
-              { label:saved?"Saved":"Save",      onClick:()=>{ if(!saved){ saveReport(message.content,title); setSaved(true); } } },
+              { label:copied?"Copied ✓":"Copy",   onClick:copy },
+              { label:"Regenerate",               onClick:onRegenerate },
+              { label:saved?"Saved ✓":"Save",     onClick:()=>{ if(!saved){ saveReport(message.content,title); setSaved(true); } } },
             ].map(({ label, onClick })=>(
               <button key={label} onClick={onClick}
-                style={{ fontSize:11, fontFamily:"var(--font-body)", color:"rgba(255,255,255,0.22)", padding:"2px 8px", borderRadius:6, background:"transparent", border:"none", cursor:"none", transition:"color 0.15s" }}
-                onMouseEnter={e=>e.currentTarget.style.color="rgba(255,255,255,0.55)"}
-                onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.22)"}>
+                style={{ fontSize:13, fontFamily:"var(--font-body)", color:"rgba(255,255,255,0.35)", background:"transparent", border:"none", cursor:"none", transition:"color 0.15s", display:"flex", alignItems:"center", gap:5, padding:0 }}
+                onMouseEnter={e=>e.currentTarget.style.color="rgba(255,255,255,0.7)"}
+                onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.35)"}>
                 {label}
               </button>
             ))}

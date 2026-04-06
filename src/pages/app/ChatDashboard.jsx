@@ -107,25 +107,24 @@ function WelcomeScreen({ userType, userName, onChip }) {
     : ["Build a campaign strategy", "Allocate my marketing budget", "Audit our brand positioning", "Analyse our competitors"];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", padding: "40px 24px", textAlign: "center" }}>
-      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}>
-        <div style={{ marginBottom: 20 }}>
-          <svg width="40" height="40" viewBox="0 0 32 32" fill="none">
-            <rect width="32" height="32" rx="9" fill={`${accentRgba}0.08)`} stroke={`${accentRgba}0.25)`} strokeWidth="1"/>
-            <path d="M8 16c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke={accentColor} strokeWidth="2.2" strokeLinecap="round"/>
-            <circle cx="16" cy="21" r="3.5" fill={accentColor}/>
-          </svg>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", padding: "40px 24px", textAlign: "center", paddingBottom: 120 }}>
+      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+
+        {/* Logo mark */}
+        <div style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg, #1a7a3c, #2dd668)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+          <div style={{ width: 16, height: 16, borderRadius: "50%", background: "rgba(255,255,255,0.9)" }}/>
         </div>
+
         <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
           style={{ fontSize: 15, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-body)", marginBottom: 8 }}>
           {getGreeting(userName)}
         </motion.p>
         <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px,3.5vw,36px)", fontWeight: 700, color: "rgba(255,255,255,0.92)", lineHeight: 1.2, marginBottom: 8 }}>
+          style={{ fontFamily: "var(--font-display)", fontSize: 32, fontWeight: 700, color: "#ffffff", lineHeight: 1.2, marginBottom: 8, textAlign: "center" }}>
           What will you create today?
         </motion.h1>
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
-          style={{ fontSize: 13, color: "rgba(255,255,255,0.28)", fontFamily: "var(--font-body)", marginBottom: 32, letterSpacing: "0.5px" }}>
+          style={{ fontSize: 15, color: "rgba(255,255,255,0.45)", fontFamily: "var(--font-body)", marginBottom: 32, textAlign: "center" }}>
           {subtitle}
         </motion.p>
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
@@ -134,16 +133,16 @@ function WelcomeScreen({ userType, userName, onChip }) {
             <motion.button key={chip}
               initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 + i * 0.04 }}
-              whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => onChip(chip)}
               style={{
-                padding: "14px 20px", borderRadius: 14, textAlign: "left", fontSize: 13,
+                padding: "14px 18px", borderRadius: 14, textAlign: "left", fontSize: 14,
                 fontFamily: "var(--font-body)", background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.65)",
-                cursor: "none", transition: "all 0.2s ease", lineHeight: 1.4,
+                border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)",
+                cursor: "none", transition: "all 0.25s ease", lineHeight: 1.4,
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = `${accentRgba}0.06)`; e.currentTarget.style.borderColor = `${accentRgba}0.2)`; e.currentTarget.style.color = "rgba(255,255,255,0.9)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.65)"; }}>
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(45,214,104,0.06)"; e.currentTarget.style.borderColor = "rgba(45,214,104,0.2)"; e.currentTarget.style.color = "#ffffff"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.2)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
               {chip}
             </motion.button>
           ))}
@@ -166,8 +165,8 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
   const bottomRef = useRef(null);
 
   const bgStyle = isCreator
-    ? { background: "radial-gradient(ellipse at 20% 10%, rgba(45,214,104,0.05) 0%, transparent 50%), radial-gradient(ellipse at 80% 90%, rgba(45,214,104,0.03) 0%, transparent 50%), #080c09" }
-    : { background: "radial-gradient(ellipse at 20% 10%, rgba(124,58,237,0.05) 0%, transparent 50%), radial-gradient(ellipse at 80% 90%, rgba(79,70,229,0.03) 0%, transparent 50%), #06040f" };
+    ? { background: "radial-gradient(ellipse at 20% 20%, rgba(45,214,104,0.03) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(45,214,104,0.02) 0%, transparent 50%), #080c09" }
+    : { background: "radial-gradient(ellipse at 20% 20%, rgba(124,58,237,0.03) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(79,70,229,0.02) 0%, transparent 50%), #06040f" };
 
   useEffect(() => {
     if (!sessionStorage.getItem("corex_session_id")) sessionStorage.setItem("corex_session_id", Date.now().toString());
@@ -317,14 +316,14 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
   };
 
   return (
-    <div className="flex flex-col h-full" style={bgStyle}>
+    <div style={{ ...bgStyle, height: "100%", position: "relative" }}>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto scroll-area" style={{ paddingTop: 8 }}>
+      {/* Messages — scrollable, padded to clear fixed input bar */}
+      <div className="scroll-area" style={{ height: "100%", overflowY: "auto", paddingBottom: 140 }}>
         {messages.length === 0 ? (
           <WelcomeScreen userType={userType} userName={userName} onChip={chip => sendMessage(chip, [])}/>
         ) : (
-          <div style={{ maxWidth: 680, margin: "0 auto", padding: "16px 24px 8px", display: "flex", flexDirection: "column", gap: 20 }}>
+          <div style={{ maxWidth: 720, margin: "0 auto", padding: "24px 24px 0", display: "flex", flexDirection: "column" }}>
             <AnimatePresence>
               {messages.map(msg =>
                 msg.streaming
@@ -348,24 +347,8 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
         )}
       </div>
 
-      {/* New chat + input */}
-      {messages.length > 0 && (
-        <div style={{ textAlign: "center", paddingTop: 4 }}>
-          <button onClick={clearChat}
-            style={{ fontSize: 11, color: "rgba(255,255,255,0.18)", fontFamily: "var(--font-body)", background: "none", border: "none", cursor: "none" }}
-            onMouseEnter={e => e.currentTarget.style.color = "rgba(255,255,255,0.4)"}
-            onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.18)"}>
-            + New chat
-          </button>
-        </div>
-      )}
-
-      <div className="flex-shrink-0">
-        <ChatInput onSend={sendMessage} disabled={loading || limitHit} userType={userType}/>
-        <div style={{ textAlign: "center", paddingBottom: 10, fontSize: 11, color: "rgba(255,255,255,0.18)", fontFamily: "var(--font-body)" }}>
-          ↵ send &nbsp;·&nbsp; ⇧↵ new line &nbsp;·&nbsp; Corex v5.3
-        </div>
-      </div>
+      {/* Fixed bottom input bar */}
+      <ChatInput onSend={sendMessage} disabled={loading || limitHit} userType={userType}/>
     </div>
   );
 }

@@ -1,3 +1,5 @@
+* { cursor: none !important; }
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -91,9 +93,6 @@
 /* ─────────────────────────────────────────────
    Custom Cursor
 ───────────────────────────────────────────── */
-* { cursor: none; }
-
-/* Re-enable default cursor on touch devices via JS — we use class .touch-device */
 .touch-device * { cursor: auto !important; }
 
 .cursor-dot {
