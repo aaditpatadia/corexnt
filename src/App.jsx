@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Component }  from "react";
-import CustomCursor   from "./components/CustomCursor";
 import { ToastProvider, setGlobalToast, useToast } from "./components/Toast";
 import MainLanding    from "./pages/MainLanding";
 import CreatorLanding from "./pages/CreatorLanding";
@@ -66,7 +65,6 @@ export default function App() {
     <ErrorBoundary>
       <ToastProvider>
         <ToastBridge />
-        <CustomCursor />
         <Routes>
           <Route path="/"         element={<MainLanding />} />
           <Route path="/creators" element={<CreatorLanding />} />

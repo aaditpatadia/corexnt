@@ -59,10 +59,10 @@ function StreamingCard({ message, userType }) {
             <circle cx="16" cy="21" r="4" fill={accentColor}/>
           </svg>
         </div>
-        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase", color: accentColor, fontFamily: "var(--font-body)" }}>COREX</span>
+        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase", color: "#1a7a3c", fontFamily: "var(--font-body)" }}>COREX</span>
       </div>
       {text ? (
-        <div className="typing-cursor" style={{ fontSize: 15, lineHeight: 1.8, color: "rgba(255,255,255,0.78)", fontFamily: "var(--font-body)", whiteSpace: "pre-wrap" }}>
+        <div className="typing-cursor" style={{ fontSize: 15, lineHeight: 1.8, color: "#1a1a1a", fontFamily: "var(--font-body)", whiteSpace: "pre-wrap" }}>
           {text}
         </div>
       ) : (
@@ -116,15 +116,15 @@ function WelcomeScreen({ userType, userName, onChip }) {
         </div>
 
         <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-          style={{ fontSize: 15, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-body)", marginBottom: 8 }}>
+          style={{ fontSize: 15, color: "#888888", fontFamily: "var(--font-body)", marginBottom: 8 }}>
           {getGreeting(userName)}
         </motion.p>
         <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          style={{ fontFamily: "var(--font-display)", fontSize: 32, fontWeight: 700, color: "#ffffff", lineHeight: 1.2, marginBottom: 8, textAlign: "center" }}>
+          style={{ fontFamily: "var(--font-display)", fontSize: 32, fontWeight: 700, color: "#1a1a1a", lineHeight: 1.2, marginBottom: 8, textAlign: "center" }}>
           What will you create today?
         </motion.h1>
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
-          style={{ fontSize: 15, color: "rgba(255,255,255,0.45)", fontFamily: "var(--font-body)", marginBottom: 32, textAlign: "center" }}>
+          style={{ fontSize: 15, color: "#888888", fontFamily: "var(--font-body)", marginBottom: 32, textAlign: "center" }}>
           {subtitle}
         </motion.p>
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
@@ -137,12 +137,12 @@ function WelcomeScreen({ userType, userName, onChip }) {
               onClick={() => onChip(chip)}
               style={{
                 padding: "14px 18px", borderRadius: 14, textAlign: "left", fontSize: 14,
-                fontFamily: "var(--font-body)", background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)",
+                fontFamily: "var(--font-body)", background: "#ffffff",
+                border: "1px solid #e0e0e0", color: "#444444",
                 cursor: "none", transition: "all 0.25s ease", lineHeight: 1.4,
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(45,214,104,0.06)"; e.currentTarget.style.borderColor = "rgba(45,214,104,0.2)"; e.currentTarget.style.color = "#ffffff"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.2)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
+              onMouseEnter={e => { e.currentTarget.style.background = "#ffffff"; e.currentTarget.style.borderColor = "#c0c0c0"; e.currentTarget.style.color = "#1a1a1a"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.08)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "#ffffff"; e.currentTarget.style.borderColor = "#e0e0e0"; e.currentTarget.style.color = "#444444"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
               {chip}
             </motion.button>
           ))}
@@ -164,9 +164,7 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
   const [limitHit,  setLimitHit]  = useState(getMsgsUsed() >= FREE_LIMIT);
   const bottomRef = useRef(null);
 
-  const bgStyle = isCreator
-    ? { background: "radial-gradient(ellipse at 20% 20%, rgba(45,214,104,0.03) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(45,214,104,0.02) 0%, transparent 50%), #080c09" }
-    : { background: "radial-gradient(ellipse at 20% 20%, rgba(124,58,237,0.03) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(79,70,229,0.02) 0%, transparent 50%), #06040f" };
+  const bgStyle = { background: "#f5f5f0" };
 
   useEffect(() => {
     if (!sessionStorage.getItem("corex_session_id")) sessionStorage.setItem("corex_session_id", Date.now().toString());
