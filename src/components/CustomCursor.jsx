@@ -1,82 +1,100 @@
-import { useEffect, useRef } from "react";
+import { useRef, useEffect } from 'react';
 
-export default function CustomCursor() {
-  const dotRef  = useRef(null);
+const CustomCursor = () => {
+  const dotRef = useRef(null);
   const ringRef = useRef(null);
-  const mouse   = useRef({ x: 0, y: 0 });
-  const ring    = useRef({ x: 0, y: 0 });
+  const mouse = useRef({ x: 0, y: 0 });
+  const ring = useRef({ x: 0, y: 0 });
   const hovering = useRef(false);
 
   useEffect(() => {
-    // Skip on touch devices
-    if ("ontouchstart" in window) return;
-    document.documentElement.style.cursor = "none";
+    if ('ontouchstart' in window) return;
 
-    const onMouseMove = (e) => {
+    const onMove = (e) => {
       mouse.current = { x: e.clientX, y: e.clientY };
       if (dotRef.current) {
-        dotRef.current.style.transform = `translate(${e.clientX - 6}px, ${e.clientY - 6}px)`;
+        dotRef.current.style.left = e.clientX - 6 + 'px';
+        dotRef.current.style.top = e.clientY - 6 + 'px';
       }
     };
 
-    const onMouseOver = (e) => {
-      const el = e.target;
-      hovering.current = !!(el.closest("button, a, [role='button'], input, textarea, select"));
+    const onOver = (e) => {
+      hovering.current = !!e.target.closest(
+        'button,a,[role="button"],input,textarea,select'
+      );
+      if (ringRef.current) {
+        ringRef.current.style.width =
+          hovering.current ? '56px' : '40px';
+        ringRef.current.style.height =
+          hovering.current ? '56px' : '40px';
+        ringRef.current.style.borderColor =
+          hovering.current
+            ? 'rgba(45,214,104,0.8)'
+            : 'rgba(45,214,104,0.4)';
+        ringRef.current.style.background =
+          hovering.current
+            ? 'rgba(45,214,104,0.05)'
+            : 'transparent';
+      }
     };
 
     let raf;
     const animate = () => {
-      ring.current.x += (mouse.current.x - ring.current.x) * 0.12;
-      ring.current.y += (mouse.current.y - ring.current.y) * 0.12;
+      ring.current.x +=
+        (mouse.current.x - ring.current.x) * 0.1;
+      ring.current.y +=
+        (mouse.current.y - ring.current.y) * 0.1;
       if (ringRef.current) {
-        const scale = hovering.current ? 1.8 : 1;
-        ringRef.current.style.transform = `translate(${ring.current.x - 20}px, ${ring.current.y - 20}px) scale(${scale})`;
+        const w = hovering.current ? 56 : 40;
+        ringRef.current.style.left =
+          ring.current.x - w / 2 + 'px';
+        ringRef.current.style.top =
+          ring.current.y - w / 2 + 'px';
       }
       raf = requestAnimationFrame(animate);
     };
 
-    window.addEventListener("mousemove",  onMouseMove);
-    window.addEventListener("mouseover",  onMouseOver);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseover', onOver);
     raf = requestAnimationFrame(animate);
 
     return () => {
-      window.removeEventListener("mousemove",  onMouseMove);
-      window.removeEventListener("mouseover",  onMouseOver);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseover', onOver);
       cancelAnimationFrame(raf);
-      document.documentElement.style.cursor = "";
     };
   }, []);
 
-  if (typeof window !== "undefined" && "ontouchstart" in window) return null;
+  if ('ontouchstart' in window) return null;
 
   return (
     <>
       <div ref={dotRef} style={{
-        position:      "fixed",
-        width:         "12px",
-        height:        "12px",
-        borderRadius:  "50%",
-        background:    "conic-gradient(from 0deg, #60a5fa, #a78bfa, #f472b6, #34d399, #60a5fa)",
-        pointerEvents: "none",
-        zIndex:        99999,
-        mixBlendMode:  "screen",
-        filter:        "brightness(1.5)",
-        transition:    "none",
-        willChange:    "transform",
-        animation:     "holo-spin 3s linear infinite",
+        position: 'fixed',
+        width: '12px',
+        height: '12px',
+        borderRadius: '50%',
+        background: 'conic-gradient(from 0deg, #60a5fa, #a78bfa, #f472b6, #34d399, #60a5fa)',
+        filter: 'brightness(1.4)',
+        mixBlendMode: 'screen',
+        pointerEvents: 'none',
+        zIndex: 999999,
+        willChange: 'left, top',
       }} />
       <div ref={ringRef} style={{
-        position:      "fixed",
-        width:         "40px",
-        height:        "40px",
-        borderRadius:  "50%",
-        border:        "1.5px solid rgba(45,214,104,0.5)",
-        pointerEvents: "none",
-        zIndex:        99998,
-        transition:    "transform 0.05s linear, scale 0.3s ease",
-        willChange:    "transform",
-        background:    "transparent",
+        position: 'fixed',
+        width: '40px',
+        height: '40px',
+        borderRadius: '50%',
+        border: '1.5px solid rgba(45,214,104,0.4)',
+        background: 'transparent',
+        pointerEvents: 'none',
+        zIndex: 999998,
+        transition: 'width 0.3s ease, height 0.3s ease, border-color 0.3s ease, background 0.3s ease',
+        willChange: 'left, top',
       }} />
     </>
   );
-}
+};
+
+export default CustomCursor;
