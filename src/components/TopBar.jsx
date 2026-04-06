@@ -76,8 +76,8 @@ export default function TopBar({ userType, userName, userEmail, onUpgrade, onLoa
   const accentRgba = isCreator ? "rgba(45,214,104," : "rgba(124,58,237,";
   const modePill   = isCreator ? "Creator" : "Brand";
   const pillStyle  = isCreator
-    ? { background: "rgba(45,214,104,0.1)", border: "1px solid rgba(45,214,104,0.25)", color: "#2dd668" }
-    : { background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.3)", color: "#a78bfa" };
+    ? { background: "#e8f5ee", border: "1px solid #c8e6d4", color: "#1a7a3c" }
+    : { background: "#ede9f8", border: "1px solid #d4c8f4", color: "#7c3aed" };
 
   // Refresh msg counter when user returns to tab
   useEffect(() => {
@@ -95,9 +95,9 @@ export default function TopBar({ userType, userName, userEmail, onUpgrade, onLoa
   const iconBtn = (onClick, children, tooltip) => (
     <button onClick={onClick} title={tooltip}
       className="w-8 h-8 rounded-xl flex items-center justify-center transition-all flex-shrink-0"
-      style={{ color: "rgba(240,250,242,0.4)" }}
-      onMouseEnter={e => { e.currentTarget.style.color = "#f0faf2"; e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
-      onMouseLeave={e => { e.currentTarget.style.color = "rgba(240,250,242,0.4)"; e.currentTarget.style.background = "transparent"; }}>
+      style={{ color: "#888888" }}
+      onMouseEnter={e => { e.currentTarget.style.color = "#1a1a1a"; e.currentTarget.style.background = "#f0f0eb"; }}
+      onMouseLeave={e => { e.currentTarget.style.color = "#888888"; e.currentTarget.style.background = "transparent"; }}>
       {children}
     </button>
   );
@@ -105,7 +105,7 @@ export default function TopBar({ userType, userName, userEmail, onUpgrade, onLoa
   return (
     <>
       <div className="flex-shrink-0 flex items-center justify-between px-5 relative z-20"
-        style={{ height: 48, background: "transparent" }}>
+        style={{ height: 48, background: "#ffffff", borderBottom: "1px solid #e8e8e3" }}>
 
         {/* Left — Logo → dashboard */}
         <button onClick={() => navigate("/app/dashboard")} title="Back to dashboard"
@@ -116,7 +116,7 @@ export default function TopBar({ userType, userName, userEmail, onUpgrade, onLoa
             <path d="M8 16c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="#2dd668" strokeWidth="2.2" strokeLinecap="round"/>
             <circle cx="16" cy="21" r="3.5" fill="#2dd668"/>
           </svg>
-          <span className="text-sm font-bold" style={{ color: "#f0faf2", fontFamily: "var(--font-body)" }}>Corex</span>
+          <span className="text-sm font-bold" style={{ color: "#1a1a1a", fontFamily: "var(--font-body)" }}>Corex</span>
         </button>
 
         {/* Center — Mode pill */}
@@ -135,7 +135,7 @@ export default function TopBar({ userType, userName, userEmail, onUpgrade, onLoa
           {/* Messages left indicator */}
           {msgsLeft <= 5 && (
             <button onClick={onUpgrade}
-              style={{ fontSize: 12, color: msgsLeft === 0 ? "#f87171" : "rgba(255,255,255,0.4)", fontFamily: "var(--font-body)", background: "none", border: "none", cursor: "none", marginRight: 4 }}>
+              style={{ fontSize: 12, color: msgsLeft === 0 ? "#f43f5e" : "#888888", fontFamily: "var(--font-body)", background: "none", border: "none", cursor: "pointer", marginRight: 4 }}>
               {msgsLeft === 0 ? "No messages left" : `${msgsLeft} left`}
             </button>
           )}
@@ -166,7 +166,7 @@ export default function TopBar({ userType, userName, userEmail, onUpgrade, onLoa
           <div className="relative ml-0.5">
             <button onClick={() => setShowProfile(p => !p)}
               className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all"
-              style={{ background: `rgba(${isCreator ? "45,214,104" : "124,58,237"},0.15)`, border: `1px solid rgba(${isCreator ? "45,214,104" : "124,58,237"},0.3)`, color: accent, fontFamily: "var(--font-body)" }}>
+              style={{ background: isCreator ? "#e8f5ee" : "#ede9f8", border: isCreator ? "1px solid #c8e6d4" : "1px solid #d4c8f4", color: accent, fontFamily: "var(--font-body)" }}>
               {(userName || "CX").slice(0, 2).toUpperCase()}
             </button>
             <AnimatePresence>
@@ -185,9 +185,9 @@ export default function TopBar({ userType, userName, userEmail, onUpgrade, onLoa
           {/* Upgrade pill */}
           <button onClick={onUpgrade}
             className="ml-1 px-3 py-1.5 rounded-full text-xs font-bold transition-all"
-            style={{ background: "rgba(45,214,104,0.1)", border: "1px solid rgba(45,214,104,0.25)", color: "#2dd668", fontFamily: "var(--font-body)" }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(45,214,104,0.18)"; e.currentTarget.style.borderColor = "rgba(45,214,104,0.4)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(45,214,104,0.1)"; e.currentTarget.style.borderColor = "rgba(45,214,104,0.25)"; }}>
+            style={{ background: "#1a7a3c", border: "1px solid #1a7a3c", color: "#ffffff", fontFamily: "var(--font-body)" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#145f2f"; e.currentTarget.style.borderColor = "#145f2f"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "#1a7a3c"; e.currentTarget.style.borderColor = "#1a7a3c"; }}>
             Upgrade
           </button>
         </div>

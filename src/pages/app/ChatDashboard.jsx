@@ -164,7 +164,7 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
   const [limitHit,  setLimitHit]  = useState(getMsgsUsed() >= FREE_LIMIT);
   const bottomRef = useRef(null);
 
-  const bgStyle = { background: "#f5f5f0" };
+  const bgStyle = { background: "#f0f0eb" };
 
   useEffect(() => {
     if (!sessionStorage.getItem("corex_session_id")) sessionStorage.setItem("corex_session_id", Date.now().toString());
