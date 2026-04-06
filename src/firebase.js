@@ -2,20 +2,35 @@ import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey:    import.meta.env.VITE_FIREBASE_API_KEY,
+  apiKey:     import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId:  import.meta.env.VITE_FIREBASE_PROJECT_ID,
 };
 
-const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+// Guard: only initialize if API key is present (avoids crash when env vars missing in dev)
+let _auth = null;
+let _provider = null;
 
-export const auth           = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: 'select_account' });
+if (firebaseConfig.apiKey) {
+  try {
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    _auth = getAuth(app);
+    _provider = new GoogleAuthProvider();
+    _provider.setCustomParameters({ prompt: 'select_account' });
+  } catch (e) {
+    console.warn('[Firebase] Init failed:', e.message);
+  }
+}
+
+export const auth           = _auth;
+export const googleProvider = _provider;
 
 export async function signInWithGoogle(userType) {
+  if (!_auth || !_provider) {
+    return { success: false, error: 'Google sign in is not configured. Use email instead.' };
+  }
   try {
-    const result = await signInWithPopup(auth, googleProvider);
+    const result = await signInWithPopup(_auth, _provider);
     const user   = result.user;
     const isNew  = result._tokenResponse?.isNewUser;
 
