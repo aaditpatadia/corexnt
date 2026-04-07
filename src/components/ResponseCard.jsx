@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bar, Line } from "react-chartjs-2";
 import {
@@ -121,10 +121,11 @@ function UserBubble({ message }) {
 export default function ResponseCard({ message, onChip, onRegenerate, userType = "creator" }) {
   const { role, searchUsed } = message;
 
-  const [copied,    setCopied]    = useState(false);
-  const [saved,     setSaved]     = useState(false);
-  const [hovered,   setHovered]   = useState(false);
+  const [copied,     setCopied]     = useState(false);
+  const [saved,      setSaved]      = useState(false);
+  const [hovered,    setHovered]    = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const chartRef = useRef(null);
 
   if (role === "user") return <UserBubble message={message}/>;
 
@@ -185,10 +186,15 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
         return (
           <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.08 }}
             style={{ marginTop:20, background:"#ffffff", border:"1px solid #e8e8e3", borderRadius:12, padding:20 }}>
+            {graphData?.title && (
+              <p style={{ fontSize:11, fontWeight:600, color:"#888888", textTransform:"uppercase", letterSpacing:"1px", fontFamily:"var(--font-body)", marginBottom:10 }}>
+                {graphData.title}
+              </p>
+            )}
             <div style={{ height:200 }}>
               {chartType === "bar"
-                ? <Bar data={barData} options={options}/>
-                : <Line data={lineData} options={options}/>}
+                ? <Bar ref={chartRef} data={barData} options={options}/>
+                : <Line ref={chartRef} data={lineData} options={options}/>}
             </div>
           </motion.div>
         );
@@ -278,7 +284,22 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
               onClick={async () => {
                 setPdfLoading(true);
                 try {
-                  generateResponsePDF({ title, body: bodyText, actionSteps: steps, realExample: example });
+                  // Capture chart canvas as PNG if available
+                  let chartImage = null;
+                  if (chartRef.current) {
+                    try {
+                      const canvas = chartRef.current.canvas;
+                      if (canvas) chartImage = canvas.toDataURL("image/png");
+                    } catch {}
+                  }
+                  generateResponsePDF({
+                    title,
+                    body: bodyText,
+                    actionSteps: steps,
+                    realExample: example,
+                    graphData: showChart ? graphData : null,
+                    chartImage,
+                  });
                 } finally {
                   setPdfLoading(false);
                 }
