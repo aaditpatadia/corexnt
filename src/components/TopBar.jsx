@@ -119,8 +119,8 @@ export default function TopBar({ userType, userName, userEmail, onUpgrade, onLoa
           <span className="text-sm font-bold" style={{ color: "#1a1a1a", fontFamily: "var(--font-body)" }}>Corex</span>
         </button>
 
-        {/* Center — Mode pill */}
-        <div className="absolute left-1/2 -translate-x-1/2">
+        {/* Center — Mode pill (hidden on mobile) */}
+        <div className="absolute left-1/2 -translate-x-1/2 hidden md:block">
           <button onClick={() => navigate("/app/dashboard")}
             className="px-3 py-1 rounded-full text-xs font-semibold transition-all"
             style={{ fontFamily: "var(--font-body)", ...pillStyle }}

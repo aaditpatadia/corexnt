@@ -251,6 +251,8 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
           files:          apiFiles,
           userType,
           profileContext,
+          attachedDocs:   JSON.parse(localStorage.getItem("corex_attached_docs") || "[]"),
+          sharedLinks:    JSON.parse(localStorage.getItem("corex_shared_links")   || "[]"),
         }),
       });
 
