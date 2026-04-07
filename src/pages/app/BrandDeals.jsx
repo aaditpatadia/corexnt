@@ -25,8 +25,8 @@ const TEMPLATES = [
 ];
 
 const fieldStyle = {
-  background:"rgba(20,40,24,0.6)", border:"1px solid rgba(45,214,104,0.18)",
-  color:"#f0faf2", borderRadius:12, fontFamily:"var(--font-body)",
+  background:"#ffffff", border:"1px solid #e8e8e3",
+  color:"#1a1a1a", borderRadius:12, fontFamily:"var(--font-body)",
   fontSize:14, outline:"none", width:"100%", padding:"10px 14px",
 };
 
@@ -71,13 +71,6 @@ Also tell me: am I undercharging or overcharging based on my engagement vs follo
         body:JSON.stringify({ messages:[{role:"user",content:prompt}], userType:"creator", engineMode:"Creator" }) });
       const contentType = res.headers.get("Content-Type")||"";
       let full = "";
-      if (contentType.includes("text/event-stream")) {
-        const reader = res.body.getReader(); const dec = new TextDecoder(); let buf="";
-        while(true){ const {done,value}=await reader.read(); if(done)break; buf+=dec.decode(value,{stream:true});
-          const lines=buf.split("\n"); buf=lines.pop()??"";
-          for(const line of lines){ if(!line.startsWith("data: "))continue; const raw=line.slice(6).trim();
-            if(raw==="[DONE]")break; try{const p=JSON.parse(raw);if(p.delta)full+=p.delta;}catch{} } }
-      } else { const d=await res.json(); full=d.reply||""; }
       setResult({ id:Date.now(), role:"assistant", content:full });
     } catch { setResult({ id:Date.now(), role:"assistant", content:"Something went wrong. Try again.\n\nChips: 'Try again' | 'Help' | 'New calculation'" }); }
     setLoading(false);
@@ -94,7 +87,7 @@ Also tell me: am I undercharging or overcharging based on my engagement vs follo
             style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:"#2dd668", fontFamily:"var(--font-body)" }}>
             🤝 Brand Deals
           </div>
-          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"var(--font-body)", color:"#f0faf2" }}>
+          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"var(--font-body)", color:"#1a1a1a" }}>
             Calculate your rates
           </h1>
           <p className="text-sm" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>
@@ -109,13 +102,13 @@ Also tell me: am I undercharging or overcharging based on my engagement vs follo
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5" style={{ color:"rgba(45,214,104,0.7)", fontFamily:"var(--font-body)" }}>Platform</label>
+              <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5" style={{ color:"#1a7a3c", fontFamily:"var(--font-body)" }}>Platform</label>
               <select value={form.platform} onChange={e=>set("platform",e.target.value)} style={fieldStyle}>
                 {PLATFORMS.map(p=><option key={p}>{p}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5" style={{ color:"rgba(45,214,104,0.7)", fontFamily:"var(--font-body)" }}>Niche</label>
+              <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5" style={{ color:"#1a7a3c", fontFamily:"var(--font-body)" }}>Niche</label>
               <select value={form.niche} onChange={e=>set("niche",e.target.value)} style={fieldStyle}>
                 {NICHES.map(n=><option key={n}>{n}</option>)}
               </select>
@@ -159,7 +152,7 @@ Also tell me: am I undercharging or overcharging based on my engagement vs follo
         </AnimatePresence>
 
         {/* Templates */}
-        <h2 className="text-base font-bold mb-4" style={{ color:"#f0faf2", fontFamily:"var(--font-body)" }}>Templates</h2>
+        <h2 className="text-base font-bold mb-4" style={{ color:"#1a1a1a", fontFamily:"var(--font-body)" }}>Templates</h2>
         <div className="space-y-3">
           {TEMPLATES.map(t=>(
             <motion.div key={t.title} whileHover={{ x:4 }}
@@ -170,7 +163,7 @@ Also tell me: am I undercharging or overcharging based on my engagement vs follo
               <div className="flex items-center gap-3">
                 <span className="text-xl">{t.emoji}</span>
                 <div>
-                  <p className="text-sm font-semibold" style={{ color:"#f0faf2", fontFamily:"var(--font-body)" }}>{t.title}</p>
+                  <p className="text-sm font-semibold" style={{ color:"#1a1a1a", fontFamily:"var(--font-body)" }}>{t.title}</p>
                   <p className="text-xs" style={{ color:"var(--text-muted)", fontFamily:"var(--font-body)" }}>{t.desc}</p>
                 </div>
               </div>

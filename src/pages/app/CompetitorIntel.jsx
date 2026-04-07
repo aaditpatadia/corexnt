@@ -5,8 +5,8 @@ import ResponseCard from "../../components/ResponseCard";
 const INDUSTRIES = ["D2C / E-commerce","SaaS / Tech","Consumer Goods","Food & Beverage","Fashion & Lifestyle","Health & Wellness","Finance / Fintech","Education","Real Estate","Agency / Services","Other"];
 
 const fieldStyle = {
-  background:"rgba(20,40,24,0.6)", border:"1px solid rgba(45,214,104,0.18)",
-  color:"#f0faf2", borderRadius:12, fontFamily:"var(--font-body)",
+  background:"#ffffff", border:"1px solid #e8e8e3",
+  color:"#1a1a1a", borderRadius:12, fontFamily:"var(--font-body)",
   fontSize:14, outline:"none", width:"100%", padding:"10px 14px",
 };
 
@@ -44,14 +44,8 @@ Be specific. Use real details. If you know anything about these brands, use it.`
     try {
       const res = await fetch("/api/chat", { method:"POST", headers:{"Content-Type":"application/json"},
         body:JSON.stringify({ messages:[{role:"user",content:prompt}], userType:"company", engineMode:"Narrative" }) });
-      const ct = res.headers.get("Content-Type")||""; let full = "";
-      if (ct.includes("text/event-stream")) {
-        const reader=res.body.getReader(); const dec=new TextDecoder(); let buf="";
-        while(true){ const{done,value}=await reader.read(); if(done)break; buf+=dec.decode(value,{stream:true});
-          const lines=buf.split("\n"); buf=lines.pop()??"";
-          for(const l of lines){ if(!l.startsWith("data: "))continue; const raw=l.slice(6).trim();
-            if(raw==="[DONE]")break; try{const p=JSON.parse(raw);if(p.delta)full+=p.delta;}catch{} } }
-      } else { const d=await res.json(); full=d.reply||""; }
+      const d = await res.json();
+      const full = d.reply || "Something went wrong. Try again.";
       setResult({ id:Date.now(), role:"assistant", content:full });
     } catch { setResult({ id:Date.now(), role:"assistant", content:"Something went wrong. Try again.\n\nChips: 'Try again' | 'Different competitor' | 'Help'" }); }
     setLoading(false);
@@ -66,7 +60,7 @@ Be specific. Use real details. If you know anything about these brands, use it.`
             style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:"#2dd668", fontFamily:"var(--font-body)" }}>
             🔍 Competitor Intel
           </div>
-          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"var(--font-body)", color:"#f0faf2" }}>Spy on your competitors</h1>
+          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"var(--font-body)", color:"#1a1a1a" }}>Spy on your competitors</h1>
           <p className="text-sm" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>
             Get a deep breakdown of what your competitors are doing and how to beat them.
           </p>
@@ -77,14 +71,14 @@ Be specific. Use real details. If you know anything about these brands, use it.`
           style={{ background:"rgba(14,28,16,0.7)", border:"1px solid rgba(45,214,104,0.15)" }}>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5" style={{ color:"rgba(45,214,104,0.7)", fontFamily:"var(--font-body)" }}>Industry</label>
+            <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5" style={{ color:"#1a7a3c", fontFamily:"var(--font-body)" }}>Industry</label>
             <select value={form.industry} onChange={e=>set("industry",e.target.value)} style={fieldStyle}>
               {INDUSTRIES.map(i=><option key={i}>{i}</option>)}
             </select>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5" style={{ color:"rgba(45,214,104,0.7)", fontFamily:"var(--font-body)" }}>
+            <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5" style={{ color:"#1a7a3c", fontFamily:"var(--font-body)" }}>
               Your brand name <span style={{ color:"rgba(240,250,242,0.3)", fontWeight:400, textTransform:"none", fontSize:10 }}>(optional)</span>
             </label>
             <input type="text" placeholder="e.g. My Brand Co." value={form.yourBrand} onChange={e=>set("yourBrand",e.target.value)}
@@ -103,7 +97,7 @@ Be specific. Use real details. If you know anything about these brands, use it.`
                 onBlur={e=>e.target.style.borderColor=errors.comp1?"rgba(248,113,113,0.5)":"rgba(45,214,104,0.18)"}/>
             </div>
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5" style={{ color:"rgba(45,214,104,0.7)", fontFamily:"var(--font-body)" }}>
+              <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5" style={{ color:"#1a7a3c", fontFamily:"var(--font-body)" }}>
                 Competitor 2 <span style={{ color:"rgba(240,250,242,0.3)", fontWeight:400, textTransform:"none", fontSize:10 }}>(optional)</span>
               </label>
               <input type="text" placeholder="e.g. Lululemon" value={form.comp2} onChange={e=>set("comp2",e.target.value)}

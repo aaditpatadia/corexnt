@@ -5,8 +5,8 @@ import ResponseCard from "../../components/ResponseCard";
 const INDUSTRIES = ["D2C / E-commerce","SaaS / Tech","Consumer Goods","Food & Beverage","Fashion & Lifestyle","Health & Wellness","Finance / Fintech","Education","Real Estate","Agency / Services","Other"];
 
 const fieldStyle = {
-  background:"rgba(20,40,24,0.6)", border:"1px solid rgba(45,214,104,0.18)",
-  color:"#f0faf2", borderRadius:12, fontFamily:"var(--font-body)",
+  background:"#ffffff", border:"1px solid #e8e8e3",
+  color:"#1a1a1a", borderRadius:12, fontFamily:"var(--font-body)",
   fontSize:14, outline:"none", width:"100%", padding:"10px 14px",
 };
 
@@ -49,13 +49,8 @@ Be brutally honest. Give specific, actionable recommendations with examples.`;
     try {
       const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},
         body:JSON.stringify({messages:[{role:"user",content:prompt}],userType:"company",engineMode:"Narrative"})});
-      const ct=res.headers.get("Content-Type")||""; let full="";
-      if(ct.includes("text/event-stream")){const reader=res.body.getReader();const dec=new TextDecoder();let buf="";
-        while(true){const{done,value}=await reader.read();if(done)break;buf+=dec.decode(value,{stream:true});
-          const lines=buf.split("\n");buf=lines.pop()??"";
-          for(const l of lines){if(!l.startsWith("data: "))continue;const raw=l.slice(6).trim();
-            if(raw==="[DONE]")break;try{const p=JSON.parse(raw);if(p.delta)full+=p.delta;}catch{}}}
-      } else {const d=await res.json();full=d.reply||"";}
+      const d = await res.json();
+      const full = d.reply || "Something went wrong. Try again.";
       setResult({id:Date.now(),role:"assistant",content:full});
     } catch { setResult({id:Date.now(),role:"assistant",content:"Something went wrong. Try again.\n\nChips: 'Try again' | 'Different brand' | 'Help'"}); }
     setLoading(false);
@@ -69,7 +64,7 @@ Be brutally honest. Give specific, actionable recommendations with examples.`;
             style={{background:"rgba(45,214,104,0.08)",border:"1px solid rgba(45,214,104,0.2)",color:"#2dd668",fontFamily:"var(--font-body)"}}>
             🛡️ Brand Audit
           </div>
-          <h1 className="text-3xl font-bold mb-2" style={{fontFamily:"var(--font-body)",color:"#f0faf2"}}>Audit your brand</h1>
+          <h1 className="text-3xl font-bold mb-2" style={{fontFamily:"var(--font-body)",color:"#1a1a1a"}}>Audit your brand</h1>
           <p className="text-sm" style={{color:"var(--text-secondary)",fontFamily:"var(--font-body)"}}>
             Get a full, honest breakdown of your brand positioning and messaging.
           </p>
@@ -89,7 +84,7 @@ Be brutally honest. Give specific, actionable recommendations with examples.`;
                 onBlur={e=>e.target.style.borderColor=errors.brand?"rgba(248,113,113,0.5)":"rgba(45,214,104,0.18)"}/>
             </div>
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5" style={{color:"rgba(45,214,104,0.7)",fontFamily:"var(--font-body)"}}>Industry</label>
+              <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5" style={{color:"#1a7a3c",fontFamily:"var(--font-body)"}}>Industry</label>
               <select value={form.industry} onChange={e=>set("industry",e.target.value)} style={fieldStyle}>
                 {INDUSTRIES.map(i=><option key={i}>{i}</option>)}
               </select>
@@ -107,7 +102,7 @@ Be brutally honest. Give specific, actionable recommendations with examples.`;
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5" style={{color:"rgba(45,214,104,0.7)",fontFamily:"var(--font-body)"}}>Main competitor (optional)</label>
+            <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5" style={{color:"#1a7a3c",fontFamily:"var(--font-body)"}}>Main competitor (optional)</label>
             <input type="text" placeholder="e.g. Nike, Lululemon" value={form.competitor} onChange={e=>set("competitor",e.target.value)}
               style={fieldStyle}
               onFocus={e=>e.target.style.borderColor="rgba(45,214,104,0.5)"}

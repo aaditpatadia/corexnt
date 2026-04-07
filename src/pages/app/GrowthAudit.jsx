@@ -6,9 +6,9 @@ const PLATFORMS  = ["Instagram","YouTube","TikTok","LinkedIn","X (Twitter)"];
 const POST_TIMES = ["Morning (6–9am)","Mid-morning (9–11am)","Lunchtime (12–2pm)","Afternoon (3–5pm)","Evening (6–9pm)","Late night (9pm+)"];
 
 const fieldStyle = {
-  background:"rgba(20,40,24,0.6)",
-  border:"1px solid rgba(45,214,104,0.18)",
-  color:"#f0faf2",
+  background:"#ffffff",
+  border:"1px solid #e8e8e3",
+  color:"#1a1a1a",
   borderRadius:12,
   fontFamily:"var(--font-body)",
   fontSize:14,
@@ -22,7 +22,7 @@ function Field({ label, hint, children }) {
     <div>
       <label className="flex items-baseline justify-between mb-1.5">
         <span className="text-xs font-semibold uppercase tracking-widest"
-          style={{ color:"rgba(45,214,104,0.7)", fontFamily:"var(--font-body)" }}>{label}</span>
+          style={{ color:"#1a7a3c", fontFamily:"var(--font-body)" }}>{label}</span>
         {hint && <span className="text-xs" style={{ color:"var(--text-muted)", fontFamily:"var(--font-body)" }}>{hint}</span>}
       </label>
       {children}
@@ -112,7 +112,7 @@ Use real numbers and benchmarks. Compare my stats to what's actually working in 
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 18L8 11L13 14L18 7L21 10"/><path d="M21 6V10H17"/></svg>
             Growth Audit
           </div>
-          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"var(--font-body)", color:"#f0faf2" }}>
+          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"var(--font-body)", color:"#1a1a1a" }}>
             Audit your growth
           </h1>
           <p className="text-sm" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>

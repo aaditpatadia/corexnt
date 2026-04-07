@@ -161,7 +161,7 @@ export default function ChatInput({ onSend, disabled, userType }) {
           border: focused
             ? `1px solid ${dragging ? "#1a7a3c" : "#1a7a3c"}`
             : `1px solid ${dragging ? "#1a7a3c" : "#e0e0da"}`,
-          borderRadius: 16,
+          borderRadius: 100,
           display: "flex",
           alignItems: "flex-end",
           padding: "10px 10px 10px 16px",
@@ -229,7 +229,7 @@ export default function ChatInput({ onSend, disabled, userType }) {
               whileHover={canSend ? { scale:1.06 } : {}}
               whileTap={canSend ? { scale:0.94 } : {}}
               style={{
-                width: 36, height: 36, borderRadius: 10, border: "none", cursor: "none",
+                width: 36, height: 36, borderRadius: 10, border: "none", cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 background: canSend ? "#1a7a3c" : "#e8e8e3",
                 color: canSend ? "#ffffff" : "#aaaaaa",
@@ -244,7 +244,7 @@ export default function ChatInput({ onSend, disabled, userType }) {
 
         {/* Hint */}
         <p style={{ marginTop:8, fontSize:11, color:"#bbbbbb", textAlign:"center", fontFamily:"var(--font-body)" }}>
-          ↵ send &nbsp;·&nbsp; ⇧↵ new line &nbsp;·&nbsp; Corex v5.3
+          ↵ send &nbsp;·&nbsp; ⇧↵ new line &nbsp;·&nbsp; Corex v6
         </p>
       </div>
     </div>

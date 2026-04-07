@@ -55,7 +55,7 @@ export default function Team() {
           </div>
 
           <motion.h1 initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.3 }}
-            className="text-4xl font-bold mb-3" style={{ fontFamily:"var(--font-body)", color:"#f0faf2" }}>
+            className="text-4xl font-bold mb-3" style={{ fontFamily:"var(--font-body)", color:"#1a1a1a" }}>
             Team Collaboration
           </motion.h1>
           <motion.p initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.4 }}
@@ -81,7 +81,7 @@ export default function Team() {
                 {f.emoji}
               </div>
               <div>
-                <p className="text-sm font-semibold mb-0.5" style={{ color:"#f0faf2", fontFamily:"var(--font-body)" }}>{f.title}</p>
+                <p className="text-sm font-semibold mb-0.5" style={{ color:"#1a1a1a", fontFamily:"var(--font-body)" }}>{f.title}</p>
                 <p className="text-xs leading-relaxed" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>{f.desc}</p>
               </div>
             </motion.div>
@@ -95,12 +95,12 @@ export default function Team() {
           {saved ? (
             <motion.div initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }} className="text-center py-4">
               <div className="text-3xl mb-3">🎉</div>
-              <p className="text-base font-bold mb-1" style={{ color:"#f0faf2", fontFamily:"var(--font-body)" }}>You're on the list!</p>
+              <p className="text-base font-bold mb-1" style={{ color:"#1a1a1a", fontFamily:"var(--font-body)" }}>You're on the list!</p>
               <p className="text-sm" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>We'll email you the moment Team drops.</p>
             </motion.div>
           ) : (
             <>
-              <p className="text-sm font-semibold mb-1" style={{ color:"#f0faf2", fontFamily:"var(--font-body)" }}>Get early access</p>
+              <p className="text-sm font-semibold mb-1" style={{ color:"#1a1a1a", fontFamily:"var(--font-body)" }}>Get early access</p>
               <p className="text-xs mb-4" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>
                 Be first to know when Team launches. No spam, just one email.
               </p>
@@ -112,9 +112,9 @@ export default function Team() {
                   onChange={e=>{ setEmail(e.target.value); setInvalid(false); }}
                   onKeyDown={e=>e.key==="Enter"&&notify()}
                   style={{
-                    flex:1, background:"rgba(20,40,24,0.6)",
+                    flex:1, background:"#ffffff",
                     border:`1px solid ${invalid?"rgba(248,113,113,0.5)":"rgba(45,214,104,0.18)"}`,
-                    color:"#f0faf2", borderRadius:12, fontFamily:"var(--font-body)",
+                    color:"#1a1a1a", borderRadius:12, fontFamily:"var(--font-body)",
                     fontSize:14, outline:"none", padding:"10px 14px",
                   }}
                   onFocus={e=>e.target.style.borderColor="rgba(45,214,104,0.5)"}

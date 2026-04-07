@@ -4,38 +4,37 @@ export default {
   theme: {
     extend: {
       colors: {
-        // App greens
-        "bg-base":       "#050a06",
-        "bg-surface":    "rgba(10,20,12,0.8)",
-        "bg-card":       "rgba(20,40,24,0.6)",
+        // v6 Design tokens
+        bg:           "#f0f0eb",
+        "bg-card":    "#ffffff",
+        "bg-dark":    "#1a1a1a",
+        green:        { DEFAULT: "#1a7a3c", light: "#2dd668", pale: "#e8f5ee", border: "#c8e6d4" },
+        "text-primary":   "#1a1a1a",
+        "text-secondary": "#555555",
+        "text-muted":     "#888888",
+        border:       "#e8e8e3",
+        // Chart palette
+        chart: { 1:"#f97316", 2:"#14b8a6", 3:"#eab308", 4:"#6366f1", 5:"#ec4899", 6:"#1a7a3c" },
+        // Landing pages
+        "bg-base":       "#f0f0eb",
         "green-primary": "#1a7a3c",
         "green-accent":  "#2dd668",
-        "text-primary":  "#f0faf2",
-        "text-secondary":"rgba(240,250,242,0.6)",
-        "text-muted":    "rgba(240,250,242,0.35)",
-        // Green shades for Tailwind
-        green: {
-          400: "#4ade80",
-          500: "#22c55e",
-          600: "#16a34a",
-        },
-        // Creator palette
-        creator: {
-          pink:   "#e879f9",
-          indigo: "#818cf8",
-          blue:   "#38bdf8",
-        },
-        // Brand palette
-        brand: {
-          purple: "#7c3aed",
-          indigo: "#4f46e5",
-          violet: "#a855f7",
-        },
+        creator: { pink:"#e879f9", indigo:"#818cf8", blue:"#38bdf8" },
+        brand:   { purple:"#7c3aed", indigo:"#4f46e5", violet:"#a855f7" },
       },
       fontFamily: {
-        display: ['"Playfair Display"', "serif"],
+        display: ['"Instrument Serif"', "serif"],
+        heading: ['"Playfair Display"', "serif"],
         serif:   ['"Instrument Serif"', "serif"],
-        body:    ['"Neue Montreal"', "Inter", "system-ui", "sans-serif"],
+        body:    ['"DM Sans"', '"Neue Montreal"', "Inter", "system-ui", "sans-serif"],
+      },
+      borderRadius: {
+        sm: "10px", md: "16px", lg: "20px", xl: "28px", pill: "100px",
+      },
+      boxShadow: {
+        card:       "0 2px 12px rgba(0,0,0,0.06)",
+        "card-hover":"0 8px 32px rgba(0,0,0,0.10)",
+        green:      "0 4px 12px rgba(26,122,60,0.3)",
       },
       animation: {
         float:        "float 12s ease-in-out infinite",
