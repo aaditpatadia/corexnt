@@ -23,10 +23,11 @@ export default {
         brand:   { purple:"#7c3aed", indigo:"#4f46e5", violet:"#a855f7" },
       },
       fontFamily: {
-        display: ['"Instrument Serif"', "serif"],
-        heading: ['"Playfair Display"', "serif"],
-        serif:   ['"Instrument Serif"', "serif"],
-        body:    ['"DM Sans"', '"Neue Montreal"', "Inter", "system-ui", "sans-serif"],
+        display: ["Montserrat", "sans-serif"],
+        heading: ["Montserrat", "sans-serif"],
+        serif:   ["Montserrat", "sans-serif"],
+        body:    ["Montserrat", "sans-serif"],
+        sans:    ["Montserrat", "sans-serif"],
       },
       borderRadius: {
         sm: "10px", md: "16px", lg: "20px", xl: "28px", pill: "100px",

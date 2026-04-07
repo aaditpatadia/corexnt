@@ -43,10 +43,10 @@
   --green-glow:     rgba(26,122,60,0.12);
 
   /* ── Typography ── */
-  --font-display: 'Instrument Serif', serif;
-  --font-heading: 'Playfair Display', serif;
-  --font-body:    'DM Sans', 'Neue Montreal', 'Inter', system-ui, sans-serif;
-  --font-serif:   'Instrument Serif', serif;
+  --font-display: 'Montserrat', sans-serif;
+  --font-heading: 'Montserrat', sans-serif;
+  --font-body:    'Montserrat', sans-serif;
+  --font-serif:   'Montserrat', sans-serif;
 
   /* Main landing (black/white) */
   --main-bg:     #080808;
@@ -82,7 +82,7 @@
   body {
     background-color: var(--bg);
     color: var(--text-primary);
-    font-family: var(--font-body);
+    font-family: 'Montserrat', sans-serif;
     font-size: 16px;
     line-height: 1.7;
     -webkit-font-smoothing: antialiased;
@@ -90,9 +90,11 @@
     overflow-x: hidden;
   }
 
-  /* Headings use body font by default; specific pages override */
+  * { font-family: 'Montserrat', sans-serif !important; }
+
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-body);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
   }
 
   ::-webkit-scrollbar       { width: 4px; }
@@ -103,32 +105,67 @@
 }
 
 /* ─────────────────────────────────────────────
-   Page animations
+   Global overflow & word-break safety
+───────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+p, span, li, div, h1, h2, h3, h4, h5, h6,
+.message-content, .response-body, .corex-message,
+.user-message, .step-text, .example-text, .chip-text {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+/* ─────────────────────────────────────────────
+   Animations
 ───────────────────────────────────────────── */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes bounceIn {
+  0%   { transform: scale(0.9); opacity: 0; }
+  60%  { transform: scale(1.03); }
+  100% { transform: scale(1); opacity: 1; }
 }
 @keyframes slideIn {
   from { opacity: 0; transform: translateX(-16px); }
   to   { opacity: 1; transform: translateX(0); }
 }
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.5; }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.7; transform: scale(0.97); }
 }
 @keyframes shimmer {
   from { background-position: -200% 0; }
   to   { background-position: 200% 0; }
 }
 
-.fade-up  { animation: fadeUp  0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
-.slide-in { animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.fade-up      { animation: fadeUp   0.4s cubic-bezier(0.16,1,0.3,1) both; }
+.fade-in      { animation: fadeIn   0.35s ease both; }
+.scale-in     { animation: scaleIn  0.3s cubic-bezier(0.16,1,0.3,1) both; }
+.slide-in     { animation: slideIn  0.4s cubic-bezier(0.16,1,0.3,1) both; }
+.page-enter   { animation: fadeUp   0.4s cubic-bezier(0.16,1,0.3,1) both; }
+.card-enter   { animation: scaleIn  0.3s cubic-bezier(0.16,1,0.3,1) both; }
+.message-enter{ animation: fadeUp   0.3s cubic-bezier(0.16,1,0.3,1) both; }
+.chip-enter   { animation: bounceIn 0.3s cubic-bezier(0.16,1,0.3,1) both; }
 
-.delay-1 { animation-delay: 0.05s; }
-.delay-2 { animation-delay: 0.10s; }
-.delay-3 { animation-delay: 0.15s; }
-.delay-4 { animation-delay: 0.20s; }
+.delay-1, .stagger-1 { animation-delay: 0.05s; }
+.delay-2, .stagger-2 { animation-delay: 0.10s; }
+.delay-3, .stagger-3 { animation-delay: 0.15s; }
+.delay-4, .stagger-4 { animation-delay: 0.20s; }
 
 /* ── v6 Card system ── */
 .card {
@@ -594,4 +631,30 @@ body::after {
 .card-hover:hover {
   transform: translateY(-4px) scale(1.01);
   box-shadow: 0 12px 40px rgba(0,0,0,0.35), 0 0 20px rgba(45,214,104,0.08);
+}
+
+
+/* ─────────────────────────────────────────────
+   Mobile layout
+───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Chat input sits above bottom nav */
+  .mobile-chat-input {
+    bottom: 60px !important;
+    padding-bottom: 12px !important;
+  }
+
+  /* Single column dashboard on mobile */
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Wider message bubbles on mobile */
+  .user-bubble { max-width: 90% !important; }
+
+  /* Reduce padding on mobile */
+  .mobile-px { padding-left: 16px !important; padding-right: 16px !important; }
+
+  /* Add bottom padding equal to nav height + chat input */
+  .chat-scroll-area { padding-bottom: 220px !important; }
 }

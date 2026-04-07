@@ -1,5 +1,6 @@
 import { useEffect, useCallback } from "react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import BottomNav from "./BottomNav";
 import AuthFlow          from "./AuthFlow";
 import TopBar            from "./TopBar";
 import ChatDashboard     from "../pages/app/ChatDashboard";
@@ -121,6 +122,12 @@ export default function AppShell() {
           <Route path="*"                element={<Navigate to={defaultRoute} replace />} />
         </Routes>
       </div>
+
+      {/* Mobile bottom navigation */}
+      <BottomNav
+        activeTab={location.pathname.replace("/app/", "").split("/")[0] || "dashboard"}
+        userType={userType}
+      />
     </div>
   );
 }

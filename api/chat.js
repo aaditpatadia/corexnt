@@ -141,7 +141,7 @@ export default async function handler(req, res) {
   if (req.method !== "POST")   return res.status(405).json({ error: "Method not allowed" });
 
   try {
-    const { messages = [], files = [], userType = "creator", engineMode, profileContext } = req.body || {};
+    const { messages = [], files = [], userType = "creator", engineMode, profileContext, attachedDocs = [], sharedLinks = [] } = req.body || {};
 
     const lastUser = [...messages].reverse().find(m => m.role === "user");
     if (!lastUser?.content?.trim() && !(files?.length > 0)) {
@@ -157,6 +157,21 @@ export default async function handler(req, res) {
 
     if (profileContext) {
       basePrompt += `\n\n${profileContext}`;
+    }
+
+    // ── Attached documents context ────────────────────────────────────────────
+    if (Array.isArray(attachedDocs) && attachedDocs.length > 0) {
+      basePrompt += `\n\nDOCUMENT CONTEXT — the user has shared the following document(s). Reference them naturally and specifically in your response:\n`;
+      for (const doc of attachedDocs.slice(0, 3)) {
+        basePrompt += `\n--- Document: ${doc.name} ---\n${(doc.text || "").slice(0, 2000)}\n`;
+      }
+      basePrompt += `\nWhen answering, reference specific content from the document(s) above.`;
+    }
+
+    // ── Shared links context ──────────────────────────────────────────────────
+    if (Array.isArray(sharedLinks) && sharedLinks.length > 0) {
+      const urls = sharedLinks.slice(-5).map(l => l.url || l).join(", ");
+      basePrompt += `\n\nThe user has shared these URLs: ${urls}. Treat these as context for your response and analyse them if relevant.`;
     }
 
     // ── File intelligence context ─────────────────────────────────────────────
