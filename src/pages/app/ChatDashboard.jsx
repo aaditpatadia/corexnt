@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import ChatInput    from "../../components/ChatInput";
 import ResponseCard from "../../components/ResponseCard";
 import { stripMarkdown } from "../../utils/parseResponse";
@@ -37,33 +36,45 @@ function saveToHistory(firstUserMsg, allMessages, userType) {
   } catch {}
 }
 
-/* ── Streaming card ── */
-function StreamingCard({ message, userType }) {
-  const isCreator   = userType !== "company";
-  const accentColor = isCreator ? "#2dd668" : "#a78bfa";
-  const accentRgba  = isCreator ? "rgba(45,214,104," : "rgba(124,58,237,";
-
-  const text = stripMarkdown(
+/* ── Word-by-word reveal card (v6) ── */
+function RevealCard({ message, userType }) {
+  const [visibleWords, setVisibleWords] = useState(0);
+  const fullText = stripMarkdown(
     (message.content || "")
       .replace(/GRAPH_DATA:[\s\S]*$/m, "")
       .replace(/Chips:.*$/m, "")
       .trim()
   );
+  const words = fullText.split(/(\s+)/);
+  const intervalRef = useRef(null);
+
+  useEffect(() => {
+    // Reveal ~8 words per frame at 60fps → smooth and fast
+    intervalRef.current = setInterval(() => {
+      setVisibleWords(prev => {
+        const next = prev + 6;
+        if (next >= words.length) { clearInterval(intervalRef.current); return words.length; }
+        return next;
+      });
+    }, 32);
+    return () => clearInterval(intervalRef.current);
+  }, [message.content]);
+
+  const visible = words.slice(0, visibleWords).join("");
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full">
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-        <div style={{ width: 16, height: 16, borderRadius: 4, background: `${accentRgba}0.12)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <svg width="9" height="9" viewBox="0 0 32 32" fill="none">
-            <path d="M8 16c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke={accentColor} strokeWidth="3.5" strokeLinecap="round"/>
-            <circle cx="16" cy="21" r="4" fill={accentColor}/>
-          </svg>
-        </div>
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full" style={{ marginBottom: 28 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
         <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase", color: "#1a7a3c", fontFamily: "var(--font-body)" }}>COREX</span>
+        {message.searchUsed && (
+          <span style={{ fontSize: 10, fontWeight: 600, color: "#1a7a3c", background: "#e8f5ee", border: "1px solid #c8e6d4", borderRadius: 20, padding: "1px 7px", fontFamily: "var(--font-body)" }}>
+            ● Live data
+          </span>
+        )}
       </div>
-      {text ? (
-        <div className="typing-cursor" style={{ fontSize: 15, lineHeight: 1.8, color: "#1a1a1a", fontFamily: "var(--font-body)", whiteSpace: "pre-wrap" }}>
-          {text}
+      {visible ? (
+        <div style={{ fontSize: 15, lineHeight: 1.8, color: "#1a1a1a", fontFamily: "var(--font-body)", whiteSpace: "pre-wrap" }}>
+          {visible}<span style={{ opacity: 0.4 }}>|</span>
         </div>
       ) : (
         <div style={{ display: "flex", gap: 4, paddingTop: 4 }}>
@@ -71,7 +82,7 @@ function StreamingCard({ message, userType }) {
             <motion.div key={i}
               animate={{ opacity: [0.3, 1, 0.3], y: [0, -3, 0] }}
               transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
-              style={{ width: 6, height: 6, borderRadius: "50%", background: accentColor }}/>
+              style={{ width: 6, height: 6, borderRadius: "50%", background: "#1a7a3c" }}/>
           ))}
         </div>
       )}
@@ -80,16 +91,15 @@ function StreamingCard({ message, userType }) {
 }
 
 /* ── Limit banner ── */
-function LimitBanner({ onUpgrade, isCreator }) {
-  const accent = isCreator ? "#2dd668" : "#a78bfa";
+function LimitBanner({ onUpgrade }) {
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-      style={{ padding: "12px 20px", borderRadius: 14, background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.2)", margin: "8px 0", textAlign: "center" }}>
-      <p style={{ fontSize: 14, color: "#f0faf2", fontFamily: "var(--font-body)", marginBottom: 6 }}>
+      style={{ padding: "12px 20px", borderRadius: 14, background: "rgba(244,63,94,0.06)", border: "1px solid rgba(244,63,94,0.2)", margin: "8px 0", textAlign: "center" }}>
+      <p style={{ fontSize: 14, color: "#1a1a1a", fontFamily: "var(--font-body)", marginBottom: 6 }}>
         You've used all 15 messages for today.
       </p>
       <button onClick={onUpgrade}
-        style={{ fontSize: 13, fontWeight: 700, color: accent, background: "none", border: "none", cursor: "none", fontFamily: "var(--font-body)" }}>
+        style={{ fontSize: 13, fontWeight: 700, color: "#1a7a3c", background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-body)" }}>
         Upgrade for unlimited →
       </button>
     </motion.div>
@@ -98,11 +108,9 @@ function LimitBanner({ onUpgrade, isCreator }) {
 
 /* ── Welcome screen ── */
 function WelcomeScreen({ userType, userName, onChip }) {
-  const isCreator   = userType !== "company";
-  const accentColor = isCreator ? "#2dd668" : "#a78bfa";
-  const accentRgba  = isCreator ? "rgba(45,214,104," : "rgba(124,58,237,";
-  const subtitle    = isCreator ? "Reels · Growth · Brand Deals · Trends" : "Campaigns · Strategy · Budgets · Intel";
-  const chips       = isCreator
+  const isCreator = userType !== "company";
+  const subtitle  = isCreator ? "Reels · Growth · Brand Deals · Trends" : "Campaigns · Strategy · Budgets · Intel";
+  const chips     = isCreator
     ? ["Write me a viral reel script", "Audit my Instagram growth", "What's trending this week?", "Price my brand deal"]
     : ["Build a campaign strategy", "Allocate my marketing budget", "Audit our brand positioning", "Analyse our competitors"];
 
@@ -111,20 +119,22 @@ function WelcomeScreen({ userType, userName, onChip }) {
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
 
         {/* Logo mark */}
-        <div style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg, #1a7a3c, #2dd668)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
-          <div style={{ width: 16, height: 16, borderRadius: "50%", background: "rgba(255,255,255,0.9)" }}/>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0, duration: 0.5 }}
+          style={{ width: 52, height: 52, borderRadius: 16, background: "linear-gradient(135deg, #1a7a3c, #2dd668)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24, boxShadow: "0 8px 24px rgba(26,122,60,0.25)" }}>
+          <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(255,255,255,0.92)" }}/>
+        </motion.div>
 
         <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
           style={{ fontSize: 15, color: "#888888", fontFamily: "var(--font-body)", marginBottom: 8 }}>
           {getGreeting(userName)}
         </motion.p>
         <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          style={{ fontFamily: "var(--font-display)", fontSize: 32, fontWeight: 700, color: "#1a1a1a", lineHeight: 1.2, marginBottom: 8, textAlign: "center" }}>
+          style={{ fontFamily: "var(--font-display)", fontSize: 34, fontWeight: 400, color: "#1a1a1a", lineHeight: 1.2, marginBottom: 8, textAlign: "center" }}>
           What will you create today?
         </motion.h1>
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
-          style={{ fontSize: 15, color: "#888888", fontFamily: "var(--font-body)", marginBottom: 32, textAlign: "center" }}>
+          style={{ fontSize: 15, color: "#888888", fontFamily: "var(--font-body)", marginBottom: 36, textAlign: "center" }}>
           {subtitle}
         </motion.p>
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
@@ -136,13 +146,13 @@ function WelcomeScreen({ userType, userName, onChip }) {
               whileTap={{ scale: 0.97 }}
               onClick={() => onChip(chip)}
               style={{
-                padding: "14px 18px", borderRadius: 14, textAlign: "left", fontSize: 14,
+                padding: "14px 18px", borderRadius: 20, textAlign: "left", fontSize: 14,
                 fontFamily: "var(--font-body)", background: "#ffffff",
-                border: "1px solid #e0e0e0", color: "#444444",
-                cursor: "none", transition: "all 0.25s ease", lineHeight: 1.4,
+                border: "1px solid #e8e8e3", color: "#444444",
+                cursor: "pointer", transition: "all 0.2s ease", lineHeight: 1.4,
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = "#ffffff"; e.currentTarget.style.borderColor = "#c0c0c0"; e.currentTarget.style.color = "#1a1a1a"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.08)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "#ffffff"; e.currentTarget.style.borderColor = "#e0e0e0"; e.currentTarget.style.color = "#444444"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "#1a7a3c"; e.currentTarget.style.color = "#1a7a3c"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(26,122,60,0.1)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "#e8e8e3"; e.currentTarget.style.color = "#444444"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
               {chip}
             </motion.button>
           ))}
@@ -154,17 +164,15 @@ function WelcomeScreen({ userType, userName, onChip }) {
 
 /* ── Main ChatDashboard ── */
 export default function ChatDashboard({ userType, userName, onUpgrade }) {
-  const navigate  = useNavigate();
   const isCreator = userType !== "company";
 
   const [messages,  setMessages]  = useState(() => {
     try { const s = sessionStorage.getItem("corex_chat"); return s ? JSON.parse(s) : []; } catch { return []; }
   });
   const [loading,   setLoading]   = useState(false);
+  const [revealing, setRevealing] = useState(null); // id of message being word-revealed
   const [limitHit,  setLimitHit]  = useState(getMsgsUsed() >= FREE_LIMIT);
   const bottomRef = useRef(null);
-
-  const bgStyle = { background: "#f0f0eb" };
 
   useEffect(() => {
     if (!sessionStorage.getItem("corex_session_id")) sessionStorage.setItem("corex_session_id", Date.now().toString());
@@ -177,24 +185,23 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
     if (p) { sessionStorage.removeItem("corex_prefill"); setTimeout(() => sendMessage(p, []), 150); }
   }, []);
 
-  // Expose to TopBar (new chat button)
+  // Expose to TopBar
   useEffect(() => {
     window.__corex_newChat = () => {
       setMessages([]);
+      setRevealing(null);
       sessionStorage.removeItem("corex_chat");
       sessionStorage.setItem("corex_session_id", Date.now().toString());
     };
     window.__corex_loadConversation = (conv) => {
       if (conv?.messages) {
         setMessages(conv.messages);
+        setRevealing(null);
         sessionStorage.setItem("corex_session_id", conv.id);
         try { sessionStorage.setItem("corex_chat", JSON.stringify(conv.messages)); } catch {}
       }
     };
-    return () => {
-      delete window.__corex_newChat;
-      delete window.__corex_loadConversation;
-    };
+    return () => { delete window.__corex_newChat; delete window.__corex_loadConversation; };
   }, []);
 
   // Persist session
@@ -207,7 +214,7 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
   }, [messages]);
 
   // Scroll to bottom
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, loading]);
 
   function trackUsage() {
     const key  = getTodayKey();
@@ -223,19 +230,18 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
     const displayFiles = files.map(({ name, type, preview }) => ({ name, type, preview }));
     const apiFiles     = files.map(({ name, type, b64 })     => ({ name, type, b64 }));
     const userMsg      = { id: Date.now(), role: "user", content: text, files: displayFiles };
-    const streamId     = Date.now() + 1;
-    const placeholder  = { id: streamId, role: "assistant", content: "", streaming: true };
+    const assistantId  = Date.now() + 1;
 
-    setMessages(prev => [...prev, userMsg, placeholder]);
+    setMessages(prev => [...prev, userMsg]);
     setLoading(true);
     trackUsage();
 
-    const fullHistory   = [...messages, userMsg];
-    const contextWindow = fullHistory.slice(-15);
+    const fullHistory    = [...messages, userMsg];
+    const contextWindow  = fullHistory.slice(-15);
     const profileContext = getProfileContext(userType);
 
-    let fullText  = "";
-    let searchUsedFlag = false;
+    let reply      = "";
+    let searchUsed = false;
     try {
       const res = await fetch("/api/chat", {
         method:  "POST",
@@ -248,75 +254,35 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
         }),
       });
 
-      const ct = res.headers.get("Content-Type") || "";
-      if (ct.includes("text/event-stream")) {
-        const reader  = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buf = "";
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buf += decoder.decode(value, { stream: true });
-          const lines = buf.split("\n"); buf = lines.pop() ?? "";
-          for (const line of lines) {
-            if (!line.startsWith("data: ")) continue;
-            const raw = line.slice(6).trim();
-            if (raw === "[DONE]") break;
-            try {
-              const p = JSON.parse(raw);
-              // Meta event (search used)
-              if (p.meta?.searchUsed) {
-                searchUsedFlag = true;
-                setMessages(prev => {
-                  const u = [...prev];
-                  const idx = u.findIndex(m => m.id === streamId);
-                  if (idx !== -1) u[idx] = { ...u[idx], searchUsed: true };
-                  return u;
-                });
-                continue;
-              }
-              if (p.delta) {
-                fullText += p.delta;
-                setMessages(prev => {
-                  const u = [...prev];
-                  const idx = u.findIndex(m => m.id === streamId);
-                  if (idx !== -1) u[idx] = { ...u[idx], content: fullText };
-                  return u;
-                });
-              }
-            } catch {}
-          }
-        }
-      } else {
-        const d = await res.json();
-        fullText = d.reply || "Something went wrong.";
-      }
-    } catch {
-      fullText = "Connection error. Please try again.\n\nChips: 'Try again' | 'New chat' | 'Help'";
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "API error");
+      reply      = data.reply || "Something went wrong. Try again.";
+      searchUsed = !!data.usedWebSearch;
+    } catch (err) {
+      reply = `Connection error. Please try again.\n\nChips: 'Try again' | 'New chat' | 'Help'`;
     }
 
+    const assistantMsg = { id: assistantId, role: "assistant", content: reply, streaming: false, searchUsed };
+
     setMessages(prev => {
-      const u = [...prev];
-      const idx = u.findIndex(m => m.id === streamId);
-      if (idx !== -1) u[idx] = { ...u[idx], content: fullText, streaming: false, searchUsed: searchUsedFlag };
-      const final = [...u];
-      const first = final.find(m => m.role === "user");
-      if (first) saveToHistory(first.content, final, userType);
-      return final;
+      const updated = [...prev, assistantMsg];
+      const first   = updated.find(m => m.role === "user");
+      if (first) saveToHistory(first.content, updated, userType);
+      return updated;
     });
+
+    // Start word-by-word reveal
+    setRevealing(assistantId);
     setLoading(false);
+
+    // Stop reveal flag after a reasonable time (reveal card handles its own timing)
+    setTimeout(() => setRevealing(null), 8000);
   }, [messages, loading, userType]);
 
-  const clearChat = () => {
-    setMessages([]);
-    sessionStorage.removeItem("corex_chat");
-    sessionStorage.setItem("corex_session_id", Date.now().toString());
-  };
-
   return (
-    <div style={{ ...bgStyle, height: "100%", position: "relative" }}>
+    <div style={{ background: "#f0f0eb", height: "100%", position: "relative" }}>
 
-      {/* Messages — scrollable, padded to clear fixed input bar */}
+      {/* Messages scrollable area */}
       <div className="scroll-area" style={{ height: "100%", overflowY: "auto", paddingBottom: 140 }}>
         {messages.length === 0 ? (
           <WelcomeScreen userType={userType} userName={userName} onChip={chip => sendMessage(chip, [])}/>
@@ -324,28 +290,46 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
           <div style={{ maxWidth: 720, margin: "0 auto", padding: "24px 24px 0", display: "flex", flexDirection: "column" }}>
             <AnimatePresence>
               {messages.map(msg =>
-                msg.streaming
-                  ? <StreamingCard key={msg.id} message={msg} userType={userType}/>
+                msg.role === "assistant" && msg.id === revealing
+                  ? <RevealCard key={msg.id} message={msg} userType={userType}/>
                   : <ResponseCard
                       key={msg.id}
                       message={msg}
                       userType={userType}
                       onChip={chip => sendMessage(chip, [])}
                       onRegenerate={() => {
-                        const prev = messages.slice(0, -1);
+                        const prev = messages.slice(0, messages.findIndex(m => m.id === msg.id));
                         const last = [...prev].reverse().find(m => m.role === "user");
-                        if (last) { setMessages(prev.filter(m => m.id !== msg.id)); setTimeout(() => sendMessage(last.content, []), 50); }
+                        if (last) { setMessages(prev); setTimeout(() => sendMessage(last.content, []), 50); }
                       }}
                     />
               )}
             </AnimatePresence>
-            {limitHit && <LimitBanner onUpgrade={onUpgrade} isCreator={isCreator} />}
+
+            {/* Loading dots while waiting for API */}
+            {loading && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ marginBottom: 28 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase", color: "#1a7a3c", fontFamily: "var(--font-body)" }}>COREX</span>
+                </div>
+                <div style={{ display: "flex", gap: 4 }}>
+                  {[0, 1, 2].map(i => (
+                    <motion.div key={i}
+                      animate={{ opacity: [0.3, 1, 0.3], y: [0, -3, 0] }}
+                      transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
+                      style={{ width: 6, height: 6, borderRadius: "50%", background: "#1a7a3c" }}/>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {limitHit && !loading && <LimitBanner onUpgrade={onUpgrade}/>}
             <div ref={bottomRef}/>
           </div>
         )}
       </div>
 
-      {/* Fixed bottom input bar */}
+      {/* Fixed bottom input */}
       <ChatInput onSend={sendMessage} disabled={loading || limitHit} userType={userType}/>
     </div>
   );

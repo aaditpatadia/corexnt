@@ -6,22 +6,47 @@
    CSS Design Tokens
 ───────────────────────────────────────────── */
 :root {
-  /* App (green) */
-  --bg-base:        #050a06;
-  --bg-surface:     rgba(10, 20, 12, 0.8);
-  --bg-card:        rgba(20, 40, 24, 0.6);
+  /* ── v6 Design tokens ── */
+  --bg:             #f0f0eb;
+  --bg-card:        #ffffff;
+  --bg-dark-card:   #1a1a1a;
+  --bg-input:       #ffffff;
+  --green:          #1a7a3c;
+  --green-light:    #2dd668;
+  --green-pale:     #e8f5ee;
+  --green-border:   #c8e6d4;
+  --text-primary:   #1a1a1a;
+  --text-secondary: #555555;
+  --text-muted:     #888888;
+  --border:         #e8e8e3;
+  --shadow:         0 2px 12px rgba(0,0,0,0.06);
+  --shadow-hover:   0 8px 32px rgba(0,0,0,0.10);
+  --radius-sm:      10px;
+  --radius-md:      16px;
+  --radius-lg:      20px;
+  --radius-xl:      28px;
+  --radius-pill:    100px;
+
+  /* ── Chart palette ── */
+  --chart-1: #f97316;
+  --chart-2: #14b8a6;
+  --chart-3: #eab308;
+  --chart-4: #6366f1;
+  --chart-5: #ec4899;
+  --chart-6: #1a7a3c;
+
+  /* ── App shell (kept for AppShell bg var) ── */
+  --bg-base:        #f0f0eb;
+  --bg-surface:     rgba(240,240,235,0.8);
   --green-primary:  #1a7a3c;
   --green-accent:   #2dd668;
-  --green-glow:     rgba(45, 214, 104, 0.15);
-  --green-border:   rgba(45, 214, 104, 0.2);
-  --text-primary:   #f0faf2;
-  --text-secondary: rgba(240, 250, 242, 0.6);
-  --text-muted:     rgba(240, 250, 242, 0.35);
+  --green-glow:     rgba(26,122,60,0.12);
 
-  /* Typography */
-  --font-display: 'Playfair Display', serif;
+  /* ── Typography ── */
+  --font-display: 'Instrument Serif', serif;
+  --font-heading: 'Playfair Display', serif;
+  --font-body:    'DM Sans', 'Neue Montreal', 'Inter', system-ui, sans-serif;
   --font-serif:   'Instrument Serif', serif;
-  --font-body:    'Neue Montreal', 'Inter', system-ui, sans-serif;
 
   /* Main landing (black/white) */
   --main-bg:     #080808;
@@ -55,11 +80,11 @@
   html { scroll-behavior: smooth; }
 
   body {
-    background-color: var(--bg-base);
+    background-color: var(--bg);
     color: var(--text-primary);
     font-family: var(--font-body);
     font-size: 16px;
-    line-height: 1.8;
+    line-height: 1.7;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
@@ -72,9 +97,9 @@
 
   ::-webkit-scrollbar       { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(45,214,104,0.3); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb { background: var(--green-border); border-radius: 99px; }
 
-  ::selection { background: rgba(45,214,104,0.3); color: #f0faf2; }
+  ::selection { background: var(--green-pale); color: var(--green); }
 }
 
 /* ─────────────────────────────────────────────
@@ -84,8 +109,62 @@
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.fade-up {
-  animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+
+.fade-up  { animation: fadeUp  0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.slide-in { animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+.delay-1 { animation-delay: 0.05s; }
+.delay-2 { animation-delay: 0.10s; }
+.delay-3 { animation-delay: 0.15s; }
+.delay-4 { animation-delay: 0.20s; }
+
+/* ── v6 Card system ── */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+}
+.card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+.dark-card {
+  background: var(--bg-dark-card);
+  border-radius: var(--radius-lg);
+  color: #ffffff;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.dark-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--green), var(--green-light));
+}
+
+/* ── Loading skeleton ── */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0eb 25%, #e8e8e3 50%, #f0f0eb 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
 }
 
 /* ─────────────────────────────────────────────

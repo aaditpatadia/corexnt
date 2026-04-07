@@ -123,25 +123,14 @@ GRAPH_DATA: {"labels":[...],"values":[...],"title":"..."} (include whenever rele
 
 Chips: 'most relevant follow-up 1' | 'most relevant follow-up 2' | 'most relevant follow-up 3'` + SHARED_RULES;
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-const SEARCH_KEYWORDS = /trending|viral|current|latest|recent|today|this week|this month|benchmark|competitor|follower count|engagement rate|market data|statistics|pricing|campaign result|right now|2024|2025/i;
-
-async function webSearch(query) {
-  const key = process.env.TAVILY_API_KEY;
-  if (!key) return null;
-  try {
-    const res = await fetch('https://api.tavily.com/search', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ api_key: key, query, search_depth: 'basic', max_results: 3, include_answer: true }),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    const results = (data.results || []).map(r => `- ${r.title}: ${(r.content || '').slice(0, 180)}`).join('\n');
-    const answer = data.answer ? `Summary: ${data.answer}\n\n` : '';
-    return `${answer}Sources:\n${results}`;
-  } catch { return null; }
-}
+// ─── Engine mode addons ───────────────────────────────────────────────────────
+const ENGINE_ADDONS = {
+  Narrative: "\n\nActive mode — Narrative: Focus on brand story, positioning and emotional resonance.",
+  Content:   "\n\nActive mode — Content: Focus on content strategy, formats, hooks and distribution.",
+  Growth:    "\n\nActive mode — Growth: Focus on growth tactics, acquisition channels and retention.",
+  Trend:     "\n\nActive mode — Trend: Focus on what is trending RIGHT NOW — viral formats and cultural moments.",
+  Creator:   "\n\nActive mode — Creator: Focus on short-form video, brand deals, audience building.",
+};
 
 export default async function handler(req, res) {
   // ── CORS ─────────────────────────────────────────────────────────────────────
@@ -159,47 +148,20 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Message is required" });
     }
 
-    // ── Web search (Tavily) ───────────────────────────────────────────────────
-    const query = lastUser?.content || "";
-    let searchContext = "";
-    let searchUsed = false;
-
-    if (SEARCH_KEYWORDS.test(query)) {
-      const results = await webSearch(query);
-      if (results) {
-        searchContext = `\n\nReal-time web search results for this query:\n${results}\n\nUse this current data naturally in your response. Say things like "Looking at current data..." or "As of now..." — never say you searched.`;
-        searchUsed = true;
-      }
-    }
-
     // ── Select and build system prompt ────────────────────────────────────────
     let basePrompt = userType === "company" ? BRAND_PROMPT : CREATOR_PROMPT;
 
-    const ENGINE_ADDONS = {
-      Narrative: "\n\nActive mode — Narrative: Focus on brand story, positioning and emotional resonance.",
-      Content:   "\n\nActive mode — Content: Focus on content strategy, formats, hooks and distribution.",
-      Growth:    "\n\nActive mode — Growth: Focus on growth tactics, acquisition channels and retention.",
-      Trend:     "\n\nActive mode — Trend: Focus on what is trending RIGHT NOW — viral formats and cultural moments.",
-      Creator:   "\n\nActive mode — Creator: Focus on short-form video, brand deals, audience building.",
-    };
     if (engineMode && ENGINE_ADDONS[engineMode]) {
       basePrompt += ENGINE_ADDONS[engineMode];
     }
 
-    // ── Inject profile context ────────────────────────────────────────────────
     if (profileContext) {
       basePrompt += `\n\n${profileContext}`;
     }
 
-    // ── Inject search results ─────────────────────────────────────────────────
-    if (searchContext) {
-      basePrompt += searchContext;
-    }
-
     // ── File intelligence context ─────────────────────────────────────────────
     const hasImages = Array.isArray(files) && files.some(f => f.type?.startsWith("image/"));
-    const hasPDF    = Array.isArray(files) && files.some(f => f.type === "application/pdf");
-    const hasFiles  = hasImages || hasPDF || (files?.length > 0);
+    const hasFiles  = Array.isArray(files) && files.length > 0;
 
     if (hasFiles) {
       basePrompt += `\n\nThe user has shared ${files.length} file(s). CRITICAL INSTRUCTIONS for file analysis:
@@ -212,28 +174,24 @@ export default async function handler(req, res) {
 - Compare what you see to industry best practices`;
     }
 
-    // ── Model selection ───────────────────────────────────────────────────────
-    const model = hasImages ? "gpt-4o" : "gpt-4o-mini";
-
-    // ── Build conversation history ────────────────────────────────────────────
+    // ── Build conversation input ──────────────────────────────────────────────
     const historyMessages = messages.slice(0, -1).map(m => ({
       role:    m.role === "assistant" ? "assistant" : "user",
       content: m.content || "",
     }));
 
-    // ── Build last user message (may include images) ──────────────────────────
     const lastUserMsg = messages[messages.length - 1];
     let userContent;
     if (hasImages) {
       userContent = [];
       if (lastUserMsg?.content?.trim()) {
-        userContent.push({ type: "text", text: lastUserMsg.content });
+        userContent.push({ type: "input_text", text: lastUserMsg.content });
       }
       for (const f of files) {
         if (f.type?.startsWith("image/") && f.b64) {
-          userContent.push({ type: "image_url", image_url: { url: `data:${f.type};base64,${f.b64}`, detail: "auto" } });
+          userContent.push({ type: "input_image", image_url: `data:${f.type};base64,${f.b64}`, detail: "auto" });
         } else if (f.b64) {
-          userContent.push({ type: "text", text: `[Attached file: ${f.name}]` });
+          userContent.push({ type: "input_text", text: `[Attached file: ${f.name}]` });
         }
       }
     } else {
@@ -243,23 +201,26 @@ export default async function handler(req, res) {
       userContent = (lastUserMsg?.content || "") + fileNote;
     }
 
-    // ── Call OpenAI with streaming ────────────────────────────────────────────
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+    // ── Call OpenAI Responses API with web_search_preview ────────────────────
+    const inputMessages = [
+      ...historyMessages,
+      { role: "user", content: userContent },
+    ];
+
+    const openaiRes = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
         "Content-Type":  "application/json",
         "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: basePrompt },
-          ...historyMessages,
-          { role: "user", content: userContent },
-        ],
+        model:       hasImages ? "gpt-4o" : "gpt-4o-mini",
+        instructions: basePrompt,
+        tools:       [{ type: "web_search_preview", search_context_size: "medium" }],
+        tool_choice: "auto",
+        input:       inputMessages,
         temperature: 0.8,
-        max_tokens:  2000,
-        stream:      true,
+        max_output_tokens: 2000,
       }),
     });
 
@@ -267,66 +228,32 @@ export default async function handler(req, res) {
       const errJson = await openaiRes.json().catch(() => ({}));
       const msg     = errJson?.error?.message || "OpenAI error";
       if (openaiRes.status === 429) {
-        res.setHeader("Content-Type", "text/event-stream");
-        res.setHeader("Cache-Control",   "no-cache");
-        res.setHeader("Connection",      "keep-alive");
-        const fallback = "Rate limit hit — give it a moment and try again.\n\nChips: 'Try again' | 'Change topic' | 'Growth strategy'";
-        res.write(`data: ${JSON.stringify({ delta: fallback })}\n\n`);
-        res.write("data: [DONE]\n\n");
-        return res.end();
+        return res.status(429).json({ error: "Rate limit — please wait a moment and try again." });
       }
       return res.status(500).json({ error: msg });
     }
 
-    // ── Stream SSE to client ──────────────────────────────────────────────────
-    res.setHeader("Content-Type",      "text/event-stream");
-    res.setHeader("Cache-Control",     "no-cache");
-    res.setHeader("Connection",        "keep-alive");
-    res.setHeader("X-Accel-Buffering", "no");
+    const data = await openaiRes.json();
 
-    // Emit meta event first if search was used
-    if (searchUsed) {
-      res.write(`data: ${JSON.stringify({ meta: { searchUsed: true } })}\n\n`);
+    // ── Extract reply text and search flag ───────────────────────────────────
+    const outputItems = data.output || [];
+    const reply = outputItems
+      .filter(item => item.type === "message")
+      .flatMap(item => Array.isArray(item.content) ? item.content : [])
+      .filter(c => c.type === "output_text")
+      .map(c => c.text)
+      .join("");
+
+    const usedWebSearch = outputItems.some(item => item.type === "web_search_call");
+
+    if (!reply) {
+      return res.status(500).json({ error: "No response generated. Try again." });
     }
 
-    const reader  = openaiRes.body.getReader();
-    const decoder = new TextDecoder();
-    let   buffer  = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() ?? "";
-
-      for (const line of lines) {
-        if (!line.startsWith("data: ")) continue;
-        const raw = line.slice(6).trim();
-        if (raw === "[DONE]") {
-          res.write("data: [DONE]\n\n");
-          res.end();
-          return;
-        }
-        try {
-          const parsed = JSON.parse(raw);
-          const delta  = parsed.choices?.[0]?.delta?.content;
-          if (delta) res.write(`data: ${JSON.stringify({ delta })}\n\n`);
-        } catch { /* skip malformed chunk */ }
-      }
-    }
-
-    res.write("data: [DONE]\n\n");
-    res.end();
+    return res.status(200).json({ reply, usedWebSearch });
 
   } catch (err) {
     console.error("COREX API error:", err);
-    if (!res.headersSent) {
-      return res.status(500).json({ error: err.message || "Internal server error" });
-    }
-    res.write(`data: ${JSON.stringify({ delta: "\n\nSomething went wrong. Try again.\n\nChips: 'Try again' | 'New chat' | 'Help'" })}\n\n`);
-    res.write("data: [DONE]\n\n");
-    res.end();
+    return res.status(500).json({ error: err.message || "Internal server error" });
   }
 }

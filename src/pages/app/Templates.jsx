@@ -102,7 +102,7 @@ export default function Templates() {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
             Templates
           </div>
-          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"var(--font-body)", color:"#f0faf2" }}>
+          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"var(--font-body)", color:"#1a1a1a" }}>
             Ready-to-use prompts
           </h1>
           <p className="text-sm" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>
@@ -125,7 +125,7 @@ export default function Templates() {
                 onClick={() => useTemplate(t)}
                 className="text-left rounded-2xl p-5 transition-all duration-200 group"
                 style={{
-                  background:"rgba(14,28,16,0.7)",
+                  background:"#ffffff",
                   border:"1px solid rgba(45,214,104,0.13)",
                   cursor:"pointer",
                 }}
@@ -135,7 +135,7 @@ export default function Templates() {
                 {/* Top row */}
                 <div className="flex items-start justify-between mb-3">
                   <div className="w-11 h-11 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-                    style={{ background:"rgba(45,214,104,0.07)", border:"1px solid rgba(45,214,104,0.15)" }}>
+                    style={{ background:"rgba(45,214,104,0.07)", border:"1px solid #e8e8e3" }}>
                     {t.emoji}
                   </div>
                   <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
@@ -144,7 +144,7 @@ export default function Templates() {
                   </span>
                 </div>
 
-                <h3 className="text-sm font-bold mb-1.5 leading-snug" style={{ color:"#f0faf2", fontFamily:"var(--font-body)" }}>
+                <h3 className="text-sm font-bold mb-1.5 leading-snug" style={{ color:"#1a1a1a", fontFamily:"var(--font-body)" }}>
                   {t.title}
                 </h3>
                 <p className="text-xs leading-relaxed" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>

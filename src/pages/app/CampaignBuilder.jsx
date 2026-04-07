@@ -7,8 +7,8 @@ const TIMELINES = ["30 days","60 days","90 days","6 months"];
 const PLATFORMS = ["Instagram","Facebook","YouTube","Google Ads","TikTok","LinkedIn","Email","Influencer","OOH / Print"];
 
 const fieldStyle = {
-  background:"rgba(20,40,24,0.6)", border:"1px solid rgba(45,214,104,0.18)",
-  color:"#f0faf2", borderRadius:12, fontFamily:"var(--font-body)",
+  background:"#ffffff", border:"1px solid #e8e8e3",
+  color:"#1a1a1a", borderRadius:12, fontFamily:"var(--font-body)",
   fontSize:14, outline:"none", width:"100%", padding:"10px 14px",
 };
 
@@ -60,13 +60,6 @@ Give me:
         body:JSON.stringify({ messages:[{role:"user",content:prompt}], userType:"company", engineMode:"Narrative" }) });
       const ct = res.headers.get("Content-Type")||"";
       let full = "";
-      if (ct.includes("text/event-stream")) {
-        const reader=res.body.getReader(); const dec=new TextDecoder(); let buf="";
-        while(true){ const {done,value}=await reader.read(); if(done)break; buf+=dec.decode(value,{stream:true});
-          const lines=buf.split("\n"); buf=lines.pop()??"";
-          for(const l of lines){ if(!l.startsWith("data: "))continue; const raw=l.slice(6).trim();
-            if(raw==="[DONE]")break; try{const p=JSON.parse(raw);if(p.delta)full+=p.delta;}catch{} } }
-      } else { const d=await res.json(); full=d.reply||""; }
       setResult({ id:Date.now(), role:"assistant", content:full });
     } catch { setResult({ id:Date.now(), role:"assistant", content:"Something went wrong. Try again.\n\nChips: 'Try again' | 'Adjust budget' | 'Change goal'" }); }
     setLoading(false);
@@ -81,7 +74,7 @@ Give me:
             style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:"#2dd668", fontFamily:"var(--font-body)" }}>
             🚀 Campaign Builder
           </div>
-          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"var(--font-body)", color:"#f0faf2" }}>Build your campaign</h1>
+          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"var(--font-body)", color:"#1a1a1a" }}>Build your campaign</h1>
           <p className="text-sm" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>
             Fill in the brief and get a complete campaign strategy with budget split.
           </p>
@@ -107,7 +100,7 @@ Give me:
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5" style={{ color:"rgba(45,214,104,0.7)", fontFamily:"var(--font-body)" }}>Campaign Goal</label>
+              <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5" style={{ color:"#1a7a3c", fontFamily:"var(--font-body)" }}>Campaign Goal</label>
               <select value={form.goal} onChange={e=>set("goal",e.target.value)} style={fieldStyle}>
                 {GOALS.map(g=><option key={g}>{g}</option>)}
               </select>
@@ -123,7 +116,7 @@ Give me:
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5" style={{ color:"rgba(45,214,104,0.7)", fontFamily:"var(--font-body)" }}>Timeline</label>
+            <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5" style={{ color:"#1a7a3c", fontFamily:"var(--font-body)" }}>Timeline</label>
             <div className="flex gap-2 flex-wrap">
               {TIMELINES.map(t=>(
                 <button key={t} onClick={()=>set("timeline",t)}

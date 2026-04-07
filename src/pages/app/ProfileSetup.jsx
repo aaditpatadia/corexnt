@@ -114,7 +114,7 @@ export default function ProfileSetup({ userType, userName }) {
             Step {step + 1} of {steps.length}
           </span>
           <button onClick={() => { localStorage.setItem("corex_skip_profile", "true"); navigate("/app/dashboard", { replace: true }); }}
-            style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-body)", background: "none", border: "none", cursor: "none" }}
+            style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-body)", background: "none", border: "none", cursor: "pointer" }}
             onMouseEnter={e => e.currentTarget.style.color = "rgba(255,255,255,0.6)"}
             onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.3)"}>
             Skip all →
@@ -156,7 +156,7 @@ export default function ProfileSetup({ userType, userName }) {
                     background: answers[current.key] === opt ? `${accentRgba}0.12)` : "rgba(255,255,255,0.04)",
                     border: answers[current.key] === opt ? `1px solid ${accentRgba}0.4)` : "1px solid rgba(255,255,255,0.08)",
                     color: answers[current.key] === opt ? accent : "rgba(255,255,255,0.7)",
-                    cursor: "none", transition: "all 0.18s ease",
+                    cursor: "pointer", transition: "all 0.18s ease",
                   }}
                   onMouseEnter={e => { e.currentTarget.style.background = `${accentRgba}0.07)`; e.currentTarget.style.color = "#f0faf2"; }}
                   onMouseLeave={e => {
@@ -195,7 +195,7 @@ export default function ProfileSetup({ userType, userName }) {
                   style={{
                     flex: 1, padding: "13px 20px", borderRadius: 12, fontSize: 14, fontWeight: 700,
                     background: `linear-gradient(135deg, ${isCreator ? "#1a7a3c,#2dd668" : "#7c3aed,#a78bfa"})`,
-                    color: isCreator ? "#050a06" : "#fff", border: "none", cursor: "none", fontFamily: "var(--font-body)",
+                    color: isCreator ? "#050a06" : "#fff", border: "none", cursor: "pointer", fontFamily: "var(--font-body)",
                   }}>
                   Continue →
                 </motion.button>
@@ -203,7 +203,7 @@ export default function ProfileSetup({ userType, userName }) {
                   style={{
                     padding: "13px 16px", borderRadius: 12, fontSize: 13, fontFamily: "var(--font-body)",
                     background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                    color: "rgba(255,255,255,0.4)", cursor: "none",
+                    color: "rgba(255,255,255,0.4)", cursor: "pointer",
                   }}
                   onMouseEnter={e => e.currentTarget.style.color = "rgba(255,255,255,0.7)"}
                   onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.4)"}>
@@ -216,7 +216,7 @@ export default function ProfileSetup({ userType, userName }) {
           {/* Skip for option questions */}
           {!current.isText && (
             <button onClick={handleSkip}
-              style={{ marginTop: 20, fontSize: 13, color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-body)", background: "none", border: "none", cursor: "none" }}
+              style={{ marginTop: 20, fontSize: 13, color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-body)", background: "none", border: "none", cursor: "pointer" }}
               onMouseEnter={e => e.currentTarget.style.color = "rgba(255,255,255,0.6)"}
               onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.3)"}>
               Skip for now →

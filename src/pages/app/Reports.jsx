@@ -26,16 +26,16 @@ function ReportCard({ report, onDelete, onView }) {
       animate={{ opacity:1, y:0 }}
       exit={{ opacity:0, scale:0.96 }}
       className="rounded-2xl p-5 transition-all duration-200"
-      style={{ background:"rgba(14,28,16,0.7)", border:"1px solid rgba(45,214,104,0.15)" }}
+      style={{ background:"#ffffff", border:"1px solid #e8e8e3" }}
       onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(45,214,104,0.3)"}
       onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(45,214,104,0.15)"}>
 
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color:"rgba(45,214,104,0.6)", fontFamily:"var(--font-body)" }}>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color:"#1a7a3c", fontFamily:"var(--font-body)" }}>
             {timeAgo(report.savedAt)}
           </p>
-          <h3 className="text-sm font-bold leading-snug" style={{ color:"#f0faf2", fontFamily:"var(--font-body)" }}>
+          <h3 className="text-sm font-bold leading-snug" style={{ color:"#1a1a1a", fontFamily:"var(--font-body)" }}>
             {report.title || "COREX Response"}
           </h3>
         </div>
@@ -79,10 +79,10 @@ function ReportModal({ report, onClose }) {
           onClick={e=>e.stopPropagation()}>
           <div className="flex items-start justify-between mb-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color:"rgba(45,214,104,0.6)", fontFamily:"var(--font-body)" }}>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color:"#1a7a3c", fontFamily:"var(--font-body)" }}>
                 Saved report · {timeAgo(report.savedAt)}
               </p>
-              <h2 className="text-lg font-bold" style={{ color:"#f0faf2", fontFamily:"var(--font-body)" }}>{report.title || "COREX Response"}</h2>
+              <h2 className="text-lg font-bold" style={{ color:"#1a1a1a", fontFamily:"var(--font-body)" }}>{report.title || "COREX Response"}</h2>
             </div>
             <button onClick={onClose} className="text-xl leading-none ml-4 flex-shrink-0" style={{ color:"rgba(240,250,242,0.4)" }}>✕</button>
           </div>
@@ -141,7 +141,7 @@ export default function Reports() {
               </button>
             )}
           </div>
-          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"var(--font-body)", color:"#f0faf2" }}>Saved reports</h1>
+          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"var(--font-body)", color:"#1a1a1a" }}>Saved reports</h1>
           <p className="text-sm" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>
             All your bookmarked COREX responses in one place.
           </p>
@@ -150,7 +150,7 @@ export default function Reports() {
         {reports.length === 0 ? (
           <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} className="text-center py-20">
             <div className="text-5xl mb-4">📭</div>
-            <p className="text-base font-semibold mb-2" style={{ color:"#f0faf2", fontFamily:"var(--font-body)" }}>No saved reports yet</p>
+            <p className="text-base font-semibold mb-2" style={{ color:"#1a1a1a", fontFamily:"var(--font-body)" }}>No saved reports yet</p>
             <p className="text-sm" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>
               Bookmark any COREX response by clicking the save icon on the response card.
             </p>

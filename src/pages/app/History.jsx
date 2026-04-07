@@ -71,7 +71,7 @@ export default function History() {
             History
           </div>
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold" style={{ fontFamily:"var(--font-body)", color:"#f0faf2" }}>
+            <h1 className="text-3xl font-bold" style={{ fontFamily:"var(--font-body)", color:"#1a1a1a" }}>
               Past conversations
             </h1>
             {history.length > 0 && (
@@ -95,8 +95,8 @@ export default function History() {
               value={search}
               onChange={e=>setSearch(e.target.value)}
               style={{
-                background:"rgba(20,40,24,0.6)", border:"1px solid rgba(45,214,104,0.18)",
-                color:"#f0faf2", borderRadius:12, fontFamily:"var(--font-body)", fontSize:14,
+                background:"#ffffff", border:"1px solid #e8e8e3",
+                color:"#1a1a1a", borderRadius:12, fontFamily:"var(--font-body)", fontSize:14,
                 outline:"none", width:"100%", padding:"10px 14px",
               }}
               onFocus={e=>e.target.style.borderColor="rgba(45,214,104,0.5)"}
@@ -153,7 +153,7 @@ export default function History() {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <p className="text-sm font-semibold truncate" style={{ color:"#f0faf2", fontFamily:"var(--font-body)" }}>
+                    <p className="text-sm font-semibold truncate" style={{ color:"#1a1a1a", fontFamily:"var(--font-body)" }}>
                       {entry.title}
                     </p>
                     <span className="text-xs flex-shrink-0" style={{ color:"var(--text-muted)", fontFamily:"var(--font-body)" }}>
@@ -205,7 +205,7 @@ export default function History() {
                 onClick={e=>e.stopPropagation()}
                 className="rounded-2xl p-6 max-w-sm w-full"
                 style={{ background:"rgba(14,28,16,0.98)", border:"1px solid rgba(45,214,104,0.2)" }}>
-                <h3 className="text-base font-bold mb-2" style={{ color:"#f0faf2", fontFamily:"var(--font-body)" }}>
+                <h3 className="text-base font-bold mb-2" style={{ color:"#1a1a1a", fontFamily:"var(--font-body)" }}>
                   {confirm === "all" ? "Clear all history?" : "Delete this conversation?"}
                 </h3>
                 <p className="text-sm mb-6" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>

@@ -6,6 +6,7 @@ import {
   BarElement, LineElement, PointElement, Tooltip, Filler, Legend,
 } from "chart.js";
 import { parseResponse, shouldShowChart, stripMarkdown } from "../utils/parseResponse";
+import { generateResponsePDF } from "../utils/generatePDF";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip, Filler, Legend);
 
@@ -120,9 +121,10 @@ function UserBubble({ message }) {
 export default function ResponseCard({ message, onChip, onRegenerate, userType = "creator" }) {
   const { role, searchUsed } = message;
 
-  const [copied,  setCopied]  = useState(false);
-  const [saved,   setSaved]   = useState(false);
-  const [hovered, setHovered] = useState(false);
+  const [copied,    setCopied]    = useState(false);
+  const [saved,     setSaved]     = useState(false);
+  const [hovered,   setHovered]   = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   if (role === "user") return <UserBubble message={message}/>;
 
@@ -254,12 +256,12 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
         </div>
       )}
 
-      {/* Copy / Redo / Save */}
+      {/* Copy / Redo / Save / PDF */}
       <AnimatePresence>
         {hovered && !message.streaming && (
           <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
             transition={{ duration:0.12 }}
-            style={{ display:"flex", gap:16, marginTop:12 }}>
+            style={{ display:"flex", gap:16, marginTop:12, flexWrap:"wrap", alignItems:"center" }}>
             {[
               { label:copied?"Copied ✓":"Copy",   onClick:copy },
               { label:"Regenerate",               onClick:onRegenerate },
@@ -272,6 +274,20 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
                 {label}
               </button>
             ))}
+            <button
+              onClick={async () => {
+                setPdfLoading(true);
+                try {
+                  generateResponsePDF({ title, body: bodyText, actionSteps: steps, realExample: example });
+                } finally {
+                  setPdfLoading(false);
+                }
+              }}
+              style={{ fontSize:13, fontFamily:"var(--font-body)", color:"#aaaaaa", background:"transparent", border:"none", cursor:"pointer", transition:"color 0.15s", display:"flex", alignItems:"center", gap:5, padding:0 }}
+              onMouseEnter={e=>e.currentTarget.style.color="#1a7a3c"}
+              onMouseLeave={e=>e.currentTarget.style.color="#aaaaaa"}>
+              {pdfLoading ? "Generating…" : "Download PDF"}
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

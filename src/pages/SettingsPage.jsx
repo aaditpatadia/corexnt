@@ -21,7 +21,7 @@ function SelectPill({ options, value, onChange, accent, accentRgba }) {
             padding: "7px 14px", borderRadius: 20, fontSize: 13, fontFamily: "var(--font-body)",
             background: value === opt ? `${accentRgba}0.12)` : "rgba(255,255,255,0.04)",
             border: value === opt ? `1px solid ${accentRgba}0.4)` : "1px solid rgba(255,255,255,0.08)",
-            color: value === opt ? accent : "rgba(255,255,255,0.6)", cursor: "none", transition: "all 0.18s ease",
+            color: value === opt ? accent : "rgba(255,255,255,0.6)", cursor: "pointer", transition: "all 0.18s ease",
           }}
           onMouseEnter={e => { e.currentTarget.style.color = "#f0faf2"; }}
           onMouseLeave={e => { e.currentTarget.style.color = value === opt ? accent : "rgba(255,255,255,0.6)"; }}>
@@ -67,7 +67,7 @@ function ToggleRow({ label, active, onClick, accent, accentRgba }) {
         display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 12, width: "100%",
         maxWidth: 400, textAlign: "left", background: active ? `${accentRgba}0.06)` : "rgba(255,255,255,0.03)",
         border: active ? `1px solid ${accentRgba}0.25)` : "1px solid rgba(255,255,255,0.06)",
-        cursor: "none", transition: "all 0.18s ease", marginBottom: 8,
+        cursor: "pointer", transition: "all 0.18s ease", marginBottom: 8,
       }}>
       <div style={{
         width: 18, height: 18, borderRadius: 6, border: active ? "none" : "1.5px solid rgba(255,255,255,0.2)",
@@ -149,7 +149,7 @@ export default function SettingsPage({ userType }) {
           <button key={s} onClick={() => setActiveSection(s)}
             style={{
               display: "block", width: "calc(100% - 8px)", padding: "10px 12px", borderRadius: 10, textAlign: "left",
-              fontSize: 14, fontFamily: "var(--font-body)", cursor: "none", transition: "all 0.18s ease", marginBottom: 4,
+              fontSize: 14, fontFamily: "var(--font-body)", cursor: "pointer", transition: "all 0.18s ease", marginBottom: 4,
               background: activeSection === s ? `${accentRgba}0.08)` : "transparent",
               color: activeSection === s ? accent : "rgba(255,255,255,0.5)",
               fontWeight: activeSection === s ? 600 : 400,
@@ -219,7 +219,7 @@ export default function SettingsPage({ userType }) {
                     marginTop: 8, padding: "12px 28px", borderRadius: 12, fontSize: 14, fontWeight: 700,
                     background: saved ? "rgba(45,214,104,0.15)" : `linear-gradient(135deg, ${isCreator ? "#1a7a3c,#2dd668" : "#7c3aed,#a78bfa"})`,
                     color: saved ? "#2dd668" : (isCreator ? "#050a06" : "#fff"), border: saved ? "1px solid rgba(45,214,104,0.3)" : "none",
-                    cursor: "none", fontFamily: "var(--font-body)", transition: "all 0.2s ease",
+                    cursor: "pointer", fontFamily: "var(--font-body)", transition: "all 0.2s ease",
                   }}>
                   {saved ? "Saved ✓" : "Save changes"}
                 </motion.button>
@@ -250,7 +250,7 @@ export default function SettingsPage({ userType }) {
                     marginTop: 8, padding: "12px 28px", borderRadius: 12, fontSize: 14, fontWeight: 700,
                     background: saved ? "rgba(45,214,104,0.15)" : `linear-gradient(135deg, ${isCreator ? "#1a7a3c,#2dd668" : "#7c3aed,#a78bfa"})`,
                     color: saved ? "#2dd668" : (isCreator ? "#050a06" : "#fff"), border: saved ? "1px solid rgba(45,214,104,0.3)" : "none",
-                    cursor: "none", fontFamily: "var(--font-body)", transition: "all 0.2s ease",
+                    cursor: "pointer", fontFamily: "var(--font-body)", transition: "all 0.2s ease",
                   }}>
                   {saved ? "Saved ✓" : "Save preferences"}
                 </motion.button>
@@ -271,19 +271,19 @@ export default function SettingsPage({ userType }) {
                   </div>
                   <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-body)", marginTop: 6 }}>15 messages per day</p>
                   <motion.button onClick={() => navigate("/app/payment")} whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}
-                    style={{ marginTop: 14, padding: "10px 20px", borderRadius: 10, fontSize: 13, fontWeight: 700, background: `linear-gradient(135deg, ${isCreator ? "#1a7a3c,#2dd668" : "#7c3aed,#a78bfa"})`, color: isCreator ? "#050a06" : "#fff", border: "none", cursor: "none", fontFamily: "var(--font-body)" }}>
+                    style={{ marginTop: 14, padding: "10px 20px", borderRadius: 10, fontSize: 13, fontWeight: 700, background: `linear-gradient(135deg, ${isCreator ? "#1a7a3c,#2dd668" : "#7c3aed,#a78bfa"})`, color: isCreator ? "#050a06" : "#fff", border: "none", cursor: "pointer", fontFamily: "var(--font-body)" }}>
                     Upgrade plan →
                   </motion.button>
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 400 }}>
                   <button onClick={handleSignOut}
-                    style={{ padding: "12px 20px", borderRadius: 12, fontSize: 14, fontFamily: "var(--font-body)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)", cursor: "none", textAlign: "left" }}
+                    style={{ padding: "12px 20px", borderRadius: 12, fontSize: 14, fontFamily: "var(--font-body)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)", cursor: "pointer", textAlign: "left" }}
                     onMouseEnter={e => e.currentTarget.style.color = "#f0faf2"} onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.6)"}>
                     🚪 Sign out
                   </button>
                   <button onClick={() => setShowDelete(true)}
-                    style={{ padding: "12px 20px", borderRadius: 12, fontSize: 14, fontFamily: "var(--font-body)", background: "rgba(248,113,113,0.04)", border: "1px solid rgba(248,113,113,0.15)", color: "rgba(248,113,113,0.6)", cursor: "none", textAlign: "left" }}
+                    style={{ padding: "12px 20px", borderRadius: 12, fontSize: 14, fontFamily: "var(--font-body)", background: "rgba(248,113,113,0.04)", border: "1px solid rgba(248,113,113,0.15)", color: "rgba(248,113,113,0.6)", cursor: "pointer", textAlign: "left" }}
                     onMouseEnter={e => e.currentTarget.style.color = "#f87171"} onMouseLeave={e => e.currentTarget.style.color = "rgba(248,113,113,0.6)"}>
                     🗑 Delete account
                   </button>
@@ -306,11 +306,11 @@ export default function SettingsPage({ userType }) {
               <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-body)", marginBottom: 24, lineHeight: 1.6 }}>This will permanently delete all your conversations, profile, and settings. This cannot be undone.</p>
               <div style={{ display: "flex", gap: 12 }}>
                 <button onClick={handleDeleteAccount}
-                  style={{ flex: 1, padding: "11px 16px", borderRadius: 12, fontSize: 14, fontWeight: 700, background: "#ef4444", color: "#fff", border: "none", cursor: "none", fontFamily: "var(--font-body)" }}>
+                  style={{ flex: 1, padding: "11px 16px", borderRadius: 12, fontSize: 14, fontWeight: 700, background: "#ef4444", color: "#fff", border: "none", cursor: "pointer", fontFamily: "var(--font-body)" }}>
                   Yes, delete everything
                 </button>
                 <button onClick={() => setShowDelete(false)}
-                  style={{ padding: "11px 20px", borderRadius: 12, fontSize: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)", cursor: "none", fontFamily: "var(--font-body)" }}>
+                  style={{ padding: "11px 20px", borderRadius: 12, fontSize: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)", cursor: "pointer", fontFamily: "var(--font-body)" }}>
                   Cancel
                 </button>
               </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 const userType = () => localStorage.getItem("userType") || "creator";
@@ -10,55 +10,28 @@ async function fetchTrends(uType, signal) {
     : `Search for the top 5 trending content formats and topics this week for content creators on Instagram, YouTube, and TikTok. For each trend: what it is, why it's working, and a ready-to-use reel concept with hook.`;
 
   const res = await fetch("/api/chat", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      messages:[{ role:"user", content:prompt }],
-      userType: uType,
-      engineMode:"Trend",
-    }),
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages: [{ role: "user", content: prompt }], userType: uType, engineMode: "Trend" }),
     signal,
   });
-
   if (!res.ok) throw new Error("Failed");
-  const contentType = res.headers.get("Content-Type") || "";
-  if (contentType.includes("text/event-stream")) {
-    const reader  = res.body.getReader();
-    const decoder = new TextDecoder();
-    let   buf = "", full = "";
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream:true });
-      const lines = buf.split("\n");
-      buf = lines.pop() ?? "";
-      for (const line of lines) {
-        if (!line.startsWith("data: ")) continue;
-        const raw = line.slice(6).trim();
-        if (raw === "[DONE]") break;
-        try { const p = JSON.parse(raw); if (p.delta) full += p.delta; } catch {}
-      }
-    }
-    return full;
-  } else {
-    const d = await res.json();
-    return d.reply || "";
-  }
+  const d = await res.json();
+  return d.reply || "";
 }
 
 function parseTrends(raw) {
-  // Split on numbered items 1. 2. 3. 4. 5.
   const cleaned = raw
-    .replace(/\*\*/g,"").replace(/^#{1,6}\s*/gm,"").replace(/GRAPH_DATA:[\s\S]*$/m,"").replace(/Chips:.*$/m,"")
-    .trim();
+    .replace(/\*\*/g, "").replace(/^#{1,6}\s*/gm, "")
+    .replace(/GRAPH_DATA:[\s\S]*$/m, "").replace(/Chips:.*$/m, "").trim();
   const parts = cleaned.split(/(?=\b[1-5]\.\s)/);
   return parts
     .filter(p => /^[1-5]\.\s/.test(p.trim()))
     .map((p, i) => {
       const lines = p.trim().split("\n").filter(Boolean);
-      const title = lines[0].replace(/^[1-5]\.\s*/, "").split("\n")[0].trim();
+      const title = lines[0].replace(/^[1-5]\.\s*/, "").trim();
       const body  = lines.slice(1).join(" ").trim();
-      const EMOJIS = ["🔥","⚡","🎯","🚀","💡"];
+      const EMOJIS = ["🔥", "⚡", "🎯", "🚀", "💡"];
       return { title, body, emoji: EMOJIS[i] || "✨" };
     })
     .slice(0, 5);
@@ -67,31 +40,27 @@ function parseTrends(raw) {
 function TrendCard({ trend, i, onUse }) {
   return (
     <motion.div
-      initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }}
-      transition={{ delay: i * 0.1, ease:[0.16,1,0.3,1] }}
-      className="rounded-2xl p-5 transition-all duration-200"
-      style={{ background:"rgba(14,28,16,0.7)", border:"1px solid rgba(45,214,104,0.15)" }}
-      onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(45,214,104,0.35)"}
-      onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(45,214,104,0.15)"}>
-      <div className="flex items-start gap-3 mb-3">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
-          style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.15)" }}>
+      initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+      style={{ background: "#ffffff", border: "1px solid #e8e8e3", borderRadius: 20, padding: 20, boxShadow: "0 2px 12px rgba(0,0,0,0.05)", transition: "all 0.2s ease" }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = "#c8e6d4"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(26,122,60,0.08)"; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = "#e8e8e3"; e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.05)"; }}>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 12 }}>
+        <div style={{ width: 44, height: 44, borderRadius: 14, background: "#e8f5ee", border: "1px solid #c8e6d4", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>
           {trend.emoji}
         </div>
         <div>
-          <span className="text-xs font-semibold uppercase tracking-widest"
-            style={{ color:"rgba(45,214,104,0.6)", fontFamily:"var(--font-body)" }}>Trend {i+1}</span>
-          <h3 className="text-sm font-bold leading-snug mt-0.5"
-            style={{ color:"#f0faf2", fontFamily:"var(--font-body)" }}>{trend.title}</h3>
+          <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "1.5px", textTransform: "uppercase", color: "#1a7a3c", fontFamily: "var(--font-body)" }}>Trend {i + 1}</span>
+          <h3 style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a", fontFamily: "var(--font-body)", lineHeight: 1.35, marginTop: 3 }}>{trend.title}</h3>
         </div>
       </div>
-      <p className="text-xs leading-relaxed mb-4"
-        style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>
-        {trend.body.slice(0, 200)}{trend.body.length > 200 ? "…" : ""}
+      <p style={{ fontSize: 14, lineHeight: 1.7, color: "#555555", fontFamily: "var(--font-body)", marginBottom: 16 }}>
+        {trend.body.slice(0, 220)}{trend.body.length > 220 ? "…" : ""}
       </p>
       <button onClick={() => onUse(trend)}
-        className="px-4 py-2 rounded-xl text-xs font-semibold btn-green transition-all"
-        style={{ color:"#050a06", fontFamily:"var(--font-body)" }}>
+        style={{ padding: "8px 18px", borderRadius: 100, fontSize: 13, fontWeight: 600, background: "#1a7a3c", color: "#ffffff", border: "none", cursor: "pointer", fontFamily: "var(--font-body)", transition: "background 0.2s" }}
+        onMouseEnter={e => e.currentTarget.style.background = "#145f2f"}
+        onMouseLeave={e => e.currentTarget.style.background = "#1a7a3c"}>
         Use this trend →
       </button>
     </motion.div>
@@ -110,7 +79,7 @@ export default function TrendEngine() {
     setLoading(true); setError(""); setTrends([]);
     const controller = new AbortController();
     try {
-      const raw = await fetchTrends(ut, controller.signal);
+      const raw    = await fetchTrends(ut, controller.signal);
       setRawText(raw);
       const parsed = parseTrends(raw);
       setTrends(parsed.length > 0 ? parsed : []);
@@ -130,57 +99,48 @@ export default function TrendEngine() {
   };
 
   return (
-    <div className="h-full overflow-y-auto scroll-area">
-      <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="h-full overflow-y-auto scroll-area" style={{ background: "#f0f0eb" }}>
+      <div style={{ maxWidth: 760, margin: "0 auto", padding: "28px 24px 48px" }}>
 
         {/* Header */}
-        <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold"
-              style={{ background:"rgba(244,63,94,0.1)", border:"1px solid rgba(244,63,94,0.3)", color:"#f43f5e", fontFamily:"var(--font-body)" }}>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 28 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 100, fontSize: 12, fontWeight: 600, background: "#fff0f0", border: "1px solid rgba(244,63,94,0.3)", color: "#e11d48", fontFamily: "var(--font-body)" }}>
               🔥 Trend Engine
             </div>
             <button onClick={load} disabled={loading}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all"
-              style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:loading?"var(--text-muted)":"#2dd668", fontFamily:"var(--font-body)" }}>
-              {loading ? "Searching…" : "↻ Refresh trends"}
+              style={{ padding: "7px 16px", borderRadius: 100, fontSize: 12, fontWeight: 600, background: "#e8f5ee", border: "1px solid #c8e6d4", color: loading ? "#888888" : "#1a7a3c", cursor: loading ? "default" : "pointer", fontFamily: "var(--font-body)", transition: "all 0.2s" }}>
+              {loading ? "Searching…" : "↻ Refresh"}
             </button>
           </div>
-          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"var(--font-body)", color:"#f0faf2" }}>
-            What's trending right now
-          </h1>
-          <p className="text-sm" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>
-            Live trending content formats and topics. Click any to get an instant action plan.
-          </p>
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: 30, fontWeight: 400, color: "#1a1a1a", marginBottom: 6 }}>What's trending right now</h1>
+          <p style={{ fontSize: 14, color: "#888888", fontFamily: "var(--font-body)" }}>Live trending content formats. Click any to get an instant action plan.</p>
         </motion.div>
 
         {/* Loading */}
         {loading && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 mb-6 p-4 rounded-2xl"
-              style={{ background:"rgba(14,28,16,0.6)", border:"1px solid rgba(45,214,104,0.12)" }}>
-              <div className="flex gap-1.5">
-                {[0,1,2].map(i=>(
-                  <motion.div key={i} className="w-2 h-2 rounded-full" style={{ background:"#f43f5e" }}
-                    animate={{ y:[0,-6,0], opacity:[0.4,1,0.4] }}
-                    transition={{ duration:0.85, delay:i*0.17, repeat:Infinity }}/>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", borderRadius: 20, background: "#ffffff", border: "1px solid #e8e8e3" }}>
+              <div style={{ display: "flex", gap: 5 }}>
+                {[0,1,2].map(i => (
+                  <motion.div key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: "#f43f5e" }}
+                    animate={{ y: [0, -5, 0], opacity: [0.4, 1, 0.4] }}
+                    transition={{ duration: 0.85, delay: i * 0.17, repeat: Infinity }}/>
                 ))}
               </div>
-              <span className="text-sm" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>
-                Searching for this week's top trends…
-              </span>
+              <span style={{ fontSize: 13, color: "#555555", fontFamily: "var(--font-body)" }}>Searching for this week's top trends…</span>
             </div>
-            {[1,2,3,4,5].map(i=>(
-              <div key={i} className="rounded-2xl p-5 animate-pulse" style={{ background:"rgba(14,28,16,0.5)", height:120 }}/>
+            {[1,2,3].map(i => (
+              <div key={i} style={{ height: 120, borderRadius: 20, background: "#e8e8e3", animation: "pulse 1.5s ease-in-out infinite" }}/>
             ))}
           </div>
         )}
 
         {/* Error */}
         {error && !loading && (
-          <div className="text-center py-12">
-            <p className="text-sm mb-4" style={{ color:"rgba(240,250,242,0.6)", fontFamily:"var(--font-body)" }}>{error}</p>
-            <button onClick={load} className="px-5 py-2.5 rounded-xl text-sm font-semibold btn-green" style={{ color:"#050a06", fontFamily:"var(--font-body)" }}>
+          <div style={{ textAlign: "center", padding: "48px 0" }}>
+            <p style={{ fontSize: 14, color: "#888888", fontFamily: "var(--font-body)", marginBottom: 16 }}>{error}</p>
+            <button onClick={load} style={{ padding: "10px 24px", borderRadius: 100, fontSize: 13, fontWeight: 600, background: "#1a7a3c", color: "#ffffff", border: "none", cursor: "pointer", fontFamily: "var(--font-body)" }}>
               Try again
             </button>
           </div>
@@ -188,18 +148,16 @@ export default function TrendEngine() {
 
         {/* Trend cards */}
         {!loading && trends.length > 0 && (
-          <div className="space-y-4">
-            {trends.map((t, i) => (
-              <TrendCard key={i} trend={t} i={i} onUse={useTrend} />
-            ))}
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {trends.map((t, i) => <TrendCard key={i} trend={t} i={i} onUse={useTrend}/>)}
           </div>
         )}
 
-        {/* Fallback: show raw if no structured trends parsed */}
+        {/* Fallback raw */}
         {!loading && !error && trends.length === 0 && rawText && (
-          <div className="rounded-2xl p-5" style={{ background:"rgba(14,28,16,0.7)", border:"1px solid rgba(45,214,104,0.15)" }}>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>
-              {rawText.replace(/\*\*/g,"").replace(/^#{1,6}\s*/gm,"").trim()}
+          <div style={{ background: "#ffffff", border: "1px solid #e8e8e3", borderRadius: 20, padding: 20 }}>
+            <p style={{ fontSize: 14, lineHeight: 1.8, color: "#555555", fontFamily: "var(--font-body)", whiteSpace: "pre-wrap" }}>
+              {rawText.replace(/\*\*/g, "").replace(/^#{1,6}\s*/gm, "").trim()}
             </p>
           </div>
         )}

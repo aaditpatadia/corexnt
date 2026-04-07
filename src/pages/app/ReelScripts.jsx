@@ -7,9 +7,9 @@ const TONES     = ["Energetic","Educational","Inspirational","Funny","Controvers
 const PLATFORMS = ["Instagram Reels","YouTube Shorts","TikTok"];
 
 const fieldStyle = {
-  background:"rgba(20,40,24,0.6)",
-  border:"1px solid rgba(45,214,104,0.18)",
-  color:"#f0faf2",
+  background:"#ffffff",
+  border:"1px solid #e8e8e3",
+  color:"#1a1a1a",
   borderRadius:12,
   fontFamily:"var(--font-body)",
   fontSize:14,
@@ -22,7 +22,7 @@ function Field({ label, children }) {
   return (
     <div>
       <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5"
-        style={{ color:"rgba(45,214,104,0.7)", fontFamily:"var(--font-body)" }}>
+        style={{ color:"#1a7a3c", fontFamily:"var(--font-body)" }}>
         {label}
       </label>
       {children}
@@ -102,7 +102,7 @@ Chips: 'Make the hook stronger' | 'Write a second version' | 'Add trending audio
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M10 9L15 12L10 15V9Z" fill="currentColor" stroke="none"/></svg>
             Reel Script Engine
           </div>
-          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"var(--font-body)", color:"#f0faf2" }}>
+          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"var(--font-body)", color:"#1a1a1a" }}>
             Generate a reel script
           </h1>
           <p className="text-sm" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>

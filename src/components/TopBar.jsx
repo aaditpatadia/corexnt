@@ -105,7 +105,7 @@ export default function TopBar({ userType, userName, userEmail, onUpgrade, onLoa
   return (
     <>
       <div className="flex-shrink-0 flex items-center justify-between px-5 relative z-20"
-        style={{ height: 48, background: "#ffffff", borderBottom: "1px solid #e8e8e3" }}>
+        style={{ height: 56, background: "#ffffff", borderBottom: "1px solid #e8e8e3" }}>
 
         {/* Left — Logo → dashboard */}
         <button onClick={() => navigate("/app/dashboard")} title="Back to dashboard"
@@ -153,6 +153,14 @@ export default function TopBar({ userType, userName, userEmail, onUpgrade, onLoa
               <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
             </svg>
           ), "Conversation history")}
+
+          {/* Notifications bell */}
+          {iconBtn(() => {}, (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          ), "Notifications")}
 
           {/* Settings */}
           {iconBtn(() => navigate("/app/settings"), (

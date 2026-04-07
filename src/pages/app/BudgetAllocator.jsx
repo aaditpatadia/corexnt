@@ -47,14 +47,8 @@ Give me:
     try {
       const res = await fetch("/api/chat", { method:"POST", headers:{"Content-Type":"application/json"},
         body:JSON.stringify({ messages:[{role:"user",content:prompt}], userType:"company", engineMode:"Growth" }) });
-      const ct=res.headers.get("Content-Type")||""; let full="";
-      if(ct.includes("text/event-stream")){
-        const reader=res.body.getReader();const dec=new TextDecoder();let buf="";
-        while(true){const{done,value}=await reader.read();if(done)break;buf+=dec.decode(value,{stream:true});
-          const lines=buf.split("\n");buf=lines.pop()??"";
-          for(const l of lines){if(!l.startsWith("data: "))continue;const raw=l.slice(6).trim();
-            if(raw==="[DONE]")break;try{const p=JSON.parse(raw);if(p.delta)full+=p.delta;}catch{}}}
-      } else { const d=await res.json(); full=d.reply||""; }
+      const d = await res.json();
+      const full = d.reply || "Something went wrong. Try again.";
       setResult({ id:Date.now(), role:"assistant", content:full });
     } catch { setResult({ id:Date.now(), role:"assistant", content:"Something went wrong. Try again.\n\nChips: 'Try again' | 'Adjust budget' | 'Change goal'" }); }
     setLoading(false);
@@ -69,7 +63,7 @@ Give me:
             style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:"#2dd668", fontFamily:"var(--font-body)" }}>
             💼 Budget Allocator
           </div>
-          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"var(--font-body)", color:"#f0faf2" }}>
+          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"var(--font-body)", color:"#1a1a1a" }}>
             Allocate your budget
           </h1>
           <p className="text-sm" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>
@@ -82,7 +76,7 @@ Give me:
           style={{ background:"rgba(14,28,16,0.7)", border:"1px solid rgba(45,214,104,0.15)" }}>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-widest mb-3" style={{ color:"rgba(45,214,104,0.7)", fontFamily:"var(--font-body)" }}>
+            <label className="block text-xs font-semibold uppercase tracking-widest mb-3" style={{ color:"#1a7a3c", fontFamily:"var(--font-body)" }}>
               Monthly Marketing Budget
             </label>
             <Slider value={budget} onChange={setBudget} min={500} max={100000} step={500}
@@ -90,7 +84,7 @@ Give me:
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color:"rgba(45,214,104,0.7)", fontFamily:"var(--font-body)" }}>Business Stage</label>
+            <label className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color:"#1a7a3c", fontFamily:"var(--font-body)" }}>Business Stage</label>
             <div className="space-y-2">
               {STAGES.map(s=>(
                 <button key={s} onClick={()=>setStage(s)}
@@ -105,7 +99,7 @@ Give me:
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color:"rgba(45,214,104,0.7)", fontFamily:"var(--font-body)" }}>Primary Goal</label>
+            <label className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color:"#1a7a3c", fontFamily:"var(--font-body)" }}>Primary Goal</label>
             <div className="flex flex-wrap gap-2">
               {GOALS.map(g=>(
                 <button key={g} onClick={()=>setGoal(g)}
