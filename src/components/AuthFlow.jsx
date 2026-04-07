@@ -62,11 +62,11 @@ function generateOtp() {
 function useTheme(userType) {
   if (userType === "company") return {
     accent:"#a78bfa", gradient:"linear-gradient(135deg,#7c3aed,#4f46e5,#a855f7)",
-    glow:"rgba(124,58,237,0.25)", border:"rgba(124,58,237,0.3)", bg:"rgba(124,58,237,0.06)",
+    glow:"rgba(124,58,237,0.25)", border:"rgba(124,58,237,0.45)", bg:"rgba(20,14,40,0.85)",
   };
   return {
     accent:"#2dd668", gradient:"linear-gradient(135deg,#1a7a3c,#2dd668)",
-    glow:"rgba(45,214,104,0.2)", border:"rgba(45,214,104,0.3)", bg:"rgba(45,214,104,0.06)",
+    glow:"rgba(45,214,104,0.2)", border:"rgba(45,214,104,0.45)", bg:"rgba(12,26,16,0.85)",
   };
 }
 
@@ -190,7 +190,7 @@ function OtpVerify({ email, userName, userType, onSuccess, onBack }) {
     <div className="min-h-screen flex items-center justify-center px-4 py-12 relative z-10">
       <motion.div initial={{ opacity:0, y:24 }} animate={{ opacity:1, y:0 }} className="w-full max-w-md">
         <button onClick={onBack} className="flex items-center gap-2 text-sm mb-8"
-          style={{ color:"var(--text-muted)", fontFamily:"var(--font-body)" }}
+          style={{ color:"rgba(255,255,255,0.4)", fontFamily:"var(--font-body)" }}
           onMouseEnter={e=>e.currentTarget.style.color="#f0faf2"} onMouseLeave={e=>e.currentTarget.style.color="var(--text-muted)"}>
           <ArrowLeft size={15}/> Back
         </button>
@@ -201,7 +201,7 @@ function OtpVerify({ email, userName, userType, onSuccess, onBack }) {
               📬
             </div>
             <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily:"var(--font-body)" }}>Check your email</h2>
-            <p className="text-sm" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>
+            <p className="text-sm" style={{ color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>
               We sent a 6-digit code to<br/>
               <span className="font-medium" style={{ color:theme.accent }}>
                 {email.replace(/(.{2})(.*)(@.*)/, (_, a, b, c) => a + b.replace(/./g,"•") + c)}
@@ -223,7 +223,7 @@ function OtpVerify({ email, userName, userType, onSuccess, onBack }) {
             {loading ? <span className="flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-black/20 border-t-black/80 rounded-full animate-spin"/>Verifying…</span> : "Verify Email →"}
           </motion.button>
 
-          <p className="text-center text-xs" style={{ color:"var(--text-muted)", fontFamily:"var(--font-body)" }}>
+          <p className="text-center text-xs" style={{ color:"rgba(255,255,255,0.4)", fontFamily:"var(--font-body)" }}>
             Didn't receive it?{" "}
             <button onClick={resend} disabled={cooldown > 0}
               className="font-medium transition-opacity" style={{ color:theme.accent, opacity:cooldown>0?0.5:1 }}>
@@ -246,7 +246,7 @@ function Onboarding({ onSelect }) {
         <h2 className="font-display font-bold mb-3" style={{ fontSize:"clamp(28px,4vw,40px)", color:"#f0faf2" }}>
           Who are you building for?
         </h2>
-        <p style={{ color:"var(--text-secondary)", fontSize:15, fontFamily:"var(--font-body)" }}>
+        <p style={{ color:"rgba(255,255,255,0.6)", fontSize:15, fontFamily:"var(--font-body)" }}>
           Your entire experience adapts to your answer.
         </p>
       </motion.div>
@@ -257,13 +257,13 @@ function Onboarding({ onSelect }) {
             type:"creator", icon:"🎬", title:"I'm a Creator",
             sub:"Reels, growth, brand deals, trends",
             stats:"3.5M+ creators growing faster",
-            gradBorder:"rgba(232,121,249,0.4)", gradBg:"rgba(232,121,249,0.06)",
+            gradBorder:"rgba(232,121,249,0.7)", gradBg:"rgba(30,12,42,0.88)",
           },
           {
             type:"company", icon:"💼", title:"I'm a Brand / Startup",
             sub:"Campaigns, budgets, brand strategy",
             stats:"Funded startups & D2C brands",
-            gradBorder:"rgba(124,58,237,0.4)", gradBg:"rgba(124,58,237,0.06)",
+            gradBorder:"rgba(124,58,237,0.7)", gradBg:"rgba(18,10,40,0.88)",
           },
         ].map((c, i) => (
           <motion.button key={c.type}
@@ -277,9 +277,9 @@ function Onboarding({ onSelect }) {
               <motion.span animate={{ scale:[1,1.05,1] }} transition={{ duration:2.5, repeat:Infinity }}>{c.icon}</motion.span>
             </div>
             <h3 className="text-2xl font-bold mb-1.5 text-white" style={{ fontFamily:"var(--font-body)" }}>{c.title}</h3>
-            <p className="text-sm mb-5" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>{c.sub}</p>
+            <p className="text-sm mb-5" style={{ color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>{c.sub}</p>
             <div className="inline-flex px-3 py-1.5 rounded-full text-xs font-semibold mb-5"
-              style={{ background:c.gradBg, border:`1px solid ${c.gradBorder}`, color:"#f0faf2", fontFamily:"var(--font-body)" }}>
+              style={{ background:c.gradBg, border:`1px solid ${c.gradBorder}`, color:"rgba(255,255,255,0.85)", fontFamily:"var(--font-body)" }}>
               {c.stats}
             </div>
             <div className="flex items-center gap-2 text-sm font-semibold" style={{ color:c.gradBorder }}>
@@ -290,7 +290,7 @@ function Onboarding({ onSelect }) {
       </div>
 
       <motion.p initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.5 }}
-        className="text-xs mt-10" style={{ color:"var(--text-muted)", fontFamily:"var(--font-body)" }}>
+        className="text-xs mt-10" style={{ color:"rgba(255,255,255,0.4)", fontFamily:"var(--font-body)" }}>
         Free to start · No credit card required
       </motion.p>
     </div>
@@ -365,7 +365,7 @@ function Signup({ userType, onSuccess, onLoginClick, onBack, onNeedOtp }) {
     <div className="min-h-screen flex items-center justify-center px-4 py-12 relative z-10">
       <motion.div initial={{ opacity:0, y:24 }} animate={{ opacity:1, y:0 }} className="w-full max-w-md">
         <button onClick={onBack} className="flex items-center gap-2 text-sm mb-8"
-          style={{ color:"var(--text-muted)", fontFamily:"var(--font-body)" }}
+          style={{ color:"rgba(255,255,255,0.4)", fontFamily:"var(--font-body)" }}
           onMouseEnter={e=>e.currentTarget.style.color="#f0faf2"} onMouseLeave={e=>e.currentTarget.style.color="var(--text-muted)"}>
           <ArrowLeft size={15}/> Back
         </button>
@@ -376,7 +376,7 @@ function Signup({ userType, onSuccess, onLoginClick, onBack, onNeedOtp }) {
               {userType === "company" ? "Brand / Startup" : "Creator"} Account
             </div>
             <h2 className="text-2xl font-bold text-white" style={{ fontFamily:"var(--font-body)" }}>Create your account</h2>
-            <p className="text-sm mt-1" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>Free tier · No card needed</p>
+            <p className="text-sm mt-1" style={{ color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>Free tier · No card needed</p>
           </div>
 
           {/* Google */}
@@ -391,7 +391,7 @@ function Signup({ userType, onSuccess, onLoginClick, onBack, onNeedOtp }) {
 
           <div className="flex items-center gap-3 mb-4">
             <div className="flex-1 h-px" style={{ background:theme.border }}/>
-            <span className="text-xs" style={{ color:"var(--text-muted)", fontFamily:"var(--font-body)" }}>or</span>
+            <span className="text-xs" style={{ color:"rgba(255,255,255,0.4)", fontFamily:"var(--font-body)" }}>or</span>
             <div className="flex-1 h-px" style={{ background:theme.border }}/>
           </div>
 
@@ -401,17 +401,17 @@ function Signup({ userType, onSuccess, onLoginClick, onBack, onNeedOtp }) {
               { key:"email", label:"Email *",     type:"email", ph:"you@example.com" },
             ].map(({ key, label, type, ph }) => (
               <div key={key}>
-                <label className="block text-xs font-medium mb-1.5" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>{label}</label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>{label}</label>
                 <input type={type} value={form[key]} onChange={set(key)} placeholder={ph}
                   className="input-green w-full px-4 py-3 rounded-xl text-sm" style={{ fontFamily:"var(--font-body)" }}/>
               </div>
             ))}
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>Phone (optional)</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>Phone (optional)</label>
               <div className="flex gap-2">
                 <select value={form.countryCode} onChange={set("countryCode")}
                   className="flex-shrink-0 px-2 py-3 rounded-xl text-sm"
-                  style={{ background:"rgba(20,40,24,0.5)", border:"1px solid rgba(45,214,104,0.15)", color:"var(--text-secondary)", fontFamily:"var(--font-body)", outline:"none" }}>
+                  style={{ background:"rgba(20,40,24,0.5)", border:"1px solid rgba(45,214,104,0.15)", color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)", outline:"none" }}>
                   {COUNTRY_CODES.map(c=><option key={c.code} value={c.code}>{c.flag} {c.code}</option>)}
                 </select>
                 <input type="tel" value={form.phone} onChange={set("phone")} placeholder="98765 43210"
@@ -419,12 +419,12 @@ function Signup({ userType, onSuccess, onLoginClick, onBack, onNeedOtp }) {
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>Password *</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>Password *</label>
               <div className="relative">
                 <input type={showPass?"text":"password"} value={form.password} onChange={set("password")} placeholder="Min. 6 characters"
                   className="input-green w-full px-4 py-3 rounded-xl text-sm pr-11" style={{ fontFamily:"var(--font-body)" }}/>
                 <button type="button" onClick={()=>setShowPass(s=>!s)} className="absolute right-3 top-1/2 -translate-y-1/2"
-                  style={{ color:"var(--text-muted)" }}>
+                  style={{ color:"rgba(255,255,255,0.4)" }}>
                   {showPass?<EyeOff size={16}/>:<Eye size={16}/>}
                 </button>
               </div>
@@ -437,7 +437,7 @@ function Signup({ userType, onSuccess, onLoginClick, onBack, onNeedOtp }) {
             </motion.button>
           </form>
 
-          <p className="text-center text-xs mt-5" style={{ color:"var(--text-muted)", fontFamily:"var(--font-body)" }}>
+          <p className="text-center text-xs mt-5" style={{ color:"rgba(255,255,255,0.4)", fontFamily:"var(--font-body)" }}>
             Already have an account?{" "}
             <button onClick={onLoginClick} className="font-medium" style={{ color:theme.accent }}>Sign in</button>
           </p>
@@ -501,7 +501,7 @@ function Login({ onSuccess, onSignupClick, onForgotClick, onBack, onNeedOtp }) {
     <div className="min-h-screen flex items-center justify-center px-4 py-12 relative z-10">
       <motion.div initial={{ opacity:0, y:24 }} animate={{ opacity:1, y:0 }} className="w-full max-w-md">
         <button onClick={onBack} className="flex items-center gap-2 text-sm mb-8"
-          style={{ color:"var(--text-muted)", fontFamily:"var(--font-body)" }}
+          style={{ color:"rgba(255,255,255,0.4)", fontFamily:"var(--font-body)" }}
           onMouseEnter={e=>e.currentTarget.style.color="#f0faf2"} onMouseLeave={e=>e.currentTarget.style.color="var(--text-muted)"}>
           <ArrowLeft size={15}/> Back
         </button>
@@ -512,7 +512,7 @@ function Login({ onSuccess, onSignupClick, onForgotClick, onBack, onNeedOtp }) {
               🌿
             </div>
             <h2 className="text-2xl font-bold text-white" style={{ fontFamily:"var(--font-body)" }}>Welcome back</h2>
-            <p className="text-sm mt-1" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>Sign in to Corex</p>
+            <p className="text-sm mt-1" style={{ color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>Sign in to Corex</p>
           </div>
 
           <motion.button type="button" whileHover={{ scale:1.01 }} whileTap={{ scale:0.98 }}
@@ -526,26 +526,26 @@ function Login({ onSuccess, onSignupClick, onForgotClick, onBack, onNeedOtp }) {
 
           <div className="flex items-center gap-3 mb-4">
             <div className="flex-1 h-px" style={{ background:theme.border }}/>
-            <span className="text-xs" style={{ color:"var(--text-muted)", fontFamily:"var(--font-body)" }}>or</span>
+            <span className="text-xs" style={{ color:"rgba(255,255,255,0.4)", fontFamily:"var(--font-body)" }}>or</span>
             <div className="flex-1 h-px" style={{ background:theme.border }}/>
           </div>
 
           <form onSubmit={submit} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>Email</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>Email</label>
               <input type="email" value={form.email} onChange={set("email")} placeholder="you@example.com"
                 className="input-green w-full px-4 py-3 rounded-xl text-sm" style={{ fontFamily:"var(--font-body)" }}/>
             </div>
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label className="text-xs font-medium" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>Password</label>
+                <label className="text-xs font-medium" style={{ color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>Password</label>
                 <button type="button" onClick={onForgotClick} className="text-xs font-medium" style={{ color:theme.accent, fontFamily:"var(--font-body)" }}>Forgot?</button>
               </div>
               <div className="relative">
                 <input type={showPass?"text":"password"} value={form.password} onChange={set("password")} placeholder="Your password"
                   className="input-green w-full px-4 py-3 rounded-xl text-sm pr-11" style={{ fontFamily:"var(--font-body)" }}/>
                 <button type="button" onClick={()=>setShowPass(s=>!s)} className="absolute right-3 top-1/2 -translate-y-1/2"
-                  style={{ color:"var(--text-muted)" }}>
+                  style={{ color:"rgba(255,255,255,0.4)" }}>
                   {showPass?<EyeOff size={16}/>:<Eye size={16}/>}
                 </button>
               </div>
@@ -558,7 +558,7 @@ function Login({ onSuccess, onSignupClick, onForgotClick, onBack, onNeedOtp }) {
             </motion.button>
           </form>
 
-          <p className="text-center text-xs mt-5" style={{ color:"var(--text-muted)", fontFamily:"var(--font-body)" }}>
+          <p className="text-center text-xs mt-5" style={{ color:"rgba(255,255,255,0.4)", fontFamily:"var(--font-body)" }}>
             Don't have an account?{" "}
             <button onClick={onSignupClick} className="font-medium" style={{ color:theme.accent }}>Sign up free</button>
           </p>
@@ -584,7 +584,7 @@ function ForgotPw({ onBack }) {
     <div className="min-h-screen flex items-center justify-center px-4 py-12 relative z-10">
       <motion.div initial={{ opacity:0, y:24 }} animate={{ opacity:1, y:0 }} className="w-full max-w-md">
         <button onClick={onBack} className="flex items-center gap-2 text-sm mb-8"
-          style={{ color:"var(--text-muted)", fontFamily:"var(--font-body)" }}
+          style={{ color:"rgba(255,255,255,0.4)", fontFamily:"var(--font-body)" }}
           onMouseEnter={e=>e.currentTarget.style.color="#f0faf2"} onMouseLeave={e=>e.currentTarget.style.color="var(--text-muted)"}>
           <ArrowLeft size={15}/> Back to login
         </button>
@@ -598,11 +598,11 @@ function ForgotPw({ onBack }) {
                     <Mail size={22} style={{ color:theme.accent }}/>
                   </div>
                   <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily:"var(--font-body)" }}>Reset your password</h2>
-                  <p className="text-sm" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>Enter your email and we'll send a reset link.</p>
+                  <p className="text-sm" style={{ color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>Enter your email and we'll send a reset link.</p>
                 </div>
                 <form onSubmit={submit} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-medium mb-1.5" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>Email address</label>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>Email address</label>
                     <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"
                       className="input-green w-full px-4 py-3 rounded-xl text-sm" style={{ fontFamily:"var(--font-body)" }}/>
                   </div>
@@ -617,7 +617,7 @@ function ForgotPw({ onBack }) {
               <motion.div key="success" initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }} className="text-center py-4">
                 <div className="text-4xl mb-4">✅</div>
                 <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily:"var(--font-body)" }}>Reset link sent!</h3>
-                <p className="text-sm mb-1" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>We've sent a reset link to</p>
+                <p className="text-sm mb-1" style={{ color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>We've sent a reset link to</p>
                 <p className="font-semibold text-sm mb-6" style={{ color:theme.accent, fontFamily:"var(--font-body)" }}>{email}</p>
                 <button onClick={onBack} className="text-sm font-medium" style={{ color:theme.accent, fontFamily:"var(--font-body)" }}>← Back to login</button>
               </motion.div>
