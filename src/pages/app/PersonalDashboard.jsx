@@ -1,7 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { getUserProfile, getProfileCompletion } from "../../utils/userProfile";
+
+function useMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const h = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", h);
+    return () => window.removeEventListener("resize", h);
+  }, []);
+  return isMobile;
+}
 
 function getGreeting(name) {
   const h = new Date().getHours();
@@ -21,7 +31,7 @@ function timeAgo(ts) {
 }
 
 function getTodayMsgs()         { return parseInt(localStorage.getItem(`corex_msgs_${new Date().toDateString()}`) || "0", 10); }
-function getDaysActive()        { const j = localStorage.getItem("corex_joined"); if (!j) return 1; return Math.max(1, Math.ceil((Date.now() - new Date(j).getTime()) / 86400000)); }
+function getDaysActive()        { const j = localStorage.getItem("corex_joined"); if (!j) return 1; const d = Math.ceil((Date.now() - new Date(j).getTime()) / 86400000); return isNaN(d) || d < 1 ? 1 : d; }
 function getTotalConversations(){ try { return JSON.parse(localStorage.getItem("corex_history") || "[]").length; } catch { return 0; } }
 
 /* ── Stat card (light v6) ── */
@@ -198,6 +208,7 @@ function IntelCard({ isCreator, navigate }) {
 export default function PersonalDashboard({ userType, userName }) {
   const navigate   = useNavigate();
   const isCreator  = userType !== "company";
+  const isMobile   = useMobile();
 
   const [history, setHistory] = useState([]);
   const profile      = getUserProfile();
@@ -235,7 +246,7 @@ export default function PersonalDashboard({ userType, userName }) {
 
   return (
     <div className="flex-1 overflow-y-auto scroll-area" style={{ background: "#f0f0eb" }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 24px 48px" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: isMobile ? "20px 16px 140px" : "28px 24px 48px" }}>
 
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 24 }}>
@@ -272,7 +283,7 @@ export default function PersonalDashboard({ userType, userName }) {
         )}
 
         {/* Stat cards row */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
           <StatCard label="Conversations" value={totalConvos || "0"} delay={0.1}/>
           <StatCard label="Messages today" value={`${todayMsgs}/15`} delay={0.15}/>
           <StatCard label="Days active" value={daysActive} delay={0.2}/>
@@ -280,7 +291,7 @@ export default function PersonalDashboard({ userType, userName }) {
         </div>
 
         {/* 2-column grid: main content (left) + news feed (right) */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 20, alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 340px", gap: 16, alignItems: "start" }}>
 
           {/* LEFT COLUMN */}
           <div>
@@ -340,7 +351,7 @@ export default function PersonalDashboard({ userType, userName }) {
               <h3 style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", fontFamily: "var(--font-body)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12 }}>
                 Quick Actions
               </h3>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
                 {actions.map((action, i) => (
                   <QuickAction
                     key={action.title}

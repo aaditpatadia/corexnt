@@ -240,10 +240,10 @@ function OtpVerify({ email, userName, userType, onSuccess, onBack }) {
 /* ─── Onboarding ─── */
 function Onboarding({ onSelect }) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16 relative z-10">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16 relative z-10" style={{ background: "#080c09" }}>
       <CorexMark/>
       <motion.div initial={{ opacity:0, y:-12 }} animate={{ opacity:1, y:0 }} className="text-center mb-12">
-        <h2 className="font-display font-bold mb-3" style={{ fontSize:"clamp(28px,4vw,40px)", color:"#f0faf2" }}>
+        <h2 className="font-display font-bold mb-3" style={{ fontSize:"clamp(28px,4vw,40px)", color:"#ffffff" }}>
           Who are you building for?
         </h2>
         <p style={{ color:"rgba(255,255,255,0.6)", fontSize:15, fontFamily:"var(--font-body)" }}>
@@ -276,8 +276,8 @@ function Onboarding({ onSelect }) {
             <div className="text-4xl mb-6">
               <motion.span animate={{ scale:[1,1.05,1] }} transition={{ duration:2.5, repeat:Infinity }}>{c.icon}</motion.span>
             </div>
-            <h3 className="text-2xl font-bold mb-1.5 text-white" style={{ fontFamily:"var(--font-body)" }}>{c.title}</h3>
-            <p className="text-sm mb-5" style={{ color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>{c.sub}</p>
+            <h3 style={{ fontSize: 22, fontWeight: 800, marginBottom: 6, color: "#ffffff", fontFamily: "var(--font-body)" }}>{c.title}</h3>
+            <p className="text-sm mb-5" style={{ color:"rgba(255,255,255,0.75)", fontFamily:"var(--font-body)" }}>{c.sub}</p>
             <div className="inline-flex px-3 py-1.5 rounded-full text-xs font-semibold mb-5"
               style={{ background:c.gradBg, border:`1px solid ${c.gradBorder}`, color:"rgba(255,255,255,0.85)", fontFamily:"var(--font-body)" }}>
               {c.stats}
@@ -672,7 +672,7 @@ export default function AuthFlow({ onSuccess }) {
   };
 
   return (
-    <div className="relative min-h-screen" style={{ background:"var(--bg-base)" }}>
+    <div className="relative min-h-screen" style={{ background:"#080c09" }}>
       <div className="orb orb-1"/><div className="orb orb-2"/><div className="orb orb-3"/>
       <AnimatePresence mode="wait">
         {screen === "onboarding" && (
