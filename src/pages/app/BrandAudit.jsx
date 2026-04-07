@@ -61,7 +61,7 @@ Be brutally honest. Give specific, actionable recommendations with examples.`;
       <div className="max-w-2xl mx-auto px-4 py-8">
         <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} className="mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-4"
-            style={{background:"rgba(45,214,104,0.08)",border:"1px solid rgba(45,214,104,0.2)",color:"#2dd668",fontFamily:"var(--font-body)"}}>
+            style={{background:"rgba(45,214,104,0.08)",border:"1px solid rgba(45,214,104,0.2)",color:"#1a7a3c",fontFamily:"var(--font-body)"}}>
             🛡️ Brand Audit
           </div>
           <h1 className="text-3xl font-bold mb-2" style={{fontFamily:"var(--font-body)",color:"#1a1a1a"}}>Audit your brand</h1>
@@ -72,7 +72,7 @@ Be brutally honest. Give specific, actionable recommendations with examples.`;
 
         <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:0.1}}
           className="rounded-2xl p-6 mb-6 space-y-5"
-          style={{background:"rgba(14,28,16,0.7)",border:"1px solid rgba(45,214,104,0.15)"}}>
+          style={{background:"#ffffff",border:"1px solid #e8e8e3", boxShadow:"0 2px 20px rgba(0,0,0,0.05)"}}>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -80,7 +80,7 @@ Be brutally honest. Give specific, actionable recommendations with examples.`;
                 style={{color:errors.brand?"#f87171":"rgba(45,214,104,0.7)",fontFamily:"var(--font-body)"}}>Brand / Company name</label>
               <input type="text" placeholder="e.g. Gymshark" value={form.brand} onChange={e=>set("brand",e.target.value)}
                 style={{...fieldStyle,borderColor:errors.brand?"rgba(248,113,113,0.5)":"rgba(45,214,104,0.18)"}}
-                onFocus={e=>e.target.style.borderColor="rgba(45,214,104,0.5)"}
+                onFocus={e=>e.target.style.borderColor="#1a7a3c"}
                 onBlur={e=>e.target.style.borderColor=errors.brand?"rgba(248,113,113,0.5)":"rgba(45,214,104,0.18)"}/>
             </div>
             <div>
@@ -97,7 +97,7 @@ Be brutally honest. Give specific, actionable recommendations with examples.`;
             <input type="text" placeholder="e.g. Gym-goers aged 18–30 interested in performance and style"
               value={form.audience} onChange={e=>set("audience",e.target.value)}
               style={{...fieldStyle,borderColor:errors.audience?"rgba(248,113,113,0.5)":"rgba(45,214,104,0.18)"}}
-              onFocus={e=>e.target.style.borderColor="rgba(45,214,104,0.5)"}
+              onFocus={e=>e.target.style.borderColor="#1a7a3c"}
               onBlur={e=>e.target.style.borderColor=errors.audience?"rgba(248,113,113,0.5)":"rgba(45,214,104,0.18)"}/>
           </div>
 
@@ -105,7 +105,7 @@ Be brutally honest. Give specific, actionable recommendations with examples.`;
             <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5" style={{color:"#1a7a3c",fontFamily:"var(--font-body)"}}>Main competitor (optional)</label>
             <input type="text" placeholder="e.g. Nike, Lululemon" value={form.competitor} onChange={e=>set("competitor",e.target.value)}
               style={fieldStyle}
-              onFocus={e=>e.target.style.borderColor="rgba(45,214,104,0.5)"}
+              onFocus={e=>e.target.style.borderColor="#1a7a3c"}
               onBlur={e=>e.target.style.borderColor="rgba(45,214,104,0.18)"}/>
           </div>
 
@@ -115,7 +115,7 @@ Be brutally honest. Give specific, actionable recommendations with examples.`;
             <textarea rows={3} placeholder="e.g. We're getting traffic but not converting. Our messaging feels generic compared to competitors."
               value={form.challenge} onChange={e=>set("challenge",e.target.value)}
               style={{...fieldStyle,resize:"none",lineHeight:1.6,borderColor:errors.challenge?"rgba(248,113,113,0.5)":"rgba(45,214,104,0.18)"}}
-              onFocus={e=>e.target.style.borderColor="rgba(45,214,104,0.5)"}
+              onFocus={e=>e.target.style.borderColor="#1a7a3c"}
               onBlur={e=>e.target.style.borderColor=errors.challenge?"rgba(248,113,113,0.5)":"rgba(45,214,104,0.18)"}/>
           </div>
 

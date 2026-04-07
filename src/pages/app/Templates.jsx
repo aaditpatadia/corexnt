@@ -78,7 +78,7 @@ const TEMPLATES = [
 
 const CATEGORY_COLORS = {
   Creator:      { bg:"rgba(168,85,247,0.1)",  border:"rgba(168,85,247,0.25)",  text:"#c084fc" },
-  Growth:       { bg:"rgba(45,214,104,0.08)", border:"rgba(45,214,104,0.2)",   text:"#2dd668" },
+  Growth:       { bg:"rgba(45,214,104,0.08)", border:"#e8f5ee",   text:"#2dd668" },
   Monetization: { bg:"rgba(251,191,36,0.08)", border:"rgba(251,191,36,0.2)",   text:"#fbbf24" },
   Strategy:     { bg:"rgba(56,189,248,0.08)", border:"rgba(56,189,248,0.2)",   text:"#38bdf8" },
 };
@@ -98,7 +98,7 @@ export default function Templates() {
         {/* Header */}
         <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} className="mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-4"
-            style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:"#2dd668", fontFamily:"var(--font-body)" }}>
+            style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:"#1a7a3c", fontFamily:"var(--font-body)" }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
             Templates
           </div>
@@ -153,11 +153,11 @@ export default function Templates() {
 
                 {/* Use button */}
                 <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold transition-all duration-200"
-                  style={{ color:"rgba(45,214,104,0.5)" }}
+                  style={{ color:"#1a7a3c" }}
                   ref={el => {
                     if (el) {
                       el.parentElement.addEventListener("mouseenter", () => el.style.color="#2dd668");
-                      el.parentElement.addEventListener("mouseleave", () => el.style.color="rgba(45,214,104,0.5)");
+                      el.parentElement.addEventListener("mouseleave", () => el.style.color="#1a7a3c");
                     }
                   }}>
                   Use template

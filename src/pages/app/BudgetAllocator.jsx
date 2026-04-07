@@ -16,7 +16,7 @@ function Slider({ value, onChange, min, max, step, format }) {
           background:`linear-gradient(90deg,#2dd668 ${pct}%,rgba(45,214,104,0.15) ${pct}%)`,
           WebkitAppearance:"none",
         }}/>
-      <div className="mt-2 text-right text-sm font-bold" style={{ color:"#2dd668", fontFamily:"var(--font-body)" }}>
+      <div className="mt-2 text-right text-sm font-bold" style={{ color:"#1a7a3c", fontFamily:"var(--font-body)" }}>
         {format(value)}
       </div>
     </div>
@@ -60,7 +60,7 @@ Give me:
 
         <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} className="mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-4"
-            style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:"#2dd668", fontFamily:"var(--font-body)" }}>
+            style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:"#1a7a3c", fontFamily:"var(--font-body)" }}>
             💼 Budget Allocator
           </div>
           <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"var(--font-body)", color:"#1a1a1a" }}>
@@ -73,7 +73,7 @@ Give me:
 
         <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
           className="rounded-2xl p-6 mb-6 space-y-6"
-          style={{ background:"rgba(14,28,16,0.7)", border:"1px solid rgba(45,214,104,0.15)" }}>
+          style={{ background:"#ffffff", border:"1px solid #e8e8e3" }}>
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-widest mb-3" style={{ color:"#1a7a3c", fontFamily:"var(--font-body)" }}>
@@ -91,7 +91,7 @@ Give me:
                   className="w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all"
                   style={{ background:stage===s?"rgba(45,214,104,0.12)":"rgba(20,40,24,0.4)",
                     border:stage===s?"1px solid rgba(45,214,104,0.4)":"1px solid rgba(45,214,104,0.1)",
-                    color:stage===s?"#f0faf2":"rgba(240,250,242,0.5)", fontFamily:"var(--font-body)" }}>
+                    color:"#666666", fontFamily:"var(--font-body)" }}>
                   {s}
                 </button>
               ))}
@@ -104,9 +104,9 @@ Give me:
               {GOALS.map(g=>(
                 <button key={g} onClick={()=>setGoal(g)}
                   className="px-4 py-1.5 rounded-full text-xs font-semibold transition-all"
-                  style={{ background:goal===g?"rgba(45,214,104,0.2)":"rgba(20,40,24,0.6)",
+                  style={{ background:"#f5f5f0",
                     border:goal===g?"1px solid rgba(45,214,104,0.5)":"1px solid rgba(45,214,104,0.15)",
-                    color:goal===g?"#2dd668":"rgba(240,250,242,0.5)", fontFamily:"var(--font-body)" }}>
+                    color:"#666666", fontFamily:"var(--font-body)" }}>
                   {g}
                 </button>
               ))}
