@@ -284,8 +284,8 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
   return (
     <div style={{ background: "#f0f0eb", height: "100%", position: "relative" }}>
 
-      {/* Messages scrollable area */}
-      <div className="scroll-area" style={{ height: "100%", overflowY: "auto", paddingBottom: 140 }}>
+      {/* Messages scrollable area — extra bottom padding on mobile for nav + input */}
+      <div className="scroll-area" style={{ height: "100%", overflowY: "auto", paddingBottom: "max(140px, calc(140px + env(safe-area-inset-bottom)))" }}>
         {messages.length === 0 ? (
           <WelcomeScreen userType={userType} userName={userName} onChip={chip => sendMessage(chip, [])}/>
         ) : (
