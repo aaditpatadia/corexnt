@@ -162,7 +162,12 @@ function NewsPanel({ userType }) {
 
 /* ── Dark intelligence card ── */
 function IntelCard({ isCreator, navigate }) {
-  const tips = isCreator ? [
+  const profile = getUserProfile();
+  const brandName = profile?.brandName || profile?.name || (isCreator ? "your channel" : "your brand");
+  const niche     = profile?.niche || profile?.industry || "";
+
+  // Type A: stat tips
+  const statTips = isCreator ? [
     "Reels under 30s get 2.4× more reach than longer videos right now.",
     "Creators posting 5-7 times/week see 40% faster follower growth.",
     "Hook in first 1.5s decides 80% of watch time on Instagram.",
@@ -171,7 +176,73 @@ function IntelCard({ isCreator, navigate }) {
     "WhatsApp marketing delivers 45-60% open rates vs 20% for email.",
     "Festival season spends are up 38% YoY — plan campaigns 6 weeks out.",
   ];
-  const tip = tips[Math.floor(Date.now() / 86400000) % tips.length];
+
+  // Type B: conversation history prompt
+  const recentTopics = (() => {
+    try {
+      const hist = JSON.parse(localStorage.getItem("corex_history") || "[]");
+      return hist.slice(0, 2).map(h => h.title).filter(Boolean);
+    } catch { return []; }
+  })();
+
+  // Type C: weekly challenge (cached per week)
+  const weekKey = `corex_weekly_challenge_${Math.floor(Date.now() / (7 * 86400000))}`;
+  const weeklyChallenges = isCreator ? [
+    `Post a "day in my life" reel${niche ? " as a " + niche + " creator" : ""} — authentic content converts 3× better than scripted.`,
+    `Collaborate with one micro-creator in your niche this week — cross-follower exposure is free paid media.`,
+    `Reply to your last 20 comments within the first hour of your next post — the algorithm rewards response velocity.`,
+  ] : [
+    `Run a limited 48-hour flash offer${niche ? " for " + niche : ""} — urgency drives 40% higher conversion than evergreen deals.`,
+    `Audit your top competitor's Instagram stories this week — note formats, posting times, and CTAs they use.`,
+    `Post one customer story (not a product post) — brand trust content gets 2× more saves than promo content.`,
+  ];
+
+  const getWeeklyChallenge = () => {
+    const cached = localStorage.getItem(weekKey);
+    if (cached) return cached;
+    const challenge = weeklyChallenges[Math.floor(Date.now() / (7 * 86400000)) % weeklyChallenges.length];
+    try { localStorage.setItem(weekKey, challenge); } catch {}
+    return challenge;
+  };
+
+  // Pick type randomly on page load (stable per session via sessionStorage)
+  const typeKey = "corex_intel_card_type";
+  const cardType = (() => {
+    const s = sessionStorage.getItem(typeKey);
+    if (s) return parseInt(s, 10);
+    const t = Math.floor(Math.random() * 3);
+    sessionStorage.setItem(typeKey, t.toString());
+    return t;
+  })();
+
+  let tip = "";
+  let label = "Intelligence";
+  let prefillQuestion = "";
+
+  if (cardType === 0) {
+    // Type A — stat
+    tip = statTips[Math.floor(Date.now() / 86400000) % statTips.length];
+    label = "Based on today's intel";
+    prefillQuestion = tip;
+  } else if (cardType === 1 && recentTopics.length > 0) {
+    // Type B — history-based
+    const lastTopic = recentTopics[0];
+    tip = `You asked about "${lastTopic}" recently. What's changed since then?`;
+    label = "Continuing from yesterday";
+    prefillQuestion = `What has changed recently around: ${lastTopic}`;
+  } else {
+    // Type C — weekly challenge
+    tip = `This week's growth move for ${brandName}: ${getWeeklyChallenge()}`;
+    label = "Your weekly move";
+    prefillQuestion = isCreator
+      ? `Help me execute this growth move: ${getWeeklyChallenge()}`
+      : `Help me run this campaign move: ${getWeeklyChallenge()}`;
+  }
+
+  const handleAsk = () => {
+    sessionStorage.setItem("corex_prefill", prefillQuestion);
+    navigate("/app/chat");
+  };
 
   return (
     <motion.div
@@ -185,14 +256,14 @@ function IntelCard({ isCreator, navigate }) {
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
         </div>
-        <div>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontSize: 11, fontWeight: 600, color: "#2dd668", fontFamily: "var(--font-body)", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6 }}>
-            Intelligence
+            {label}
           </p>
-          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", fontFamily: "var(--font-body)", lineHeight: 1.6 }}>
+          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", fontFamily: "var(--font-body)", lineHeight: 1.6, wordBreak: "break-word" }}>
             {tip}
           </p>
-          <button onClick={() => navigate("/app/chat")}
+          <button onClick={handleAsk}
             style={{ marginTop: 10, fontSize: 12, color: "#2dd668", fontFamily: "var(--font-body)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
             onMouseEnter={e => e.currentTarget.style.opacity = "0.75"}
             onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
