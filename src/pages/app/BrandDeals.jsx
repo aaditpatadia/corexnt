@@ -84,7 +84,7 @@ Also tell me: am I undercharging or overcharging based on my engagement vs follo
 
         <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} className="mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-4"
-            style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:"#2dd668", fontFamily:"var(--font-body)" }}>
+            style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:"#1a7a3c", fontFamily:"var(--font-body)" }}>
             🤝 Brand Deals
           </div>
           <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"var(--font-body)", color:"#1a1a1a" }}>
@@ -98,7 +98,7 @@ Also tell me: am I undercharging or overcharging based on my engagement vs follo
         {/* Rate Calculator */}
         <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
           className="rounded-2xl p-6 mb-6 space-y-4"
-          style={{ background:"rgba(14,28,16,0.7)", border:"1px solid rgba(45,214,104,0.15)" }}>
+          style={{ background:"#ffffff", border:"1px solid #e8e8e3" }}>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -126,7 +126,7 @@ Also tell me: am I undercharging or overcharging based on my engagement vs follo
                   style={{ color: f.hint ? "#f87171" : "rgba(45,214,104,0.7)", fontFamily:"var(--font-body)" }}>{f.label}</label>
                 <input type="number" min={0} placeholder={f.ph} value={form[f.key]} onChange={e=>set(f.key,e.target.value)}
                   style={{ ...fieldStyle, borderColor: f.hint ? "rgba(248,113,113,0.5)" : "rgba(45,214,104,0.18)" }}
-                  onFocus={e=>e.target.style.borderColor="rgba(45,214,104,0.5)"}
+                  onFocus={e=>e.target.style.borderColor="#1a7a3c"}
                   onBlur={e=>e.target.style.borderColor=f.hint?"rgba(248,113,113,0.5)":"rgba(45,214,104,0.18)"}/>
               </div>
             ))}
@@ -169,7 +169,7 @@ Also tell me: am I undercharging or overcharging based on my engagement vs follo
               </div>
               <button onClick={()=>useTemplate(t)}
                 className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-semibold transition-all"
-                style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:"#2dd668", fontFamily:"var(--font-body)" }}>
+                style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:"#1a7a3c", fontFamily:"var(--font-body)" }}>
                 Generate →
               </button>
             </motion.div>

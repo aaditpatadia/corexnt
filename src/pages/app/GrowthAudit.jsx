@@ -97,7 +97,7 @@ Use real numbers and benchmarks. Compare my stats to what's actually working in 
     type:"number", min:0, value:form[key],
     onChange:e=>set(key,e.target.value),
     style:{ ...fieldStyle, borderColor: errors[key] ? "rgba(248,113,113,0.5)" : "rgba(45,214,104,0.18)" },
-    onFocus:e=>e.target.style.borderColor="rgba(45,214,104,0.5)",
+    onFocus:e=>e.target.style.borderColor="#1a7a3c",
     onBlur:e=>e.target.style.borderColor=errors[key]?"rgba(248,113,113,0.5)":"rgba(45,214,104,0.18)",
   });
 
@@ -108,7 +108,7 @@ Use real numbers and benchmarks. Compare my stats to what's actually working in 
         {/* Header */}
         <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} className="mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-4"
-            style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:"#2dd668", fontFamily:"var(--font-body)" }}>
+            style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:"#1a7a3c", fontFamily:"var(--font-body)" }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 18L8 11L13 14L18 7L21 10"/><path d="M21 6V10H17"/></svg>
             Growth Audit
           </div>
@@ -123,7 +123,7 @@ Use real numbers and benchmarks. Compare my stats to what's actually working in 
         {/* Form */}
         <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
           className="rounded-2xl p-6 mb-6 space-y-5"
-          style={{ background:"rgba(14,28,16,0.7)", border:"1px solid rgba(45,214,104,0.15)" }}>
+          style={{ background:"#ffffff", border:"1px solid #e8e8e3" }}>
 
           {/* Platform selector */}
           <Field label="Platform">
@@ -132,9 +132,9 @@ Use real numbers and benchmarks. Compare my stats to what's actually working in 
                 <button key={p} onClick={()=>set("platform",p)}
                   className="px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200"
                   style={{
-                    background: form.platform===p ? "rgba(45,214,104,0.2)" : "rgba(20,40,24,0.6)",
+                    background:"#f5f5f0",
                     border: form.platform===p ? "1px solid rgba(45,214,104,0.5)" : "1px solid rgba(45,214,104,0.15)",
-                    color: form.platform===p ? "#2dd668" : "rgba(240,250,242,0.5)",
+                    color:"#666666",
                     fontFamily:"var(--font-body)",
                   }}>
                   {p}
@@ -173,7 +173,7 @@ Use real numbers and benchmarks. Compare my stats to what's actually working in 
               rows={3}
               style={{ ...fieldStyle, resize:"none", lineHeight:1.6,
                 borderColor:errors.challenge?"rgba(248,113,113,0.5)":"rgba(45,214,104,0.18)" }}
-              onFocus={e=>e.target.style.borderColor="rgba(45,214,104,0.5)"}
+              onFocus={e=>e.target.style.borderColor="#1a7a3c"}
               onBlur={e=>e.target.style.borderColor=errors.challenge?"rgba(248,113,113,0.5)":"rgba(45,214,104,0.18)"}
             />
           </Field>
@@ -199,9 +199,9 @@ Use real numbers and benchmarks. Compare my stats to what's actually working in 
             <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
               className="flex items-center gap-3 mb-4">
               <div className="w-7 h-7 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0"
-                style={{ background:"rgba(45,214,104,0.15)", border:"1px solid rgba(45,214,104,0.3)", color:"#2dd668", fontFamily:"var(--font-body)" }}>CX</div>
+                style={{ background:"rgba(45,214,104,0.15)", border:"1px solid rgba(45,214,104,0.3)", color:"#1a7a3c", fontFamily:"var(--font-body)" }}>CX</div>
               <div className="px-4 py-3 rounded-2xl flex items-center gap-2"
-                style={{ background:"rgba(14,28,16,0.8)", border:"1px solid rgba(45,214,104,0.15)" }}>
+                style={{ background:"rgba(14,28,16,0.8)", border:"1px solid #e8e8e3" }}>
                 {[0,1,2].map(i=>(
                   <motion.div key={i} className="w-2 h-2 rounded-full" style={{ background:"#2dd668" }}
                     animate={{ y:[0,-6,0], opacity:[0.4,1,0.4] }}

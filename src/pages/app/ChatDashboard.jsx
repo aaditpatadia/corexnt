@@ -90,6 +90,51 @@ function RevealCard({ message, userType }) {
   );
 }
 
+/* ── Thinking / loading card ── */
+const THINKING_PHRASES = [
+  "Analysing your question…",
+  "Searching live data…",
+  "Pulling competitor intel…",
+  "Building your strategy…",
+  "Checking Indian market trends…",
+  "Crunching the numbers…",
+  "Researching benchmarks…",
+];
+function ThinkingCard() {
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setIdx(i => (i + 1) % THINKING_PHRASES.length), 1800);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 28 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#1a7a3c", fontFamily: "var(--font-body)" }}>COREX</span>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", borderRadius: 16, background: "#ffffff", border: "1px solid #e8f5ee", boxShadow: "0 2px 12px rgba(26,122,60,0.06)" }}>
+        {/* Animated green bar progress */}
+        <div style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
+          {[0,1,2,3].map(i => (
+            <motion.div key={i}
+              animate={{ scaleY: [0.4, 1, 0.4], opacity: [0.4, 1, 0.4] }}
+              transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
+              style={{ width: 3, height: 18, borderRadius: 99, background: "#1a7a3c", transformOrigin: "bottom" }}/>
+          ))}
+        </div>
+        <motion.span
+          key={idx}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          style={{ fontSize: 14, color: "#555555", fontFamily: "var(--font-body)", fontWeight: 500 }}>
+          {THINKING_PHRASES[idx]}
+        </motion.span>
+      </div>
+    </motion.div>
+  );
+}
+
 /* ── Limit banner ── */
 function LimitBanner({ onUpgrade }) {
   return (
@@ -308,22 +353,8 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
               )}
             </AnimatePresence>
 
-            {/* Loading dots while waiting for API */}
-            {loading && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ marginBottom: 28 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase", color: "#1a7a3c", fontFamily: "var(--font-body)" }}>COREX</span>
-                </div>
-                <div style={{ display: "flex", gap: 4 }}>
-                  {[0, 1, 2].map(i => (
-                    <motion.div key={i}
-                      animate={{ opacity: [0.3, 1, 0.3], y: [0, -3, 0] }}
-                      transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
-                      style={{ width: 6, height: 6, borderRadius: "50%", background: "#1a7a3c" }}/>
-                  ))}
-                </div>
-              </motion.div>
-            )}
+            {/* Loading — animated thinking state */}
+            {loading && <ThinkingCard/>}
 
             {limitHit && !loading && <LimitBanner onUpgrade={onUpgrade}/>}
             <div ref={bottomRef}/>

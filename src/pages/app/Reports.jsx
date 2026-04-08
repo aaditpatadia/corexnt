@@ -49,7 +49,7 @@ function ReportCard({ report, onDelete, onView }) {
       <div className="flex gap-2">
         <button onClick={() => onView(report)}
           className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
-          style={{ background:"rgba(45,214,104,0.1)", border:"1px solid rgba(45,214,104,0.25)", color:"#2dd668", fontFamily:"var(--font-body)" }}>
+          style={{ background:"rgba(45,214,104,0.1)", border:"1px solid rgba(45,214,104,0.25)", color:"#1a7a3c", fontFamily:"var(--font-body)" }}>
           View →
         </button>
         <button
@@ -130,7 +130,7 @@ export default function Reports() {
         <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold"
-              style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:"#2dd668", fontFamily:"var(--font-body)" }}>
+              style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:"#1a7a3c", fontFamily:"var(--font-body)" }}>
               📁 Reports
             </div>
             {reports.length > 0 && (

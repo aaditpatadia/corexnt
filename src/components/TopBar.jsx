@@ -39,8 +39,8 @@ function ProfileDropdown({ userName, userEmail, accent, accentRgba, onClose, onS
     <motion.div ref={ref}
       initial={{ opacity: 0, y: -8, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.95 }}
       transition={{ duration: 0.15 }}
-      className="absolute right-0 top-full mt-2 w-52 rounded-2xl overflow-hidden z-50"
-      style={{ background: "rgba(10,18,12,0.98)", border: `1px solid ${accentRgba}0.15)`, boxShadow: "0 16px 48px rgba(0,0,0,0.5)" }}>
+      className="absolute right-0 top-full mt-2 rounded-2xl overflow-hidden z-[100]"
+      style={{ background: "rgba(10,18,12,0.98)", border: `1px solid ${accentRgba}0.25)`, boxShadow: "0 16px 48px rgba(0,0,0,0.6)", width: 208, maxWidth: "calc(100vw - 24px)" }}>
       <div className="p-3 border-b" style={{ borderColor: `${accentRgba}0.08)` }}>
         <p className="text-sm font-semibold truncate" style={{ color: "#f0faf2", fontFamily: "var(--font-body)" }}>{userName || "User"}</p>
         <p className="text-xs truncate mt-0.5" style={{ color: "var(--text-muted)", fontFamily: "var(--font-body)" }}>{userEmail}</p>
@@ -147,28 +147,34 @@ export default function TopBar({ userType, userName, userEmail, onUpgrade, onLoa
             </svg>
           ), "New chat")}
 
-          {/* History */}
-          {iconBtn(() => setShowHistory(true), (
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-            </svg>
-          ), "Conversation history")}
+          {/* History — hidden on mobile */}
+          <span className="hidden md:flex">
+            {iconBtn(() => setShowHistory(true), (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+            ), "Conversation history")}
+          </span>
 
-          {/* Notifications bell */}
-          {iconBtn(() => {}, (
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-            </svg>
-          ), "Notifications")}
+          {/* Notifications bell — hidden on mobile */}
+          <span className="hidden md:flex">
+            {iconBtn(() => {}, (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+            ), "Notifications")}
+          </span>
 
-          {/* Settings */}
-          {iconBtn(() => navigate("/app/settings"), (
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-            </svg>
-          ), "Settings")}
+          {/* Settings — hidden on mobile */}
+          <span className="hidden md:flex">
+            {iconBtn(() => navigate("/app/settings"), (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+            ), "Settings")}
+          </span>
 
           {/* Profile avatar */}
           <div className="relative ml-0.5">

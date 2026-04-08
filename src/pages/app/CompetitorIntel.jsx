@@ -57,7 +57,7 @@ Be specific. Use real details. If you know anything about these brands, use it.`
 
         <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} className="mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-4"
-            style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:"#2dd668", fontFamily:"var(--font-body)" }}>
+            style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:"#1a7a3c", fontFamily:"var(--font-body)" }}>
             🔍 Competitor Intel
           </div>
           <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"var(--font-body)", color:"#1a1a1a" }}>Spy on your competitors</h1>
@@ -68,7 +68,7 @@ Be specific. Use real details. If you know anything about these brands, use it.`
 
         <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
           className="rounded-2xl p-6 mb-6 space-y-5"
-          style={{ background:"rgba(14,28,16,0.7)", border:"1px solid rgba(45,214,104,0.15)" }}>
+          style={{ background:"#ffffff", border:"1px solid #e8e8e3" }}>
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-widest mb-1.5" style={{ color:"#1a7a3c", fontFamily:"var(--font-body)" }}>Industry</label>
@@ -83,7 +83,7 @@ Be specific. Use real details. If you know anything about these brands, use it.`
             </label>
             <input type="text" placeholder="e.g. My Brand Co." value={form.yourBrand} onChange={e=>set("yourBrand",e.target.value)}
               style={fieldStyle}
-              onFocus={e=>e.target.style.borderColor="rgba(45,214,104,0.5)"}
+              onFocus={e=>e.target.style.borderColor="#1a7a3c"}
               onBlur={e=>e.target.style.borderColor="rgba(45,214,104,0.18)"}/>
           </div>
 
@@ -93,7 +93,7 @@ Be specific. Use real details. If you know anything about these brands, use it.`
                 style={{ color:errors.comp1?"#f87171":"rgba(45,214,104,0.7)", fontFamily:"var(--font-body)" }}>Competitor 1</label>
               <input type="text" placeholder="e.g. Gymshark" value={form.comp1} onChange={e=>set("comp1",e.target.value)}
                 style={{ ...fieldStyle, borderColor:errors.comp1?"rgba(248,113,113,0.5)":"rgba(45,214,104,0.18)" }}
-                onFocus={e=>e.target.style.borderColor="rgba(45,214,104,0.5)"}
+                onFocus={e=>e.target.style.borderColor="#1a7a3c"}
                 onBlur={e=>e.target.style.borderColor=errors.comp1?"rgba(248,113,113,0.5)":"rgba(45,214,104,0.18)"}/>
             </div>
             <div>
@@ -102,7 +102,7 @@ Be specific. Use real details. If you know anything about these brands, use it.`
               </label>
               <input type="text" placeholder="e.g. Lululemon" value={form.comp2} onChange={e=>set("comp2",e.target.value)}
                 style={fieldStyle}
-                onFocus={e=>e.target.style.borderColor="rgba(45,214,104,0.5)"}
+                onFocus={e=>e.target.style.borderColor="#1a7a3c"}
                 onBlur={e=>e.target.style.borderColor="rgba(45,214,104,0.18)"}/>
             </div>
           </div>
