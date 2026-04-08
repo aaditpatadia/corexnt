@@ -147,10 +147,12 @@ export default function ChatInput({ onSend, disabled, userType }) {
   return (
     <div
       style={{
-        position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 51,
-        background: "#ffffff",
+        position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
+        background: "rgba(245,245,240,0.95)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
         borderTop: "1px solid #e8e8e3",
-        padding: "12px 24px 20px",
+        padding: "12px 16px",
       }}
       className="mobile-chat-input"
       onDragOver={onDragOver}

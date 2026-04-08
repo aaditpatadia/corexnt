@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { getUserProfile, getProfileCompletion } from "../../utils/userProfile";
@@ -34,18 +34,55 @@ function getTodayMsgs()         { return parseInt(localStorage.getItem(`corex_ms
 function getDaysActive()        { const j = localStorage.getItem("corex_joined"); if (!j) return 1; const d = Math.ceil((Date.now() - new Date(j).getTime()) / 86400000); return isNaN(d) || d < 1 ? 1 : d; }
 function getTotalConversations(){ try { return JSON.parse(localStorage.getItem("corex_history") || "[]").length; } catch { return 0; } }
 
-/* ── Stat card (light v6) ── */
-function StatCard({ label, value, trend, delay = 0 }) {
+/* ── Stat card (v6.3) ── */
+function StatCard({ icon, label, value, delay = 0 }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }}
       whileHover={{ y: -3 }}
-      style={{ background: "#ffffff", border: "1px solid #e8e8e3", borderRadius: 20, padding: "18px 20px", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
-      <p style={{ fontSize: 11, color: "#888888", fontFamily: "var(--font-body)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "1px", fontWeight: 600 }}>{label}</p>
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
-        <p style={{ fontSize: 28, fontFamily: "var(--font-display)", fontWeight: 400, color: "#1a1a1a", lineHeight: 1 }}>{value}</p>
-        {trend && <span style={{ fontSize: 12, color: trend > 0 ? "#1a7a3c" : "#888888", fontFamily: "var(--font-body)", fontWeight: 600 }}>{trend > 0 ? `↑ ${trend}%` : "—"}</span>}
+      style={{ background: "#ffffff", border: "1px solid var(--border)", borderRadius: 16, padding: "20px 24px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+      <p style={{ fontSize: 12, color: "var(--text-muted)", fontFamily: "var(--font-body)", marginBottom: 10, letterSpacing: "0.5px", fontWeight: 500, display: "flex", alignItems: "center", gap: 5 }}>
+        <span>{icon}</span>{label}
+      </p>
+      <p style={{ fontSize: 32, fontFamily: "var(--font-body)", fontWeight: 700, color: "var(--text-primary)", lineHeight: 1 }}>{value}</p>
+    </motion.div>
+  );
+}
+
+/* ── Conversation row ── */
+function ConversationRow({ conv, onClick }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <motion.div
+      onClick={onClick}
+      whileHover={{ x: 2 }}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "12px 14px", borderRadius: 14, cursor: "pointer",
+        background: hov ? "#f5f5f0" : "#f8f8f6",
+        transition: "background 0.15s ease",
+      }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ fontSize: 15, fontWeight: 500, color: "#1a1a1a", fontFamily: "var(--font-body)", marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {conv.title || "Conversation"}
+        </p>
+        <p style={{ fontSize: 12, color: "var(--text-muted)", fontFamily: "var(--font-body)" }}>
+          {timeAgo(conv.timestamp || conv.updatedAt || Date.now())} · {conv.messages?.filter(m => m.role === "user").length || 0} messages
+        </p>
       </div>
+      <span style={{
+        flexShrink: 0, marginLeft: 12,
+        fontSize: 12, fontWeight: 600, color: "#1a7a3c",
+        fontFamily: "var(--font-body)",
+        padding: "4px 12px", borderRadius: 100,
+        border: "1px solid #1a7a3c",
+        background: hov ? "var(--green-pale)" : "transparent",
+        transition: "background 0.15s ease",
+      }}>
+        Continue →
+      </span>
     </motion.div>
   );
 }
@@ -160,10 +197,27 @@ function NewsPanel({ userType }) {
   );
 }
 
+/* ── Intel ask button with animated arrow ── */
+function IntelAskButton({ onClick }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <button onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 600, color: "#2dd668", fontFamily: "var(--font-body)", background: "none", border: "none", cursor: "pointer", padding: 0, transition: "opacity 0.15s" }}>
+      Ask COREX about this
+      <span style={{ display: "inline-block", transition: "transform 0.2s ease", transform: hov ? "translateX(4px)" : "translateX(0)" }}>→</span>
+    </button>
+  );
+}
+
 /* ── Dark intelligence card ── */
 function IntelCard({ isCreator, navigate }) {
   const profile = getUserProfile();
-  const brandName = profile?.brandName || profile?.name || (isCreator ? "your channel" : "your brand");
+  // Creator: name + niche   |   Brand: name + company + industry
+  const brandName = isCreator
+    ? (profile?.name || "your channel")
+    : (profile?.company || profile?.name || "your brand");
   const niche     = profile?.niche || profile?.industry || "";
 
   // Type A: stat tips
@@ -257,18 +311,13 @@ function IntelCard({ isCreator, navigate }) {
           </svg>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontSize: 11, fontWeight: 600, color: "#2dd668", fontFamily: "var(--font-body)", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6 }}>
+          <p style={{ fontSize: 10, fontWeight: 600, color: "#2dd668", fontFamily: "var(--font-body)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 8 }}>
             {label}
           </p>
-          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", fontFamily: "var(--font-body)", lineHeight: 1.6, wordBreak: "break-word" }}>
+          <p style={{ fontSize: 17, fontWeight: 500, color: "#ffffff", fontFamily: "var(--font-body)", lineHeight: 1.5, wordBreak: "break-word", maxWidth: 480 }}>
             {tip}
           </p>
-          <button onClick={handleAsk}
-            style={{ marginTop: 10, fontSize: 12, color: "#2dd668", fontFamily: "var(--font-body)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-            onMouseEnter={e => e.currentTarget.style.opacity = "0.75"}
-            onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
-            Ask COREX about this →
-          </button>
+          <IntelAskButton onClick={handleAsk}/>
         </div>
       </div>
     </motion.div>
@@ -287,8 +336,11 @@ export default function PersonalDashboard({ userType, userName }) {
   const todayMsgs    = getTodayMsgs();
   const daysActive   = getDaysActive();
   const totalConvos  = getTotalConversations();
-  const displayName  = userName || profile?.name || "";
-  const niche        = profile?.niche || profile?.company || "";
+
+  // Profile fields — creator uses `name` + `niche`, brand uses `name` + `company` + `industry`
+  const displayName  = profile?.name || userName || "";
+  const entityName   = isCreator ? (profile?.niche || "") : (profile?.company || "");
+  const niche        = profile?.niche || profile?.industry || "";
 
   useEffect(() => {
     try { setHistory(JSON.parse(localStorage.getItem("corex_history") || "[]").slice(0, 4)); } catch {}
@@ -323,7 +375,7 @@ export default function PersonalDashboard({ userType, userName }) {
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 24 }}>
           <p style={{ fontSize: 13, color: "#888888", fontFamily: "var(--font-body)", marginBottom: 4 }}>{getGreeting(displayName)}</p>
           <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(22px, 3vw, 30px)", fontWeight: 400, color: "#1a1a1a", lineHeight: 1.2 }}>
-            {niche ? `${niche} ${isCreator ? "Creator" : "Brand"}` : (isCreator ? "Creator Dashboard" : "Brand Dashboard")}
+            {entityName || (isCreator ? "Creator Dashboard" : "Brand Dashboard")}
           </h1>
         </motion.div>
 
@@ -355,10 +407,10 @@ export default function PersonalDashboard({ userType, userName }) {
 
         {/* Stat cards row */}
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
-          <StatCard label="Conversations" value={totalConvos || "0"} delay={0.1}/>
-          <StatCard label="Messages today" value={`${todayMsgs}/15`} delay={0.15}/>
-          <StatCard label="Days active" value={daysActive} delay={0.2}/>
-          <StatCard label="Profile" value={`${completion}%`} delay={0.25}/>
+          <StatCard icon="💬" label="Conversations" value={totalConvos || "0"} delay={0.1}/>
+          <StatCard icon="⚡" label="Messages today" value={`${todayMsgs}/15`} delay={0.15}/>
+          <StatCard icon="📅" label="Days active" value={daysActive} delay={0.2}/>
+          <StatCard icon="✓" label="Profile complete" value={`${completion}%`} delay={0.25}/>
         </div>
 
         {/* 2-column grid: main content (left) + news feed (right) */}
@@ -391,27 +443,9 @@ export default function PersonalDashboard({ userType, userName }) {
                   Start your first conversation →
                 </button>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {history.map((conv) => (
-                    <motion.button key={conv.id}
-                      onClick={() => loadConversation(conv)}
-                      whileHover={{ x: 4 }}
-                      style={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        padding: "10px 12px", borderRadius: 14, textAlign: "left", width: "100%",
-                        background: "#f8f8f6", border: "1px solid #e8e8e3",
-                        cursor: "pointer", transition: "all 0.2s ease",
-                      }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 13, color: "#1a1a1a", fontWeight: 500, fontFamily: "var(--font-body)", marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "40ch" }}>
-                          {conv.title || "Conversation"}
-                        </p>
-                        <p style={{ fontSize: 11, color: "#888888", fontFamily: "var(--font-body)" }}>
-                          {timeAgo(conv.timestamp || conv.updatedAt || Date.now())} · {conv.messages?.filter(m => m.role === "user").length || 0} messages
-                        </p>
-                      </div>
-                      <span style={{ fontSize: 12, color: "#1a7a3c", flexShrink: 0, fontFamily: "var(--font-body)" }}>Continue →</span>
-                    </motion.button>
+                    <ConversationRow key={conv.id} conv={conv} onClick={() => loadConversation(conv)}/>
                   ))}
                 </div>
               )}

@@ -328,6 +328,7 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
     let reply      = "";
     let searchUsed = false;
     try {
+      const userProfile = (() => { try { return JSON.parse(localStorage.getItem("corex_user_profile") || "null"); } catch { return null; } })();
       const res = await fetch("/api/chat", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
@@ -335,6 +336,7 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
           messages:       contextWindow.map(m => ({ role: m.role, content: m.content || "" })),
           files:          apiFiles,
           userType,
+          userProfile,
           profileContext: sessionContext,
           attachedDocs:   JSON.parse(localStorage.getItem("corex_attached_docs") || "[]"),
           sharedLinks:    JSON.parse(localStorage.getItem("corex_shared_links")   || "[]"),
@@ -369,8 +371,8 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
   return (
     <div style={{ background: "#f0f0eb", height: "100%", position: "relative" }}>
 
-      {/* Messages scrollable area — extra bottom padding on mobile for nav + input */}
-      <div className="scroll-area" style={{ height: "100%", overflowY: "auto", paddingBottom: "max(140px, calc(140px + env(safe-area-inset-bottom)))" }}>
+      {/* Messages scrollable area — bottom padding clears input bar + bottom nav + chips */}
+      <div className="scroll-area" style={{ height: "100%", overflowY: "auto", paddingBottom: "max(180px, calc(180px + env(safe-area-inset-bottom)))" }}>
         {messages.length === 0 ? (
           <WelcomeScreen userType={userType} userName={userName} onChip={chip => sendMessage(chip, [])}/>
         ) : (

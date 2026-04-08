@@ -168,21 +168,55 @@ export default async function handler(req, res) {
   if (req.method !== "POST")   return res.status(405).json({ error: "Method not allowed" });
 
   try {
-    const { messages = [], files = [], userType = "creator", engineMode, profileContext, attachedDocs = [], sharedLinks = [] } = req.body || {};
+    const { messages = [], files = [], userType = "creator", engineMode, profileContext, userProfile, attachedDocs = [], sharedLinks = [] } = req.body || {};
 
     const lastUser = [...messages].reverse().find(m => m.role === "user");
     if (!lastUser?.content?.trim() && !(files?.length > 0)) {
       return res.status(400).json({ error: "Message is required" });
     }
 
+    // ── Build user context block from userProfile ────────────────────────────
+    let userContextBlock = "";
+    if (userProfile && typeof userProfile === "object") {
+      const isCreator = userType !== "company";
+      const name        = userProfile.name        || "";
+      const brand       = isCreator ? (userProfile.name || "") : (userProfile.company || userProfile.name || "");
+      const industry    = userProfile.industry    || userProfile.niche || "";
+      const competitors = userProfile.competitors || "";
+      const budget      = userProfile.budget      || "";
+      const platform    = userProfile.platform    || "";
+      const followers   = userProfile.followers   || "";
+      const challenge   = userProfile.challenge   || "";
+
+      userContextBlock = `\n\nUSER CONTEXT — Read this first and never ignore it:
+Name: ${name}
+${isCreator ? `Creator handle/name: ${brand}` : `Brand: ${brand}`}
+${isCreator ? `Platform: ${platform}` : `Industry: ${industry}`}
+${isCreator ? `Followers: ${followers}` : `Competitors: ${competitors}`}
+${isCreator ? `Niche: ${industry}` : `Monthly budget: ${budget}`}
+${isCreator ? `Main challenge: ${challenge}` : ""}
+User type: ${userType}
+
+MANDATORY PERSONALISATION RULES — non-negotiable:
+1. The first sentence of EVERY response must reference the user's actual ${isCreator ? "creator name or niche" : "brand name"} (${brand || name || "this user"}). Never start a response without acknowledging who you are talking to.
+2. ${competitors ? `COMPETITOR SPECIFICITY: This user's actual competitors are: ${competitors}. Every competitive analysis must name these specific competitors. Never substitute generic names.` : "Use web search to identify their key competitors."}
+3. ${budget ? `BUDGET AWARENESS: This user's monthly budget is ${budget}. All paid campaign recommendations, influencer spends, and ad budgets must fit within this range. A brand with this budget gets different advice than a larger or smaller one.` : "Ask about budget if making spend recommendations."}
+4. WEB SEARCH TRIGGER: For any question about competitors, trends, or current market data, ALWAYS use web search. Do not answer from training data alone. Cite what you found: "Based on current data: [source]..."
+5. RESPONSE LENGTH: Maximum 4 sections. No padding. Every sentence must add new information. Cut anything a smart marketer already knows.`;
+    } else if (profileContext) {
+      userContextBlock = `\n\n${profileContext}`;
+    }
+
     // ── Select and build system prompt ────────────────────────────────────────
-    let basePrompt = userType === "company" ? BRAND_PROMPT : CREATOR_PROMPT;
+    // User context injected first — before anything else
+    let basePrompt = (userType === "company" ? BRAND_PROMPT : CREATOR_PROMPT) + userContextBlock;
 
     if (engineMode && ENGINE_ADDONS[engineMode]) {
       basePrompt += ENGINE_ADDONS[engineMode];
     }
 
-    if (profileContext) {
+    // Legacy profileContext support (if userProfile not present)
+    if (!userProfile && profileContext) {
       basePrompt += `\n\n${profileContext}`;
     }
 
