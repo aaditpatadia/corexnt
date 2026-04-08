@@ -644,10 +644,9 @@ body::after {
    Mobile layout
 ───────────────────────────────────────────── */
 @media (max-width: 768px) {
-  /* Chat input sits above bottom nav */
+  /* Chat input sits above bottom nav on mobile */
   .mobile-chat-input {
     bottom: 60px !important;
-    padding-bottom: 12px !important;
   }
 
   /* Single column dashboard on mobile */
@@ -661,6 +660,6 @@ body::after {
   /* Reduce padding on mobile */
   .mobile-px { padding-left: 16px !important; padding-right: 16px !important; }
 
-  /* Add bottom padding equal to nav height + chat input */
-  .chat-scroll-area { padding-bottom: 220px !important; }
+  /* Bottom padding accounts for input bar + nav + chips */
+  .chat-scroll-area { padding-bottom: 240px !important; }
 }
