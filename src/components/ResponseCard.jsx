@@ -129,9 +129,12 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
 
   if (role === "user") return <UserBubble message={message}/>;
 
-  const { title, cleanBody, steps, example, graphData, chips } = parseResponse(message.content);
+  const { title, cleanBody, steps, example, graphData, chips, followups } = parseResponse(message.content);
   const showChart = shouldShowChart(graphData);
   const bodyText  = stripMarkdown(cleanBody || "");
+
+  // Determine label for next moves section based on userType
+  const nextMovesLabel = userType !== "company" ? "This week" : "Next moves";
 
   const copy = () => {
     const parts = [title, bodyText,
@@ -150,14 +153,21 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
       onMouseEnter={()=>setHovered(true)}
       onMouseLeave={()=>setHovered(false)}>
 
-      {/* COREX label */}
+      {/* COREX Intelligence label */}
       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
-        <span style={{ fontSize:11, fontWeight:600, letterSpacing:"2px", textTransform:"uppercase", color:"#1a7a3c", fontFamily:"var(--font-body)" }}>
-          COREX
+        <span style={{ fontSize:11, fontWeight:600, letterSpacing:"1.5px", textTransform:"uppercase", color:"#888888", fontFamily:"var(--font-body)" }}>
+          COREX Intelligence
         </span>
         {searchUsed && (
-          <span style={{ fontSize:10, fontWeight:600, color:"#1a7a3c", background:"#e8f5ee", border:"1px solid #c8e6d4", borderRadius:20, padding:"1px 7px", fontFamily:"var(--font-body)", letterSpacing:"0.5px" }}>
-            ● Live data
+          <span style={{
+            fontSize:10, fontWeight:600, color:"#1a7a3c",
+            background:"#e8f5ee", border:"1px solid #c8e6d4",
+            borderRadius:20, padding:"2px 8px",
+            fontFamily:"var(--font-body)", letterSpacing:"0.5px",
+            display:"inline-flex", alignItems:"center", gap:5,
+          }}>
+            <span style={{ animation:"liveIntelPulse 2s ease-in-out infinite", display:"inline-block", width:6, height:6, borderRadius:"50%", background:"#1a7a3c" }}/>
+            Live intel
           </span>
         )}
       </div>
@@ -200,25 +210,25 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
         );
       })()}
 
-      {/* Action steps */}
+      {/* Next moves / action steps — distinct deliverable card */}
       {steps.length > 0 && (
-        <div style={{ marginTop:20 }}>
-          <p style={{ fontSize:11, fontWeight:600, letterSpacing:"2px", textTransform:"uppercase", color:"#888888", fontFamily:"var(--font-body)", marginBottom:10 }}>
-            ACTION STEPS
+        <div style={{ marginTop:20, background:"var(--green-pale)", border:"1px solid var(--green-border)", borderRadius:16, padding:"16px 18px" }}>
+          <p style={{ fontSize:11, fontWeight:700, letterSpacing:"2px", textTransform:"uppercase", color:"#1a7a3c", fontFamily:"var(--font-body)", marginBottom:12 }}>
+            {nextMovesLabel}
           </p>
           <div style={{ display:"flex", flexDirection:"column", gap:0 }}>
             {steps.map((s, i) => (
               <div key={i} style={{ display:"flex", gap:12, marginBottom:10, alignItems:"flex-start" }}>
+                {/* Unchecked checkbox */}
                 <div style={{
-                  width:24, height:24, borderRadius:"50%", flexShrink:0,
-                  background:"#e8f5ee", border:"1px solid #c8e6d4",
-                  color:"#1a7a3c", fontSize:12, fontWeight:600,
-                  display:"flex", alignItems:"center", justifyContent:"center",
-                  fontFamily:"var(--font-body)",
+                  width:18, height:18, borderRadius:4, flexShrink:0, marginTop:3,
+                  border:"1.5px solid #1a7a3c", background:"#ffffff",
                 }}>
-                  {i+1}
+                  <svg width="18" height="18" viewBox="0 0 18 18" style={{ opacity:0 }}>
+                    <polyline points="3 9 7 13 15 5" stroke="#1a7a3c" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                  </svg>
                 </div>
-                <span style={{ fontSize:15, color:"#333333", lineHeight:1.6, paddingTop:3, fontFamily:"var(--font-body)" }}>
+                <span style={{ fontSize:14, color:"#1a4a28", lineHeight:1.6, fontFamily:"var(--font-body)", wordBreak:"break-word", overflowWrap:"break-word" }}>
                   {stripMarkdown(s)}
                 </span>
               </div>
@@ -244,10 +254,10 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
         </div>
       )}
 
-      {/* Follow-up chips */}
-      {chips.length > 0 && (
+      {/* Follow-up chips — from Chips: and FOLLOWUPS: blocks */}
+      {(chips.length > 0 || (followups && followups.length > 0)) && (
         <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginTop:16 }}>
-          {chips.map((chip, i) => (
+          {[...chips, ...(followups || [])].map((chip, i) => (
             <button key={i} onClick={()=>onChip?.(chip)}
               style={{
                 padding:"7px 16px", borderRadius:20, fontSize:13, fontFamily:"var(--font-body)",

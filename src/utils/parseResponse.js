@@ -27,6 +27,16 @@ export function shouldShowChart(graphData) {
   return (max - min) > (max * 0.1);
 }
 
+function extractFollowups(raw) {
+  const match = raw.match(/FOLLOWUPS:\s*(\[[\s\S]*?\])/);
+  if (!match) return [];
+  try {
+    const arr = JSON.parse(match[1]);
+    if (Array.isArray(arr)) return arr.filter(Boolean).slice(0, 2);
+  } catch {}
+  return [];
+}
+
 function extractChips(raw) {
   // Single-quoted
   const sq = raw.match(/Chips:\s*'([^']+)'\s*\|\s*'([^']+)'\s*(?:\|\s*'([^']+)')?/);
@@ -68,11 +78,13 @@ export function parseResponse(raw) {
   // Extract structured data first (from raw, before stripping)
   const graphData = extractGraphData(raw);
   const chips     = extractChips(raw);
+  const followups = extractFollowups(raw);
 
   // Remove structured tokens from display text
   let clean = raw
     .replace(/GRAPH_DATA:\s*\{[\s\S]*?\}\s*(?=\n|$)/g, "")
     .replace(/Chips:\s*.+$/m, "")
+    .replace(/FOLLOWUPS:\s*\[[\s\S]*?\]/m, "")
     .trim();
 
   clean = stripMarkdown(clean);
@@ -130,7 +142,7 @@ export function parseResponse(raw) {
   // Key metric extraction (only from body, not title)
   const keyMetric = extractKeyMetric(cleanBody);
 
-  return { title, summary, cleanBody, steps, example, graphData, chips, keyMetric };
+  return { title, summary, cleanBody, steps, example, graphData, chips, followups, keyMetric };
 }
 
 function extractKeyMetric(text) {

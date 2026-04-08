@@ -245,6 +245,11 @@ export default function ChatInput({ onSend, disabled, userType }) {
             ref={textRef}
             value={text}
             onChange={e => setText(e.target.value)}
+            onInput={e => {
+              const el = e.target;
+              el.style.height = "auto";
+              el.style.height = Math.min(el.scrollHeight, 200) + "px";
+            }}
             onKeyDown={onKey}
             onFocus={() => setFocused(true)}
             onBlur={()  => setFocused(false)}

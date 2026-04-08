@@ -155,9 +155,26 @@ function LimitBanner({ onUpgrade }) {
 function WelcomeScreen({ userType, userName, onChip }) {
   const isCreator = userType !== "company";
   const subtitle  = isCreator ? "Reels · Growth · Brand Deals · Trends" : "Campaigns · Strategy · Budgets · Intel";
-  const chips     = isCreator
-    ? ["Write me a viral reel script", "Audit my Instagram growth", "What's trending this week?", "Price my brand deal"]
-    : ["Build a campaign strategy", "Allocate my marketing budget", "Audit our brand positioning", "Analyse our competitors"];
+
+  // Dynamic chips based on profile data
+  const profile    = (() => { try { return JSON.parse(localStorage.getItem("corex_user_profile") || "{}"); } catch { return {}; } })();
+  const brandName  = profile?.brandName || profile?.name || "";
+  const niche      = profile?.niche || profile?.industry || "";
+  const followers  = profile?.followers || "";
+
+  const chips = isCreator
+    ? [
+        `Why did my last 3 reels underperform${niche ? " in " + niche : ""}`,
+        `Script a reel${niche ? " for " + niche : ""} that hooks in 2 seconds`,
+        "What trend should I jump on this week",
+        `How do I price my next brand deal${followers ? " at " + followers + " followers" : ""}`,
+      ]
+    : [
+        `Audit ${brandName || "our brand"}'s Instagram`,
+        "Find a gap our competitors are missing",
+        `Plan our next campaign${niche ? " for " + niche : ""}`,
+        "Where should we allocate our budget this month",
+      ];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", padding: "40px 24px", textAlign: "center", paddingBottom: 120 }}>
@@ -285,6 +302,29 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
     const contextWindow  = fullHistory.slice(-15);
     const profileContext = getProfileContext(userType);
 
+    // Build session context for first message in a conversation
+    const isFirstMessage = messages.length === 0;
+    let sessionContext = profileContext;
+    if (isFirstMessage) {
+      const now       = new Date();
+      const dateStr   = now.toLocaleDateString("en-IN", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+      const timeStr   = now.toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit" });
+      const recentHistory = (() => {
+        try {
+          return JSON.parse(localStorage.getItem("corex_history") || "[]")
+            .slice(0, 3)
+            .map(h => h.title)
+            .filter(Boolean);
+        } catch { return []; }
+      })();
+      const planTier  = localStorage.getItem("corex_plan") || "free";
+      sessionContext  = (profileContext || "") +
+        `\n\nSESSION CONTEXT:\n` +
+        `Date and time: ${dateStr}, ${timeStr}\n` +
+        `User plan tier: ${planTier}\n` +
+        (recentHistory.length > 0 ? `Recent conversations: ${recentHistory.join(" | ")}\n` : "");
+    }
+
     let reply      = "";
     let searchUsed = false;
     try {
@@ -295,7 +335,7 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
           messages:       contextWindow.map(m => ({ role: m.role, content: m.content || "" })),
           files:          apiFiles,
           userType,
-          profileContext,
+          profileContext: sessionContext,
           attachedDocs:   JSON.parse(localStorage.getItem("corex_attached_docs") || "[]"),
           sharedLinks:    JSON.parse(localStorage.getItem("corex_shared_links")   || "[]"),
         }),
