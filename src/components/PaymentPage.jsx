@@ -12,43 +12,12 @@ function detectIndia() {
   );
 }
 
-/* ─── Check icon ─── */
-function Check() {
-  return (
-    <span style={{
-      display:"inline-flex", alignItems:"center", justifyContent:"center",
-      width:18, height:18, borderRadius:"50%",
-      background:"#e8f5ee", flexShrink:0, marginTop:1,
-    }}>
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-        stroke="#1a7a3c" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="20 6 9 17 4 12"/>
-      </svg>
-    </span>
-  );
-}
-
-/* ─── Cross icon ─── */
-function Cross() {
-  return (
-    <span style={{
-      display:"inline-flex", alignItems:"center", justifyContent:"center",
-      width:18, height:18, borderRadius:"50%",
-      background:"#f5f5f0", flexShrink:0, marginTop:1,
-    }}>
-      <svg width="8" height="2" viewBox="0 0 10 2">
-        <rect x="0" y="0" width="10" height="2" rx="1" fill="#bbbbbb"/>
-      </svg>
-    </span>
-  );
-}
-
 /* ─── Pill toggle ─── */
 function PillToggle({ options, value, onChange, small }) {
   return (
     <div style={{
-      display:"inline-flex", background:"#ffffff",
-      border:"1px solid #e8e8e3", borderRadius:100,
+      display:"inline-flex", background:"rgba(255,255,255,0.06)",
+      border:"1px solid rgba(255,255,255,0.08)", borderRadius:100,
       padding:4, gap:4,
     }}>
       {options.map((opt) => (
@@ -56,11 +25,13 @@ function PillToggle({ options, value, onChange, small }) {
           style={{
             padding: small ? "8px 20px" : "10px 28px",
             borderRadius:100, border:"none", cursor:"pointer",
-            fontFamily:"Montserrat, sans-serif",
+            fontFamily:"'Instrument Sans', sans-serif",
             fontSize: small ? 13 : 14,
             fontWeight:600,
-            background: value === opt.value ? "#1a7a3c" : "transparent",
-            color: value === opt.value ? "#ffffff" : "#888888",
+            background: value === opt.value
+              ? "linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)"
+              : "transparent",
+            color: value === opt.value ? "#000000" : "rgba(255,255,255,0.5)",
             transition:"all 0.2s ease",
             whiteSpace:"nowrap",
           }}>
@@ -68,18 +39,6 @@ function PillToggle({ options, value, onChange, small }) {
         </button>
       ))}
     </div>
-  );
-}
-
-/* ─── Feature row ─── */
-function Feature({ text }) {
-  return (
-    <li style={{ display:"flex", alignItems:"flex-start", gap:10, marginBottom:10 }}>
-      <Check/>
-      <span style={{ fontFamily:"Montserrat, sans-serif", fontSize:14, fontWeight:500, color:"#444444", lineHeight:1.5 }}>
-        {text}
-      </span>
-    </li>
   );
 }
 
@@ -93,10 +52,10 @@ function Price({ monthly, threeMonth, billing, isIndia }) {
   if (mo === "Custom") {
     return (
       <div>
-        <div style={{ fontFamily:"Montserrat, sans-serif", fontSize:44, fontWeight:800, color:"#1a1a1a", lineHeight:1 }}>
+        <div style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:44, fontWeight:800, color:"#ffffff", lineHeight:1 }}>
           Custom
         </div>
-        <div style={{ fontFamily:"Montserrat, sans-serif", fontSize:12, color:"#888888", marginTop:4 }}>
+        <div style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:12, color:"rgba(255,255,255,0.4)", marginTop:4 }}>
           {isIndia ? "Starting ₹15,000/month" : "Starting $199/month"}
         </div>
       </div>
@@ -108,29 +67,29 @@ function Price({ monthly, threeMonth, billing, isIndia }) {
       {billing === "3month" ? (
         <>
           <div style={{ display:"flex", alignItems:"baseline", gap:6 }}>
-            <span style={{ fontFamily:"Montserrat, sans-serif", fontSize:44, fontWeight:800, color:"#1a7a3c", lineHeight:1 }}>
+            <span style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:44, fontWeight:800, color:"#ffffff", lineHeight:1 }}>
               {cur}{disc}
             </span>
-            <span style={{ fontFamily:"Montserrat, sans-serif", fontSize:15, color:"#888888" }}>/mo</span>
+            <span style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:15, color:"rgba(255,255,255,0.4)" }}>/mo</span>
           </div>
           <div style={{ display:"flex", alignItems:"center", gap:8, marginTop:4 }}>
-            <span style={{ fontFamily:"Montserrat, sans-serif", fontSize:13, color:"#bbbbbb", textDecoration:"line-through" }}>
+            <span style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:13, color:"rgba(255,255,255,0.25)", textDecoration:"line-through" }}>
               {cur}{mo}/mo
             </span>
           </div>
-          <div style={{ fontFamily:"Montserrat, sans-serif", fontSize:12, color:"#888888", marginTop:2 }}>
+          <div style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:12, color:"rgba(255,255,255,0.35)", marginTop:2 }}>
             Billed {isIndia ? `₹${billed}` : `$${billed}`} every 3 months
           </div>
         </>
       ) : (
         <div style={{ display:"flex", alignItems:"baseline", gap:6 }}>
-          <span style={{ fontFamily:"Montserrat, sans-serif", fontSize:44, fontWeight:800, color:"#1a1a1a", lineHeight:1 }}>
+          <span style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:44, fontWeight:800, color:"#ffffff", lineHeight:1 }}>
             {cur}{mo}
           </span>
-          <span style={{ fontFamily:"Montserrat, sans-serif", fontSize:15, color:"#888888" }}>/month</span>
+          <span style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:15, color:"rgba(255,255,255,0.4)" }}>/month</span>
         </div>
       )}
-      <div style={{ fontFamily:"Montserrat, sans-serif", fontSize:11, color:"#aaaaaa", marginTop:6 }}>
+      <div style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:11, color:"rgba(255,255,255,0.25)", marginTop:6 }}>
         {isIndia ? "Prices in Indian Rupees (₹)" : "Prices in USD ($)"}
       </div>
     </div>
@@ -142,22 +101,25 @@ function PlanCard({ plan, billing, isIndia, delay }) {
   const [hovered, setHovered] = useState(false);
 
   const isPopular = plan.badge === "Most Popular";
-  const isBest = plan.badge === "Best Value";
 
   const cardStyle = {
     position:"relative",
-    background:"#ffffff",
-    borderRadius:20,
+    borderRadius:24,
     padding:28,
     display:"flex",
     flexDirection:"column",
-    border: isPopular ? "2px solid #1a7a3c" : "1px solid #e8e8e3",
-    boxShadow: isPopular
-      ? "0 8px 32px rgba(26,122,60,0.12)"
-      : "0 2px 12px rgba(0,0,0,0.06)",
     transition:"all 0.25s cubic-bezier(0.16,1,0.3,1)",
-    transform: hovered ? "translateY(-3px)" : "translateY(0)",
-    animation: isPopular ? "subtlePulse 3s ease-in-out infinite" : "none",
+    transform: hovered ? "translateY(-4px)" : "translateY(0)",
+    ...(isPopular
+      ? {
+          background: "linear-gradient(#0a0a0a,#0a0a0a) padding-box, linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71) border-box",
+          border: "1px solid transparent",
+          boxShadow: "0 20px 60px rgba(34,111,247,0.15)",
+        }
+      : {
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.08)",
+        }),
   };
 
   return (
@@ -174,12 +136,10 @@ function PlanCard({ plan, billing, isIndia, delay }) {
         <div style={{
           position:"absolute", top:-14, left:"50%", transform:"translateX(-50%)",
           padding:"5px 16px", borderRadius:100,
-          fontFamily:"Montserrat, sans-serif", fontSize:11, fontWeight:600,
+          fontFamily:"'Instrument Sans', sans-serif", fontSize:11, fontWeight:600,
           whiteSpace:"nowrap",
-          ...(isPopular
-            ? { background:"#1a7a3c", color:"#ffffff" }
-            : { background:"#f0faf4", color:"#1a7a3c", border:"1px solid #c8e6d4" }
-          ),
+          background:"linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)",
+          color:"#000000",
         }}>
           {plan.badge}
         </div>
@@ -187,15 +147,15 @@ function PlanCard({ plan, billing, isIndia, delay }) {
 
       {/* Plan name */}
       <div style={{
-        fontFamily:"Montserrat, sans-serif", fontSize:13, fontWeight:600,
-        color:"#888888", letterSpacing:1, textTransform:"uppercase", marginBottom:8,
+        fontFamily:"'Instrument Sans', sans-serif", fontSize:13, fontWeight:600,
+        color:"rgba(255,255,255,0.4)", letterSpacing:1, textTransform:"uppercase", marginBottom:8,
         marginTop: plan.badge ? 8 : 0,
       }}>
         {plan.name}
       </div>
 
       {/* Price */}
-      <div style={{ marginBottom:20 }}>
+      <div style={{ marginBottom:24 }}>
         <Price
           monthly={plan.monthly}
           threeMonth={plan.threeMonth}
@@ -205,23 +165,37 @@ function PlanCard({ plan, billing, isIndia, delay }) {
       </div>
 
       {/* Divider */}
-      <div style={{ height:1, background:"#f0f0eb", marginBottom:20 }}/>
+      <div style={{ height:1, background:"rgba(255,255,255,0.07)", marginBottom:20 }}/>
 
       {/* Features */}
       <ul style={{ listStyle:"none", padding:0, margin:"0 0 24px 0", flex:1 }}>
-        {plan.features.map((f) => <Feature key={f} text={f}/>)}
+        {plan.features.map((f) => (
+          <li key={f} style={{ display:"flex", alignItems:"flex-start", gap:10, marginBottom:10 }}>
+            <span style={{
+              display:"inline-flex", alignItems:"center", justifyContent:"center",
+              width:18, height:18, borderRadius:"50%",
+              background:"rgba(156,252,175,0.1)", flexShrink:0, marginTop:2,
+            }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                stroke="#9CFCAF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </span>
+            <span style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:14, fontWeight:400, color:"rgba(255,255,255,0.7)", lineHeight:1.5 }}>
+              {f}
+            </span>
+          </li>
+        ))}
       </ul>
 
       {/* CTA */}
-      <PlanButton plan={plan} hovered={hovered}/>
+      <PlanButton plan={plan} isPopular={isPopular}/>
     </motion.div>
   );
 }
 
-function PlanButton({ plan }) {
+function PlanButton({ plan, isPopular }) {
   const [btnHov, setBtnHov] = useState(false);
-
-  const isPopular = plan.badge === "Most Popular";
 
   if (plan.enterprise) {
     return (
@@ -231,10 +205,10 @@ function PlanButton({ plan }) {
         style={{
           display:"block", textAlign:"center", textDecoration:"none",
           padding:"14px 0", borderRadius:100,
-          fontFamily:"Montserrat, sans-serif", fontSize:15, fontWeight:600,
-          border:"1.5px solid #1a7a3c",
-          background: btnHov ? "#1a7a3c" : "#ffffff",
-          color: btnHov ? "#ffffff" : "#1a7a3c",
+          fontFamily:"'Instrument Sans', sans-serif", fontSize:15, fontWeight:600,
+          border:"1px solid rgba(255,255,255,0.2)",
+          background: btnHov ? "rgba(255,255,255,0.08)" : "transparent",
+          color: "#ffffff",
           transition:"all 0.2s ease",
         }}>
         {plan.cta}
@@ -250,10 +224,10 @@ function PlanButton({ plan }) {
         onClick={() => alert("Payments launching soon — you'll be notified!")}
         style={{
           width:"100%", padding:"14px 0", borderRadius:100, border:"none",
-          fontFamily:"Montserrat, sans-serif", fontSize:15, fontWeight:600,
-          background: btnHov ? "#155f30" : "#1a7a3c",
-          color:"#ffffff", cursor:"pointer",
-          boxShadow: btnHov ? "0 6px 20px rgba(26,122,60,0.4)" : "0 4px 14px rgba(26,122,60,0.3)",
+          fontFamily:"'Instrument Sans', sans-serif", fontSize:15, fontWeight:600,
+          background:"linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)",
+          color:"#000000", cursor:"pointer",
+          opacity: btnHov ? 0.88 : 1,
           transition:"all 0.2s ease",
         }}>
         {plan.cta}
@@ -268,10 +242,10 @@ function PlanButton({ plan }) {
       onClick={() => alert("Payments launching soon — you'll be notified!")}
       style={{
         width:"100%", padding:"14px 0", borderRadius:100,
-        fontFamily:"Montserrat, sans-serif", fontSize:15, fontWeight:600,
-        border:"1.5px solid #1a7a3c",
-        background: btnHov ? "#1a7a3c" : "#ffffff",
-        color: btnHov ? "#ffffff" : "#1a7a3c",
+        fontFamily:"'Instrument Sans', sans-serif", fontSize:15, fontWeight:600,
+        border:"1px solid rgba(255,255,255,0.15)",
+        background: btnHov ? "rgba(255,255,255,0.08)" : "transparent",
+        color: "#ffffff",
         cursor:"pointer",
         transition:"all 0.2s ease",
       }}>
@@ -429,10 +403,10 @@ function TableCell({ value }) {
       <td style={{ padding:"12px 16px", textAlign:"center" }}>
         <span style={{
           display:"inline-flex", alignItems:"center", justifyContent:"center",
-          width:22, height:22, borderRadius:"50%", background:"#e8f5ee",
+          width:22, height:22, borderRadius:"50%", background:"rgba(156,252,175,0.1)",
         }}>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-            stroke="#1a7a3c" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            stroke="#9CFCAF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </span>
@@ -443,7 +417,7 @@ function TableCell({ value }) {
     return (
       <td style={{ padding:"12px 16px", textAlign:"center" }}>
         <span style={{
-          display:"inline-block", width:16, height:2, background:"#cccccc",
+          display:"inline-block", width:16, height:2, background:"rgba(255,255,255,0.12)",
           borderRadius:2, verticalAlign:"middle",
         }}/>
       </td>
@@ -452,7 +426,7 @@ function TableCell({ value }) {
   return (
     <td style={{
       padding:"12px 16px", textAlign:"center",
-      fontFamily:"Montserrat, sans-serif", fontSize:13, color:"#444444",
+      fontFamily:"'Instrument Sans', sans-serif", fontSize:13, color:"rgba(255,255,255,0.6)",
     }}>
       {value}
     </td>
@@ -464,24 +438,24 @@ function ComparisonTable({ userType }) {
   return (
     <div style={{ marginTop:60 }}>
       <h2 style={{
-        fontFamily:"Montserrat, sans-serif", fontSize:20, fontWeight:700,
-        color:"#1a1a1a", marginBottom:20,
+        fontFamily:"'Instrument Serif', serif", fontStyle:"italic",
+        fontSize:24, fontWeight:400, color:"#ffffff", marginBottom:20,
       }}>
         Compare all features
       </h2>
       <div style={{
-        background:"#ffffff", borderRadius:20, border:"1px solid #e8e8e3",
-        overflow:"auto",
+        background:"rgba(255,255,255,0.03)", borderRadius:20,
+        border:"1px solid rgba(255,255,255,0.07)", overflow:"auto",
       }}>
         <table style={{ width:"100%", borderCollapse:"collapse", minWidth:520 }}>
           <thead>
-            <tr style={{ borderBottom:"1px solid #e8e8e3" }}>
+            <tr style={{ borderBottom:"1px solid rgba(255,255,255,0.07)" }}>
               {table.headers.map((h, i) => (
                 <th key={h} style={{
                   padding:"14px 16px",
                   textAlign: i === 0 ? "left" : "center",
-                  fontFamily:"Montserrat, sans-serif", fontSize:13, fontWeight:600,
-                  color:"#1a1a1a",
+                  fontFamily:"'Instrument Sans', sans-serif", fontSize:13, fontWeight:600,
+                  color:"rgba(255,255,255,0.5)",
                 }}>
                   {h}
                 </th>
@@ -490,11 +464,11 @@ function ComparisonTable({ userType }) {
           </thead>
           <tbody>
             {table.rows.map((row, ri) => (
-              <tr key={ri} style={{ background: ri % 2 === 0 ? "#ffffff" : "#f9f9f7" }}>
+              <tr key={ri} style={{ background: ri % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
                 <td style={{
                   padding:"12px 16px",
-                  fontFamily:"Montserrat, sans-serif", fontSize:13, fontWeight:500,
-                  color:"#1a1a1a",
+                  fontFamily:"'Instrument Sans', sans-serif", fontSize:13, fontWeight:500,
+                  color:"rgba(255,255,255,0.7)",
                 }}>
                   {row[0]}
                 </td>
@@ -533,16 +507,17 @@ function FAQ() {
   return (
     <div style={{ marginTop:64 }}>
       <h2 style={{
-        fontFamily:"Montserrat, sans-serif", fontSize:24, fontWeight:700,
-        color:"#1a1a1a", textAlign:"center", marginBottom:28,
+        fontFamily:"'Instrument Serif', serif", fontStyle:"italic",
+        fontSize:28, fontWeight:400, color:"#ffffff",
+        textAlign:"center", marginBottom:28,
       }}>
         Questions? We have answers.
       </h2>
       <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
         {FAQS.map((faq, i) => (
           <div key={i} style={{
-            background:"#ffffff", borderRadius:20, border:"1px solid #e8e8e3",
-            overflow:"hidden",
+            background:"rgba(255,255,255,0.04)", borderRadius:20,
+            border:"1px solid rgba(255,255,255,0.07)", overflow:"hidden",
           }}>
             <button
               onClick={() => setOpen(open === i ? null : i)}
@@ -552,14 +527,14 @@ function FAQ() {
                 textAlign:"left",
               }}>
               <span style={{
-                fontFamily:"Montserrat, sans-serif", fontSize:15, fontWeight:600, color:"#1a1a1a",
+                fontFamily:"'Instrument Sans', sans-serif", fontSize:15, fontWeight:600, color:"#ffffff",
               }}>
                 {faq.q}
               </span>
               <span style={{
                 flexShrink:0, marginLeft:16,
-                fontFamily:"Montserrat, sans-serif", fontSize:20, fontWeight:600, color:"#1a7a3c",
-                lineHeight:1,
+                fontFamily:"'Instrument Sans', sans-serif", fontSize:22, fontWeight:300,
+                color:"rgba(255,255,255,0.4)", lineHeight:1,
               }}>
                 {open === i ? "−" : "+"}
               </span>
@@ -574,8 +549,8 @@ function FAQ() {
                   style={{ overflow:"hidden" }}>
                   <div style={{
                     padding:"0 20px 18px",
-                    borderTop:"1px solid #f0f0eb",
-                    fontFamily:"Montserrat, sans-serif", fontSize:14, color:"#555555",
+                    borderTop:"1px solid rgba(255,255,255,0.06)",
+                    fontFamily:"'Instrument Sans', sans-serif", fontSize:14, color:"rgba(255,255,255,0.55)",
                     lineHeight:1.65, paddingTop:14,
                   }}>
                     {faq.a}
@@ -610,16 +585,16 @@ function WaitlistBanner() {
 
   return (
     <div style={{
-      background:"#fffbeb", border:"1px solid #fde68a", borderRadius:12,
+      background:"rgba(255,235,113,0.06)", border:"1px solid rgba(255,235,113,0.15)", borderRadius:16,
       padding:"16px 20px", marginBottom:28, textAlign:"center",
     }}>
       {done ? (
-        <p style={{ fontFamily:"Montserrat, sans-serif", fontSize:14, fontWeight:500, color:"#1a7a3c", margin:0 }}>
+        <p style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:14, fontWeight:500, color:"#9CFCAF", margin:0 }}>
           You&apos;re on the list! We&apos;ll email you at <strong>{email}</strong> when we go live.
         </p>
       ) : (
         <>
-          <p style={{ fontFamily:"Montserrat, sans-serif", fontSize:14, fontWeight:500, color:"#92400e", margin:"0 0 12px 0" }}>
+          <p style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:14, fontWeight:500, color:"rgba(255,235,113,0.8)", margin:"0 0 12px 0" }}>
             ⚡ Payments launching soon — Join the waitlist and get 30 days free when we go live.
           </p>
           <form onSubmit={handleSubmit}
@@ -631,15 +606,16 @@ function WaitlistBanner() {
               placeholder="your@email.com"
               style={{
                 padding:"10px 20px", borderRadius:100,
-                border:"1px solid #fde68a", background:"#ffffff",
-                fontFamily:"Montserrat, sans-serif", fontSize:14, color:"#1a1a1a",
+                border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.06)",
+                fontFamily:"'Instrument Sans', sans-serif", fontSize:14, color:"#ffffff",
                 outline:"none", minWidth:220,
               }}
             />
             <button type="submit" style={{
               padding:"10px 20px", borderRadius:100, border:"none",
-              background:"#f59e0b", color:"#ffffff",
-              fontFamily:"Montserrat, sans-serif", fontSize:14, fontWeight:600,
+              background:"linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)",
+              color:"#000000",
+              fontFamily:"'Instrument Sans', sans-serif", fontSize:14, fontWeight:600,
               cursor:"pointer",
             }}>
               Join Waitlist
@@ -665,8 +641,8 @@ export default function PaymentPage({ onBack, userType: initType = "creator" }) 
     <>
       <style>{`
         @keyframes subtlePulse {
-          0%, 100% { box-shadow: 0 8px 32px rgba(26,122,60,0.12); }
-          50% { box-shadow: 0 8px 40px rgba(26,122,60,0.22); }
+          0%, 100% { box-shadow: 0 8px 32px rgba(34,111,247,0.12); }
+          50% { box-shadow: 0 8px 40px rgba(34,111,247,0.22); }
         }
         @media (max-width: 768px) {
           .payment-grid { grid-template-columns: 1fr !important; }
@@ -674,19 +650,19 @@ export default function PaymentPage({ onBack, userType: initType = "creator" }) 
         }
       `}</style>
 
-      <div style={{ background:"#f5f5f0", minHeight:"100%", overflowY:"auto", padding:"32px 24px 80px" }}>
+      <div style={{ background:"#000000", minHeight:"100%", overflowY:"auto", padding:"32px 24px 80px" }}>
         <div style={{ maxWidth:1100, margin:"0 auto" }}>
 
           {/* Back */}
           <button onClick={onBack}
             style={{
               display:"inline-flex", alignItems:"center", gap:8,
-              fontFamily:"Montserrat, sans-serif", fontSize:14, color:"#888888",
+              fontFamily:"'Instrument Sans', sans-serif", fontSize:14, color:"rgba(255,255,255,0.4)",
               background:"none", border:"none", cursor:"pointer",
               marginBottom:36, padding:0, transition:"color 0.15s",
             }}
-            onMouseEnter={e => e.currentTarget.style.color="#1a1a1a"}
-            onMouseLeave={e => e.currentTarget.style.color="#888888"}>
+            onMouseEnter={e => e.currentTarget.style.color="#ffffff"}
+            onMouseLeave={e => e.currentTarget.style.color="rgba(255,255,255,0.4)"}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M19 12H5M12 5l-7 7 7 7"/>
@@ -697,14 +673,14 @@ export default function PaymentPage({ onBack, userType: initType = "creator" }) 
           {/* Header */}
           <div style={{ textAlign:"center", marginBottom:32 }}>
             <h1 style={{
-              fontFamily:"Montserrat, sans-serif", fontSize:32, fontWeight:700,
-              color:"#1a1a1a", margin:"0 0 8px 0",
+              fontFamily:"'Instrument Serif', serif", fontStyle:"italic",
+              fontSize:40, fontWeight:400, color:"#ffffff", margin:"0 0 8px 0",
             }}>
               Choose your plan
             </h1>
             <p style={{
-              fontFamily:"Montserrat, sans-serif", fontSize:16, fontWeight:400,
-              color:"#888888", margin:0,
+              fontFamily:"'Instrument Sans', sans-serif", fontSize:16, fontWeight:400,
+              color:"rgba(255,255,255,0.4)", margin:0,
             }}>
               Start free. Upgrade when ready. Cancel anytime.
             </p>
@@ -769,7 +745,7 @@ export default function PaymentPage({ onBack, userType: initType = "creator" }) 
 
           <p style={{
             textAlign:"center", marginTop:48,
-            fontFamily:"Montserrat, sans-serif", fontSize:12, color:"#aaaaaa",
+            fontFamily:"'Instrument Sans', sans-serif", fontSize:12, color:"rgba(255,255,255,0.2)",
           }}>
             Stripe-secured payments · Cancel anytime · No contracts
           </p>
