@@ -158,7 +158,7 @@ function WelcomeScreen({ userType, userName, onChip }) {
 
   // Dynamic chips based on profile data
   const profile    = (() => { try { return JSON.parse(localStorage.getItem("corex_user_profile") || "{}"); } catch { return {}; } })();
-  const brandName  = profile?.brandName || profile?.name || "";
+  const brandName  = profile?.company || profile?.name || "";
   const niche      = profile?.niche || profile?.industry || "";
   const followers  = profile?.followers || "";
 
