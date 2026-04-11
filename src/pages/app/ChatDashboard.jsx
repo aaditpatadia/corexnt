@@ -8,18 +8,13 @@ import { getProfileContext } from "../../utils/userProfile";
 const FREE_LIMIT = 15;
 
 /* ── Helpers ── */
+function getTodayKey() { return `corex_msgs_${new Date().toDateString()}`; }
+function getMsgsUsed() { return parseInt(localStorage.getItem(getTodayKey()) || "0", 10); }
+
 function getGreeting(name) {
   const h = new Date().getHours();
   const t = h < 12 ? "morning" : h < 17 ? "afternoon" : "evening";
-  return `Good ${t}${name ? `, ${name.split(" ")[0]}` : ""}`;
-}
-
-function getTodayKey() {
-  return `corex_msgs_${new Date().toDateString()}`;
-}
-
-function getMsgsUsed() {
-  return parseInt(localStorage.getItem(getTodayKey()) || "0", 10);
+  return name ? `Good ${t}, ${name.split(" ")[0]}` : `Good ${t}`;
 }
 
 function saveToHistory(firstUserMsg, allMessages, userType) {
@@ -36,20 +31,254 @@ function saveToHistory(firstUserMsg, allMessages, userType) {
   } catch {}
 }
 
-/* ── Word-by-word reveal card (v6) ── */
-function RevealCard({ message, userType }) {
+/* ── BRANCHES parser ── */
+function parseBranches(text) {
+  const a = text.match(/BRANCH_A:\s*([^|\n]+)\|\s*([^\n]+)/);
+  const b = text.match(/BRANCH_B:\s*([^|\n]+)\|\s*([^\n]+)/);
+  const c = text.match(/BRANCH_C:\s*([^|\n]+)\|\s*([^\n]+)/);
+  const t = text.match(/THINKING:\s*([^\n]+)/);
+  if (!a || !b || !c) return null;
+  return {
+    branches: [
+      { label: "Direction A", title: a[1].trim(), desc: a[2].trim() },
+      { label: "Direction B", title: b[1].trim(), desc: b[2].trim() },
+      { label: "Direction C", title: c[1].trim(), desc: c[2].trim() },
+    ],
+    thinking: t?.[1]?.trim() || "",
+  };
+}
+
+/* ── Branch Cards ── */
+function BranchCards({ data, onSelect }) {
+  const [selected, setSelected] = useState(null);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      style={{ marginBottom: 28, width: "100%" }}
+    >
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: 16,
+          maxWidth: 900,
+          margin: "0 auto",
+        }}
+        className="branch-grid"
+      >
+        {data.branches.map((branch, i) => {
+          const isSelected = selected === i;
+          return (
+            <motion.button
+              key={i}
+              onClick={() => {
+                setSelected(i);
+                setTimeout(() => onSelect(branch.title), 300);
+              }}
+              whileHover={{ translateY: -2 }}
+              transition={{ duration: 0.2 }}
+              style={{
+                padding: 24,
+                borderRadius: 20,
+                border: isSelected
+                  ? "1px solid rgba(156,252,175,0.4)"
+                  : "1px solid rgba(255,255,255,0.08)",
+                background: isSelected
+                  ? "rgba(156,252,175,0.04)"
+                  : "rgba(255,255,255,0.04)",
+                cursor: "pointer",
+                textAlign: "left",
+                display: "flex",
+                flexDirection: "column",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                if (!isSelected) {
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
+                  e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isSelected) {
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                  e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                }
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 11,
+                  fontFamily: "'Instrument Sans', sans-serif",
+                  color: "rgba(255,255,255,0.3)",
+                  letterSpacing: "2px",
+                  textTransform: "uppercase",
+                  marginBottom: 8,
+                }}
+              >
+                {branch.label}
+              </span>
+              <h3
+                style={{
+                  fontFamily: "'Instrument Serif', serif",
+                  fontSize: 20,
+                  fontWeight: 400,
+                  color: "#ffffff",
+                  lineHeight: 1.3,
+                  margin: "0 0 10px",
+                }}
+              >
+                {branch.title}
+              </h3>
+              <p
+                style={{
+                  fontSize: 14,
+                  color: "rgba(255,255,255,0.55)",
+                  fontFamily: "'Instrument Sans', sans-serif",
+                  lineHeight: 1.6,
+                  flex: 1,
+                }}
+              >
+                {branch.desc}
+              </p>
+              <span
+                style={{
+                  marginTop: 16,
+                  fontSize: 13,
+                  color: "rgba(255,255,255,0.3)",
+                  fontFamily: "'Instrument Sans', sans-serif",
+                }}
+              >
+                Explore this →
+              </span>
+            </motion.button>
+          );
+        })}
+      </div>
+
+      {data.thinking && (
+        <p
+          style={{
+            textAlign: "center",
+            fontSize: 13,
+            color: "rgba(255,255,255,0.3)",
+            fontFamily: "'Instrument Sans', sans-serif",
+            fontStyle: "italic",
+            marginTop: 16,
+            maxWidth: 900,
+            margin: "16px auto 0",
+          }}
+        >
+          {data.thinking}
+        </p>
+      )}
+    </motion.div>
+  );
+}
+
+/* ── Thinking animation ── */
+const THINKING_PHRASES = [
+  "Analysing your idea…",
+  "Searching live data…",
+  "Building creative directions…",
+  "Mapping the space…",
+  "Checking market pulse…",
+  "Considering angles…",
+];
+
+function ThinkingCard() {
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setIdx(i => (i + 1) % THINKING_PHRASES.length), 1800);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 28 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          marginBottom: 10,
+        }}
+      >
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: "2px",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.4)",
+            fontFamily: "'Instrument Sans', sans-serif",
+          }}
+        >
+          COREX
+        </span>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          padding: "14px 18px",
+          borderRadius: 16,
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
+          {[0,1,2,3].map(i => (
+            <motion.div
+              key={i}
+              animate={{ scaleY: [0.4, 1, 0.4], opacity: [0.3, 1, 0.3] }}
+              transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.15 }}
+              style={{
+                width: 3,
+                height: 18,
+                borderRadius: 99,
+                background: "rgba(156,252,175,0.6)",
+                transformOrigin: "bottom",
+              }}
+            />
+          ))}
+        </div>
+        <motion.span
+          key={idx}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          style={{
+            fontSize: 14,
+            color: "rgba(255,255,255,0.5)",
+            fontFamily: "'Instrument Sans', sans-serif",
+            fontWeight: 500,
+          }}
+        >
+          {THINKING_PHRASES[idx]}
+        </motion.span>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ── Word-reveal card ── */
+function RevealCard({ message }) {
   const [visibleWords, setVisibleWords] = useState(0);
   const fullText = stripMarkdown(
     (message.content || "")
       .replace(/GRAPH_DATA:[\s\S]*$/m, "")
       .replace(/Chips:.*$/m, "")
+      .replace(/FOLLOWUPS:[\s\S]*$/m, "")
+      .replace(/BRANCH_[ABC]:.*$/gm, "")
+      .replace(/THINKING:.*$/m, "")
       .trim()
   );
   const words = fullText.split(/(\s+)/);
   const intervalRef = useRef(null);
 
   useEffect(() => {
-    // Reveal ~8 words per frame at 60fps → smooth and fast
     intervalRef.current = setInterval(() => {
       setVisibleWords(prev => {
         const next = prev + 6;
@@ -63,26 +292,59 @@ function RevealCard({ message, userType }) {
   const visible = words.slice(0, visibleWords).join("");
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full" style={{ marginBottom: 28 }}>
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 28, width: "100%" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase", color: "#1a7a3c", fontFamily: "var(--font-body)" }}>COREX</span>
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: "2px",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.4)",
+            fontFamily: "'Instrument Sans', sans-serif",
+          }}
+        >
+          COREX
+        </span>
         {message.searchUsed && (
-          <span style={{ fontSize: 10, fontWeight: 600, color: "#1a7a3c", background: "#e8f5ee", border: "1px solid #c8e6d4", borderRadius: 20, padding: "1px 7px", fontFamily: "var(--font-body)" }}>
-            ● Live data
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              color: "rgba(156,252,175,0.8)",
+              background: "rgba(156,252,175,0.08)",
+              border: "1px solid rgba(156,252,175,0.2)",
+              borderRadius: 20,
+              padding: "1px 7px",
+              fontFamily: "'Instrument Sans', sans-serif",
+            }}
+          >
+            ● Live intel
           </span>
         )}
       </div>
       {visible ? (
-        <div style={{ fontSize: 15, lineHeight: 1.8, color: "#1a1a1a", fontFamily: "var(--font-body)", whiteSpace: "pre-wrap" }}>
-          {visible}<span style={{ opacity: 0.4 }}>|</span>
+        <div
+          style={{
+            fontSize: 15,
+            lineHeight: 1.8,
+            color: "rgba(255,255,255,0.85)",
+            fontFamily: "'Instrument Sans', sans-serif",
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          {visible}
+          <span style={{ opacity: 0.3 }}>|</span>
         </div>
       ) : (
         <div style={{ display: "flex", gap: 4, paddingTop: 4 }}>
           {[0, 1, 2].map(i => (
-            <motion.div key={i}
+            <motion.div
+              key={i}
               animate={{ opacity: [0.3, 1, 0.3], y: [0, -3, 0] }}
               transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
-              style={{ width: 6, height: 6, borderRadius: "50%", background: "#1a7a3c" }}/>
+              style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(156,252,175,0.6)" }}
+            />
           ))}
         </div>
       )}
@@ -90,61 +352,38 @@ function RevealCard({ message, userType }) {
   );
 }
 
-/* ── Thinking / loading card ── */
-const THINKING_PHRASES = [
-  "Analysing your question…",
-  "Searching live data…",
-  "Pulling competitor intel…",
-  "Building your strategy…",
-  "Checking Indian market trends…",
-  "Crunching the numbers…",
-  "Researching benchmarks…",
-];
-function ThinkingCard() {
-  const [idx, setIdx] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => setIdx(i => (i + 1) % THINKING_PHRASES.length), 1800);
-    return () => clearInterval(t);
-  }, []);
-  return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 28 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#1a7a3c", fontFamily: "var(--font-body)" }}>COREX</span>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", borderRadius: 16, background: "#ffffff", border: "1px solid #e8f5ee", boxShadow: "0 2px 12px rgba(26,122,60,0.06)" }}>
-        {/* Animated green bar progress */}
-        <div style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
-          {[0,1,2,3].map(i => (
-            <motion.div key={i}
-              animate={{ scaleY: [0.4, 1, 0.4], opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
-              style={{ width: 3, height: 18, borderRadius: 99, background: "#1a7a3c", transformOrigin: "bottom" }}/>
-          ))}
-        </div>
-        <motion.span
-          key={idx}
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          style={{ fontSize: 14, color: "#555555", fontFamily: "var(--font-body)", fontWeight: 500 }}>
-          {THINKING_PHRASES[idx]}
-        </motion.span>
-      </div>
-    </motion.div>
-  );
-}
-
 /* ── Limit banner ── */
 function LimitBanner({ onUpgrade }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-      style={{ padding: "12px 20px", borderRadius: 14, background: "rgba(244,63,94,0.06)", border: "1px solid rgba(244,63,94,0.2)", margin: "8px 0", textAlign: "center" }}>
-      <p style={{ fontSize: 14, color: "#1a1a1a", fontFamily: "var(--font-body)", marginBottom: 6 }}>
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      style={{
+        padding: "12px 20px",
+        borderRadius: 14,
+        background: "rgba(248,113,113,0.08)",
+        border: "1px solid rgba(248,113,113,0.2)",
+        margin: "8px 0",
+        textAlign: "center",
+      }}
+    >
+      <p style={{ fontSize: 14, color: "rgba(255,255,255,0.8)", fontFamily: "'Instrument Sans', sans-serif", marginBottom: 6 }}>
         You've used all 15 messages for today.
       </p>
-      <button onClick={onUpgrade}
-        style={{ fontSize: 13, fontWeight: 700, color: "#1a7a3c", background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-body)" }}>
+      <button
+        onClick={onUpgrade}
+        style={{
+          fontSize: 13,
+          fontWeight: 700,
+          border: "none",
+          cursor: "pointer",
+          fontFamily: "'Instrument Sans', sans-serif",
+          background: "linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
+        }}
+      >
         Upgrade for unlimited →
       </button>
     </motion.div>
@@ -152,73 +391,57 @@ function LimitBanner({ onUpgrade }) {
 }
 
 /* ── Welcome screen ── */
-function WelcomeScreen({ userType, userName, onChip }) {
-  const isCreator = userType !== "company";
-  const subtitle  = isCreator ? "Reels · Growth · Brand Deals · Trends" : "Campaigns · Strategy · Budgets · Intel";
-
-  // Dynamic chips based on profile data
-  const profile    = (() => { try { return JSON.parse(localStorage.getItem("corex_user_profile") || "{}"); } catch { return {}; } })();
-  const brandName  = profile?.company || profile?.name || "";
-  const niche      = profile?.niche || profile?.industry || "";
-  const followers  = profile?.followers || "";
-
-  const chips = isCreator
-    ? [
-        `Why did my last 3 reels underperform${niche ? " in " + niche : ""}`,
-        `Script a reel${niche ? " for " + niche : ""} that hooks in 2 seconds`,
-        "What trend should I jump on this week",
-        `How do I price my next brand deal${followers ? " at " + followers + " followers" : ""}`,
-      ]
-    : [
-        `Audit ${brandName || "our brand"}'s Instagram`,
-        "Find a gap our competitors are missing",
-        `Plan our next campaign${niche ? " for " + niche : ""}`,
-        "Where should we allocate our budget this month",
-      ];
-
+function WelcomeScreen({ userName }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", padding: "40px 24px", textAlign: "center", paddingBottom: 120 }}>
-      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-
-        {/* Logo mark */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0, duration: 0.5 }}
-          style={{ width: 52, height: 52, borderRadius: 16, background: "linear-gradient(135deg, #1a7a3c, #2dd668)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24, boxShadow: "0 8px 24px rgba(26,122,60,0.25)" }}>
-          <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(255,255,255,0.92)" }}/>
-        </motion.div>
-
-        <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-          style={{ fontSize: 15, color: "#888888", fontFamily: "var(--font-body)", marginBottom: 8 }}>
-          {getGreeting(userName)}
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100%",
+        padding: "40px 24px 180px",
+        textAlign: "center",
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+      >
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          style={{
+            fontFamily: "'Instrument Serif', serif",
+            fontStyle: "italic",
+            fontSize: 32,
+            color: "#ffffff",
+            marginBottom: 4,
+            textAlign: "center",
+          }}
+        >
+          Hey {userName?.split(" ")[0] || "there"},
         </motion.p>
-        <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          style={{ fontFamily: "var(--font-display)", fontSize: 34, fontWeight: 400, color: "#1a1a1a", lineHeight: 1.2, marginBottom: 8, textAlign: "center" }}>
-          What will you create today?
+
+        <motion.h1
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          style={{
+            fontFamily: "'Instrument Sans', sans-serif",
+            fontWeight: 500,
+            fontSize: 28,
+            color: "#ffffff",
+            textAlign: "center",
+            margin: 0,
+            lineHeight: 1.3,
+          }}
+        >
+          What idea are we exploring today?
         </motion.h1>
-        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
-          style={{ fontSize: 15, color: "#888888", fontFamily: "var(--font-body)", marginBottom: 36, textAlign: "center" }}>
-          {subtitle}
-        </motion.p>
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, maxWidth: 480, width: "100%" }}>
-          {chips.map((chip, i) => (
-            <motion.button key={chip}
-              initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 + i * 0.04 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => onChip(chip)}
-              style={{
-                padding: "14px 18px", borderRadius: 20, textAlign: "left", fontSize: 14,
-                fontFamily: "var(--font-body)", background: "#ffffff",
-                border: "1px solid #e8e8e3", color: "#444444",
-                cursor: "pointer", transition: "all 0.2s ease", lineHeight: 1.4,
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "#1a7a3c"; e.currentTarget.style.color = "#1a7a3c"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(26,122,60,0.1)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "#e8e8e3"; e.currentTarget.style.color = "#444444"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
-              {chip}
-            </motion.button>
-          ))}
-        </motion.div>
       </motion.div>
     </div>
   );
@@ -226,19 +449,19 @@ function WelcomeScreen({ userType, userName, onChip }) {
 
 /* ── Main ChatDashboard ── */
 export default function ChatDashboard({ userType, userName, onUpgrade }) {
-  const isCreator = userType !== "company";
-
   const [messages,  setMessages]  = useState(() => {
     try { const s = sessionStorage.getItem("corex_chat"); return s ? JSON.parse(s) : []; } catch { return []; }
   });
   const [loading,   setLoading]   = useState(false);
-  const [revealing, setRevealing] = useState(null); // id of message being word-revealed
+  const [revealing, setRevealing] = useState(null);
   const [limitHit,  setLimitHit]  = useState(getMsgsUsed() >= FREE_LIMIT);
   const bottomRef = useRef(null);
 
   useEffect(() => {
-    if (!sessionStorage.getItem("corex_session_id")) sessionStorage.setItem("corex_session_id", Date.now().toString());
-    if (!localStorage.getItem("corex_joined")) localStorage.setItem("corex_joined", new Date().toISOString());
+    if (!sessionStorage.getItem("corex_session_id"))
+      sessionStorage.setItem("corex_session_id", Date.now().toString());
+    if (!localStorage.getItem("corex_joined"))
+      localStorage.setItem("corex_joined", new Date().toISOString());
   }, []);
 
   // Prefill from other pages
@@ -247,7 +470,7 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
     if (p) { sessionStorage.removeItem("corex_prefill"); setTimeout(() => sendMessage(p, []), 150); }
   }, []);
 
-  // Expose to TopBar
+  // Expose global handlers for AppShell
   useEffect(() => {
     window.__corex_newChat = () => {
       setMessages([]);
@@ -280,7 +503,7 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
 
   function trackUsage() {
     const key  = getTodayKey();
-    const used = (parseInt(localStorage.getItem(key) || "0", 10) + 1);
+    const used = parseInt(localStorage.getItem(key) || "0", 10) + 1;
     localStorage.setItem(key, used.toString());
     if (used >= FREE_LIMIT) setLimitHit(true);
   }
@@ -298,48 +521,47 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
     setLoading(true);
     trackUsage();
 
-    const fullHistory    = [...messages, userMsg];
-    const contextWindow  = fullHistory.slice(-15);
+    const fullHistory   = [...messages, userMsg];
+    const contextWindow = fullHistory.slice(-15);
     const profileContext = getProfileContext(userType);
 
-    // Build session context for first message in a conversation
     const isFirstMessage = messages.length === 0;
     let sessionContext = profileContext;
     if (isFirstMessage) {
-      const now       = new Date();
-      const dateStr   = now.toLocaleDateString("en-IN", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
-      const timeStr   = now.toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit" });
+      const now = new Date();
+      const dateStr = now.toLocaleDateString("en-IN", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+      const timeStr = now.toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit" });
       const recentHistory = (() => {
         try {
           return JSON.parse(localStorage.getItem("corex_history") || "[]")
-            .slice(0, 3)
-            .map(h => h.title)
-            .filter(Boolean);
+            .slice(0, 3).map(h => h.title).filter(Boolean);
         } catch { return []; }
       })();
-      const planTier  = localStorage.getItem("corex_plan") || "free";
-      sessionContext  = (profileContext || "") +
-        `\n\nSESSION CONTEXT:\n` +
-        `Date and time: ${dateStr}, ${timeStr}\n` +
-        `User plan tier: ${planTier}\n` +
-        (recentHistory.length > 0 ? `Recent conversations: ${recentHistory.join(" | ")}\n` : "");
+      const planTier = localStorage.getItem("corex_plan") || "free";
+      sessionContext = (profileContext || "") +
+        `\n\nSESSION CONTEXT:\nDate: ${dateStr}, ${timeStr}\nPlan: ${planTier}\n` +
+        (recentHistory.length > 0 ? `Recent: ${recentHistory.join(" | ")}\n` : "");
     }
 
     let reply      = "";
     let searchUsed = false;
     try {
-      const userProfile = (() => { try { return JSON.parse(localStorage.getItem("corex_user_profile") || "null"); } catch { return null; } })();
+      const userProfile = (() => {
+        try { return JSON.parse(localStorage.getItem("corex_user_profile") || "null"); }
+        catch { return null; }
+      })();
       const res = await fetch("/api/chat", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({
-          messages:       contextWindow.map(m => ({ role: m.role, content: m.content || "" })),
-          files:          apiFiles,
+          messages:         contextWindow.map(m => ({ role: m.role, content: m.content || "" })),
+          files:            apiFiles,
           userType,
           userProfile,
-          profileContext: sessionContext,
-          attachedDocs:   JSON.parse(localStorage.getItem("corex_attached_docs") || "[]"),
-          sharedLinks:    JSON.parse(localStorage.getItem("corex_shared_links")   || "[]"),
+          profileContext:   sessionContext,
+          conversationTurn: isFirstMessage ? 1 : fullHistory.filter(m => m.role === "user").length,
+          attachedDocs:     JSON.parse(localStorage.getItem("corex_attached_docs") || "[]"),
+          sharedLinks:      JSON.parse(localStorage.getItem("corex_shared_links")   || "[]"),
         }),
       });
 
@@ -347,12 +569,11 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
       if (!res.ok) throw new Error(data.error || "API error");
       reply      = data.reply || "Something went wrong. Try again.";
       searchUsed = !!data.usedWebSearch;
-    } catch (err) {
-      reply = `Connection error. Please try again.\n\nChips: 'Try again' | 'New chat' | 'Help'`;
+    } catch {
+      reply = `Connection error. Please try again.\n\nFOLLOWUPS: ["Try again", "New idea"]`;
     }
 
     const assistantMsg = { id: assistantId, role: "assistant", content: reply, streaming: false, searchUsed };
-
     setMessages(prev => {
       const updated = [...prev, assistantMsg];
       const first   = updated.find(m => m.role === "user");
@@ -360,52 +581,114 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
       return updated;
     });
 
-    // Start word-by-word reveal
     setRevealing(assistantId);
     setLoading(false);
-
-    // Stop reveal flag after a reasonable time (reveal card handles its own timing)
     setTimeout(() => setRevealing(null), 8000);
   }, [messages, loading, userType]);
 
-  return (
-    <div style={{ background: "#f0f0eb", height: "100%", position: "relative" }}>
+  // Handler when user picks a branch
+  const handleBranchSelect = useCallback((branchTitle) => {
+    sendMessage(`Let's go with "${branchTitle}". Deepen this direction.`, []);
+  }, [sendMessage]);
 
-      {/* Messages scrollable area — bottom padding clears input bar + bottom nav + chips */}
-      <div className="scroll-area" style={{ height: "100%", overflowY: "auto", paddingBottom: "max(180px, calc(180px + env(safe-area-inset-bottom)))" }}>
+  return (
+    <div
+      style={{
+        background: "#000000",
+        height: "100%",
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      {/* Messages scrollable area */}
+      <div
+        className="scroll-area"
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          position: "relative",
+        }}
+      >
         {messages.length === 0 ? (
-          <WelcomeScreen userType={userType} userName={userName} onChip={chip => sendMessage(chip, [])}/>
+          <WelcomeScreen userName={userName} />
         ) : (
-          <div style={{ maxWidth: 720, margin: "0 auto", padding: "24px 24px 0", display: "flex", flexDirection: "column" }}>
+          <div
+            style={{
+              maxWidth: 720,
+              margin: "0 auto",
+              padding: "24px 24px 0",
+              display: "flex",
+              flexDirection: "column",
+              paddingBottom: "max(180px, calc(180px + env(safe-area-inset-bottom)))",
+            }}
+          >
             <AnimatePresence>
-              {messages.map(msg =>
-                msg.role === "assistant" && msg.id === revealing
-                  ? <RevealCard key={msg.id} message={msg} userType={userType}/>
-                  : <ResponseCard
-                      key={msg.id}
-                      message={msg}
-                      userType={userType}
-                      onChip={chip => sendMessage(chip, [])}
-                      onRegenerate={() => {
-                        const prev = messages.slice(0, messages.findIndex(m => m.id === msg.id));
-                        const last = [...prev].reverse().find(m => m.role === "user");
-                        if (last) { setMessages(prev); setTimeout(() => sendMessage(last.content, []), 50); }
-                      }}
-                    />
-              )}
+              {messages.map(msg => {
+                // Branches response
+                if (msg.role === "assistant" && msg.id !== revealing) {
+                  const branches = parseBranches(msg.content || "");
+                  if (branches) {
+                    return (
+                      <BranchCards
+                        key={msg.id}
+                        data={branches}
+                        onSelect={handleBranchSelect}
+                      />
+                    );
+                  }
+                }
+
+                // Revealing (word by word)
+                if (msg.role === "assistant" && msg.id === revealing) {
+                  const branches = parseBranches(msg.content || "");
+                  if (branches) {
+                    return (
+                      <BranchCards
+                        key={msg.id}
+                        data={branches}
+                        onSelect={handleBranchSelect}
+                      />
+                    );
+                  }
+                  return <RevealCard key={msg.id} message={msg} />;
+                }
+
+                // Normal response card
+                return (
+                  <ResponseCard
+                    key={msg.id}
+                    message={msg}
+                    userType={userType}
+                    onChip={chip => sendMessage(chip, [])}
+                    onRegenerate={() => {
+                      const prev = messages.slice(0, messages.findIndex(m => m.id === msg.id));
+                      const last = [...prev].reverse().find(m => m.role === "user");
+                      if (last) { setMessages(prev); setTimeout(() => sendMessage(last.content, []), 50); }
+                    }}
+                  />
+                );
+              })}
             </AnimatePresence>
 
-            {/* Loading — animated thinking state */}
-            {loading && <ThinkingCard/>}
-
-            {limitHit && !loading && <LimitBanner onUpgrade={onUpgrade}/>}
-            <div ref={bottomRef}/>
+            {loading && <ThinkingCard />}
+            {limitHit && !loading && <LimitBanner onUpgrade={onUpgrade} />}
+            <div ref={bottomRef} />
           </div>
         )}
       </div>
 
       {/* Fixed bottom input */}
-      <ChatInput onSend={sendMessage} disabled={loading || limitHit} userType={userType}/>
+      <ChatInput onSend={sendMessage} disabled={loading || limitHit} userType={userType} />
+
+      {/* Branch grid responsive styles */}
+      <style>{`
+        @media (max-width: 700px) {
+          .branch-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
