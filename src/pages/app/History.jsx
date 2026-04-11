@@ -25,7 +25,7 @@ export default function History() {
   const navigate  = useNavigate();
   const [history, setHistory]   = useState([]);
   const [search,  setSearch]    = useState("");
-  const [confirm, setConfirm]   = useState(null); // id to delete
+  const [confirm, setConfirm]   = useState(null);
 
   useEffect(() => {
     try {
@@ -60,26 +60,24 @@ export default function History() {
     : history;
 
   return (
-    <div className="h-full overflow-y-auto scroll-area">
-      <div className="max-w-2xl mx-auto px-4 py-8">
+    <div style={{ height: "100%", overflowY: "auto", background: "#000000" }}>
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "32px 24px 80px" }}>
 
         {/* Header */}
-        <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} className="mb-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-4"
-            style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:"#2dd668", fontFamily:"var(--font-body)" }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} style={{ marginBottom: 24 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 100, fontSize: 11, fontWeight: 600, marginBottom: 16, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-body)" }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
             History
           </div>
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold" style={{ fontFamily:"var(--font-body)", color:"#1a1a1a" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <h1 style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 32, fontWeight: 400, color: "#ffffff" }}>
               Past conversations
             </h1>
             {history.length > 0 && (
               <button onClick={() => setConfirm("all")}
-                className="text-xs px-3 py-1.5 rounded-xl transition-all"
-                style={{ color:"rgba(248,113,113,0.7)", border:"1px solid rgba(248,113,113,0.2)", fontFamily:"var(--font-body)" }}
+                style={{ fontSize: 12, padding: "6px 14px", borderRadius: 100, color: "rgba(248,113,113,0.6)", border: "1px solid rgba(248,113,113,0.2)", background: "transparent", fontFamily: "var(--font-body)", cursor: "pointer", transition: "all 0.15s" }}
                 onMouseEnter={e=>{ e.currentTarget.style.color="#f87171"; e.currentTarget.style.background="rgba(248,113,113,0.08)"; }}
-                onMouseLeave={e=>{ e.currentTarget.style.color="rgba(248,113,113,0.7)"; e.currentTarget.style.background="transparent"; }}>
+                onMouseLeave={e=>{ e.currentTarget.style.color="rgba(248,113,113,0.6)"; e.currentTarget.style.background="transparent"; }}>
                 Clear all
               </button>
             )}
@@ -88,19 +86,19 @@ export default function History() {
 
         {/* Search */}
         {history.length > 3 && (
-          <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.1 }} className="mb-5">
+          <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.1 }} style={{ marginBottom: 20 }}>
             <input
               type="text"
               placeholder="Search conversations…"
               value={search}
               onChange={e=>setSearch(e.target.value)}
               style={{
-                background:"#ffffff", border:"1px solid #e8e8e3",
-                color:"#1a1a1a", borderRadius:12, fontFamily:"var(--font-body)", fontSize:14,
-                outline:"none", width:"100%", padding:"10px 14px",
+                background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)",
+                color: "#ffffff", borderRadius: 12, fontFamily: "var(--font-body)", fontSize: 14,
+                outline: "none", width: "100%", padding: "10px 14px",
               }}
-              onFocus={e=>e.target.style.borderColor="rgba(45,214,104,0.5)"}
-              onBlur={e=>e.target.style.borderColor="rgba(45,214,104,0.18)"}
+              onFocus={e=>e.target.style.borderColor="rgba(255,255,255,0.2)"}
+              onBlur={e=>e.target.style.borderColor="rgba(255,255,255,0.08)"}
             />
           </motion.div>
         )}
@@ -108,21 +106,23 @@ export default function History() {
         {/* Empty state */}
         {filtered.length === 0 && (
           <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.15 }}
-            className="text-center py-16">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl"
-              style={{ background:"rgba(45,214,104,0.07)", border:"1px solid rgba(45,214,104,0.15)" }}>
+            style={{ textAlign: "center", padding: "64px 24px" }}>
+            <div style={{ width: 64, height: 64, borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: 28, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
               🕰️
             </div>
-            <p className="text-sm font-medium mb-1" style={{ color:"rgba(240,250,242,0.6)", fontFamily:"var(--font-body)" }}>
+            <p style={{ fontSize: 15, fontWeight: 500, color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-body)", marginBottom: 6 }}>
               {search ? "No matches found" : "No conversations yet"}
             </p>
-            <p className="text-xs mb-6" style={{ color:"var(--text-muted)", fontFamily:"var(--font-body)" }}>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-body)", marginBottom: 24 }}>
               {search ? "Try a different search term" : "Start a chat and it will show up here"}
             </p>
             {!search && (
               <button onClick={() => navigate("/app/chat")}
-                className="px-5 py-2.5 rounded-xl text-sm font-semibold btn-green"
-                style={{ color:"#050a06", fontFamily:"var(--font-body)" }}>
+                style={{
+                  padding: "10px 24px", borderRadius: 100, border: "none", cursor: "pointer",
+                  background: "linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)",
+                  color: "#000000", fontSize: 14, fontWeight: 600, fontFamily: "var(--font-body)",
+                }}>
                 Start a conversation
               </button>
             )}
@@ -130,7 +130,7 @@ export default function History() {
         )}
 
         {/* List */}
-        <div className="space-y-3">
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <AnimatePresence>
             {filtered.map((entry, i) => (
               <motion.div key={entry.id}
@@ -138,51 +138,44 @@ export default function History() {
                 animate={{ opacity:1, y:0 }}
                 exit={{ opacity:0, x:-20, height:0, marginBottom:0 }}
                 transition={{ delay: i * 0.04, ease:[0.16,1,0.3,1] }}
-                className="group flex items-start gap-4 rounded-2xl p-4 cursor-pointer transition-all duration-200"
-                style={{ background:"rgba(14,28,16,0.7)", border:"1px solid rgba(45,214,104,0.13)" }}
+                style={{ display: "flex", alignItems: "flex-start", gap: 16, borderRadius: 20, padding: 16, cursor: "pointer", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", transition: "all 0.2s" }}
                 onClick={() => load(entry)}
-                onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(45,214,104,0.3)"}
-                onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(45,214,104,0.13)"}>
+                onMouseEnter={e=>{ e.currentTarget.style.background="rgba(255,255,255,0.07)"; e.currentTarget.style.borderColor="rgba(255,255,255,0.14)"; }}
+                onMouseLeave={e=>{ e.currentTarget.style.background="rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor="rgba(255,255,255,0.07)"; }}>
 
-                {/* Icon */}
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-sm"
-                  style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.15)" }}>
+                <div style={{ width: 36, height: 36, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
                   💬
                 </div>
 
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <p className="text-sm font-semibold truncate" style={{ color:"#1a1a1a", fontFamily:"var(--font-body)" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: "#ffffff", fontFamily: "var(--font-body)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {entry.title}
                     </p>
-                    <span className="text-xs flex-shrink-0" style={{ color:"var(--text-muted)", fontFamily:"var(--font-body)" }}>
+                    <span style={{ fontSize: 12, flexShrink: 0, color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-body)" }}>
                       {timeAgo(entry.timestamp)}
                     </span>
                   </div>
-                  <p className="text-xs leading-relaxed line-clamp-2" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>
+                  <p style={{ fontSize: 13, lineHeight: 1.5, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-body)", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
                     {getPreview(entry.messages)}
                   </p>
-                  <div className="flex items-center gap-3 mt-2">
-                    <span className="text-xs" style={{ color:"var(--text-muted)", fontFamily:"var(--font-body)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8 }}>
+                    <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-body)" }}>
                       {entry.messages?.length || 0} messages
                     </span>
                     {entry.userType && (
-                      <span className="text-xs px-2 py-0.5 rounded-full capitalize"
-                        style={{ background:"rgba(45,214,104,0.06)", border:"1px solid rgba(45,214,104,0.15)", color:"rgba(45,214,104,0.6)", fontFamily:"var(--font-body)" }}>
+                      <span style={{ fontSize: 11, padding: "2px 10px", borderRadius: 100, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-body)" }}>
                         {entry.userType}
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Delete */}
                 <button
                   onClick={e=>{ e.stopPropagation(); setConfirm(entry.id); }}
-                  className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200"
-                  style={{ color:"rgba(248,113,113,0.6)" }}
+                  style={{ flexShrink: 0, width: 28, height: 28, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "transparent", cursor: "pointer", color: "rgba(248,113,113,0.4)", transition: "all 0.15s" }}
                   onMouseEnter={e=>{ e.currentTarget.style.background="rgba(248,113,113,0.1)"; e.currentTarget.style.color="#f87171"; }}
-                  onMouseLeave={e=>{ e.currentTarget.style.background="transparent"; e.currentTarget.style.color="rgba(248,113,113,0.6)"; }}>
+                  onMouseLeave={e=>{ e.currentTarget.style.background="transparent"; e.currentTarget.style.color="rgba(248,113,113,0.4)"; }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                     <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
                   </svg>
@@ -197,31 +190,27 @@ export default function History() {
           {confirm && (
             <motion.div
               initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
-              style={{ background:"rgba(0,0,0,0.7)", backdropFilter:"blur(8px)" }}
+              style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}
               onClick={() => setConfirm(null)}>
               <motion.div
                 initial={{ scale:0.9, opacity:0 }} animate={{ scale:1, opacity:1 }} exit={{ scale:0.9, opacity:0 }}
                 onClick={e=>e.stopPropagation()}
-                className="rounded-2xl p-6 max-w-sm w-full"
-                style={{ background:"rgba(14,28,16,0.98)", border:"1px solid rgba(45,214,104,0.2)" }}>
-                <h3 className="text-base font-bold mb-2" style={{ color:"#1a1a1a", fontFamily:"var(--font-body)" }}>
+                style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: 24, maxWidth: 360, width: "100%" }}>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: "#ffffff", fontFamily: "var(--font-body)", marginBottom: 8 }}>
                   {confirm === "all" ? "Clear all history?" : "Delete this conversation?"}
                 </h3>
-                <p className="text-sm mb-6" style={{ color:"var(--text-secondary)", fontFamily:"var(--font-body)" }}>
+                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-body)", marginBottom: 24, lineHeight: 1.5 }}>
                   {confirm === "all"
                     ? "This will permanently delete all your conversation history. This can't be undone."
                     : "This conversation will be permanently deleted."}
                 </p>
-                <div className="flex gap-3">
+                <div style={{ display: "flex", gap: 12 }}>
                   <button onClick={() => setConfirm(null)}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                    style={{ background:"rgba(45,214,104,0.08)", border:"1px solid rgba(45,214,104,0.2)", color:"rgba(240,250,242,0.7)", fontFamily:"var(--font-body)" }}>
+                    style={{ flex: 1, padding: "10px 0", borderRadius: 100, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)", fontSize: 14, fontWeight: 600, fontFamily: "var(--font-body)", cursor: "pointer" }}>
                     Cancel
                   </button>
                   <button onClick={() => confirm === "all" ? clearAll() : remove(confirm)}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                    style={{ background:"rgba(248,113,113,0.15)", border:"1px solid rgba(248,113,113,0.3)", color:"#f87171", fontFamily:"var(--font-body)" }}>
+                    style={{ flex: 1, padding: "10px 0", borderRadius: 100, background: "rgba(248,113,113,0.15)", border: "1px solid rgba(248,113,113,0.3)", color: "#f87171", fontSize: 14, fontWeight: 600, fontFamily: "var(--font-body)", cursor: "pointer" }}>
                     {confirm === "all" ? "Clear all" : "Delete"}
                   </button>
                 </div>

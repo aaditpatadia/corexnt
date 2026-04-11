@@ -31,13 +31,32 @@ const MODES = [
 
 export default function ModesPage() {
   const navigate = useNavigate();
-  const [activeMode, setActiveMode] = useState(
-    () => localStorage.getItem("corex_mode") || null
-  );
 
-  const setMode = (id) => {
-    localStorage.setItem("corex_mode", id);
-    setActiveMode(id);
+  const [activeModes, setActiveModes] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("corex_modes") || "[]");
+      if (Array.isArray(saved)) return new Set(saved);
+      // migrate legacy single mode
+      const legacy = localStorage.getItem("corex_mode");
+      return legacy ? new Set([legacy]) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
+  const toggleMode = (id) => {
+    setActiveModes(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        if (next.size >= 3) return prev; // max 3
+        next.add(id);
+      }
+      localStorage.setItem("corex_modes", JSON.stringify([...next]));
+      localStorage.setItem("corex_mode", [...next][0] || ""); // keep legacy compat
+      return next;
+    });
   };
 
   return (
@@ -61,10 +80,11 @@ export default function ModesPage() {
         <h1
           style={{
             fontFamily: "'Instrument Serif', serif",
+            fontStyle: "italic",
             fontWeight: 400,
             fontSize: 36,
             color: "#ffffff",
-            marginBottom: 12,
+            marginBottom: 8,
             lineHeight: 1.2,
           }}
         >
@@ -72,13 +92,23 @@ export default function ModesPage() {
         </h1>
         <p
           style={{
-            fontSize: 16,
-            color: "rgba(255,255,255,0.5)",
+            fontSize: 15,
+            color: "rgba(255,255,255,0.4)",
+            fontFamily: "'Instrument Sans', sans-serif",
+            marginBottom: 8,
+          }}
+        >
+          Choose how Corex thinks with you
+        </p>
+        <p
+          style={{
+            fontSize: 13,
+            color: "rgba(255,255,255,0.25)",
             fontFamily: "'Instrument Sans', sans-serif",
             marginBottom: 40,
           }}
         >
-          Choose how Corex thinks with you
+          Select up to 3 modes
         </p>
 
         <div
@@ -90,7 +120,8 @@ export default function ModesPage() {
           }}
         >
           {MODES.map((mode, i) => {
-            const isActive = activeMode === mode.id;
+            const isActive = activeModes.has(mode.id);
+            const isDisabled = !isActive && activeModes.size >= 3;
             return (
               <motion.div
                 key={mode.id}
@@ -100,13 +131,13 @@ export default function ModesPage() {
                 style={{
                   padding: 24,
                   borderRadius: 20,
-                  cursor: "pointer",
+                  cursor: isDisabled ? "not-allowed" : "pointer",
                   textAlign: "left",
                   display: "flex",
                   flexDirection: "column",
                   gap: 12,
                   transition: "all 0.2s ease",
-                  /* Gradient border when selected */
+                  opacity: isDisabled ? 0.4 : 1,
                   ...(isActive
                     ? {
                         background: "linear-gradient(#000,#000) padding-box, linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71) border-box",
@@ -117,15 +148,15 @@ export default function ModesPage() {
                         border: "1px solid rgba(255,255,255,0.08)",
                       }),
                 }}
-                onClick={() => setMode(mode.id)}
+                onClick={() => !isDisabled && toggleMode(mode.id)}
                 onMouseEnter={(e) => {
-                  if (!isActive) {
+                  if (!isActive && !isDisabled) {
                     e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
                     e.currentTarget.style.background = "rgba(255,255,255,0.06)";
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (!isActive) {
+                  if (!isActive && !isDisabled) {
                     e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
                     e.currentTarget.style.background = "rgba(255,255,255,0.04)";
                   }
@@ -158,7 +189,7 @@ export default function ModesPage() {
                 </div>
 
                 <button
-                  onClick={(e) => { e.stopPropagation(); setMode(mode.id); }}
+                  onClick={(e) => { e.stopPropagation(); if (!isDisabled) toggleMode(mode.id); }}
                   style={{
                     marginTop: "auto",
                     padding: "8px 16px",
@@ -171,23 +202,29 @@ export default function ModesPage() {
                     fontSize: 13,
                     fontWeight: 600,
                     fontFamily: "'Instrument Sans', sans-serif",
-                    cursor: "pointer",
+                    cursor: isDisabled ? "not-allowed" : "pointer",
                     alignSelf: "flex-start",
                     transition: "all 0.2s",
                   }}
                 >
-                  {isActive ? "Active ✓" : "Set as default"}
+                  {isActive ? "Active ✓" : "Select"}
                 </button>
               </motion.div>
             );
           })}
         </div>
 
-        {activeMode && (
+        {activeModes.size > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
+            style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}
           >
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "'Instrument Sans', sans-serif" }}>
+              {activeModes.size === 1
+                ? `${MODES.find(m => activeModes.has(m.id))?.name} mode active`
+                : `${[...activeModes].map(id => MODES.find(m => m.id === id)?.name).join(" + ")} active`}
+            </p>
             <button
               onClick={() => navigate("/app/chat")}
               style={{
@@ -205,7 +242,7 @@ export default function ModesPage() {
               onMouseEnter={(e) => e.currentTarget.style.opacity = "0.88"}
               onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
             >
-              Start creating with {MODES.find(m => m.id === activeMode)?.name} →
+              Start creating →
             </button>
           </motion.div>
         )}

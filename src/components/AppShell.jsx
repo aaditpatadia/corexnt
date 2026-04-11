@@ -52,7 +52,7 @@ function Sidebar({ open, onClose, navigate, location, userName, onNewChat, onUpg
         overflowY: "auto",
       }}
     >
-      {/* Logo + grid */}
+      {/* Logo + grid + close */}
       <div
         style={{
           display: "flex",
@@ -76,21 +76,40 @@ function Sidebar({ open, onClose, navigate, location, userName, onNewChat, onUpg
         >
           Corex
         </button>
-        <button
-          onClick={() => { navigate("/app/dashboard"); onClose?.(); }}
-          style={{
-            color: "rgba(255,255,255,0.4)",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: 18,
-            lineHeight: 1,
-            padding: 4,
-          }}
-          title="Dashboard"
-        >
-          ⊞
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <button
+            onClick={() => { navigate("/app/dashboard"); onClose?.(); }}
+            style={{
+              color: "rgba(255,255,255,0.4)",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: 18,
+              lineHeight: 1,
+              padding: 4,
+            }}
+            title="Dashboard"
+          >
+            ⊞
+          </button>
+          {onClose && (
+            <button
+              onClick={onClose}
+              style={{
+                width: 28, height: 28, borderRadius: 8,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.06)",
+                border: "none", cursor: "pointer", fontSize: 16, lineHeight: 1,
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = "#ffffff"; e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
+              title="Close sidebar"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Nav items */}
@@ -573,8 +592,9 @@ export default function AppShell() {
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          overflow: "hidden",
+          overflow: "visible",
           position: "relative",
+          minWidth: 0,
         }}
       >
         {/* Top-right bar */}
@@ -593,6 +613,7 @@ export default function AppShell() {
             overflow: "hidden",
             position: "relative",
             animation: "fadeUp 0.3s ease both",
+            minHeight: 0,
           }}
         >
           <Routes>
