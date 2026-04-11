@@ -207,9 +207,22 @@ MANDATORY PERSONALISATION RULES — non-negotiable:
       userContextBlock = `\n\n${profileContext}`;
     }
 
+    // ── BRANCHES mode: first turn of a session ────────────────────────────────
+    const conversationTurn = req.body?.conversationTurn ?? (historyMessages.length === 0 ? 1 : 2);
+    const branchesInstruction = conversationTurn === 1
+      ? `\n\nFIRST MESSAGE INSTRUCTION — this is turn 1 of a new session. Respond ONLY using the BRANCHES format below. Do not add any text outside it:
+
+BRANCH_A: [Title — max 6 words] | [2-sentence description of this creative direction]
+BRANCH_B: [Title — max 6 words] | [2-sentence description of this creative direction]
+BRANCH_C: [Title — max 6 words] | [2-sentence description of this creative direction]
+THINKING: [1 sentence explaining why these three directions were chosen]
+
+Rules: Each branch must be a genuinely different angle — not variations of the same idea. Direction A = the expected angle, Direction B = a lateral/sideways angle, Direction C = the provocative/contrarian angle. No markdown, no preamble, no extra text.`
+      : "";
+
     // ── Select and build system prompt ────────────────────────────────────────
     // User context injected first — before anything else
-    let basePrompt = (userType === "company" ? BRAND_PROMPT : CREATOR_PROMPT) + userContextBlock;
+    let basePrompt = (userType === "company" ? BRAND_PROMPT : CREATOR_PROMPT) + userContextBlock + branchesInstruction;
 
     if (engineMode && ENGINE_ADDONS[engineMode]) {
       basePrompt += ENGINE_ADDONS[engineMode];
