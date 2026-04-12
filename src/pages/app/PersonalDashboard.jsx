@@ -366,7 +366,7 @@ export default function PersonalDashboard({ userType, userName }) {
   const actions = isCreator ? creatorActions : brandActions;
 
   return (
-    <div style={{ flex: 1, overflowY: "auto", background: "#000000" }}>
+    <div style={{ flex: 1, height: "100%", overflowY: "auto", background: "#000000" }}>
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: isMobile ? "20px 16px 140px" : "28px 24px 48px" }}>
 
         {/* Header */}

@@ -455,6 +455,7 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
   const [loading,   setLoading]   = useState(false);
   const [revealing, setRevealing] = useState(null);
   const [limitHit,  setLimitHit]  = useState(getMsgsUsed() >= FREE_LIMIT);
+  const [showLimit, setShowLimit] = useState(false);
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -511,6 +512,10 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
   const sendMessage = useCallback(async (text, files = []) => {
     if ((!text?.trim() && !files.length) || loading) return;
     if (getMsgsUsed() >= FREE_LIMIT) { setLimitHit(true); return; }
+
+    const isNewChat = messages.length === 0;
+    const histCount = (() => { try { return JSON.parse(localStorage.getItem("corex_history")||"[]").length; } catch { return 0; } })();
+    if (isNewChat && histCount >= 5) { setShowLimit(true); return; }
 
     const displayFiles = files.map(({ name, type, preview }) => ({ name, type, preview }));
     const apiFiles     = files.map(({ name, type, b64 })     => ({ name, type, b64 }));
@@ -601,6 +606,29 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
         flexDirection: "column",
       }}
     >
+      {showLimit && (
+        <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }}
+          style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.8)", backdropFilter:"blur(12px)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:100, padding:24 }}>
+          <motion.div initial={{ scale:0.9, opacity:0 }} animate={{ scale:1, opacity:1 }} transition={{ delay:0.05 }}
+            style={{ background:"#111111", border:"1px solid rgba(255,255,255,0.1)", borderRadius:28, padding:"40px 36px", maxWidth:400, width:"100%", textAlign:"center" }}>
+            <div style={{ fontSize:40, marginBottom:16 }}>🔒</div>
+            <h3 style={{ fontFamily:"'Instrument Serif', serif", fontStyle:"italic", fontSize:26, color:"#ffffff", marginBottom:8 }}>5 project limit reached</h3>
+            <p style={{ fontSize:15, color:"rgba(255,255,255,0.5)", fontFamily:"'Instrument Sans', sans-serif", lineHeight:1.6, marginBottom:28 }}>
+              Free accounts can create 5 projects. Upgrade to unlock unlimited creative sessions.
+            </p>
+            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+              <button onClick={onUpgrade}
+                style={{ padding:"14px 0", borderRadius:100, border:"none", cursor:"pointer", background:"linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)", color:"#000000", fontSize:15, fontWeight:700, fontFamily:"'Instrument Sans', sans-serif" }}>
+                Upgrade to Pro →
+              </button>
+              <button onClick={() => setShowLimit(false)}
+                style={{ padding:"12px 0", borderRadius:100, border:"1px solid rgba(255,255,255,0.12)", background:"transparent", color:"rgba(255,255,255,0.5)", fontSize:14, fontFamily:"'Instrument Sans', sans-serif", cursor:"pointer" }}>
+                Go back
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
       {/* Messages scrollable area */}
       <div
         className="scroll-area"
