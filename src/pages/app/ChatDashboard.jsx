@@ -449,14 +449,17 @@ function WelcomeScreen({ userName }) {
 
 /* ── Main ChatDashboard ── */
 export default function ChatDashboard({ userType, userName, onUpgrade }) {
-  const [messages,  setMessages]  = useState(() => {
+  const [messages,    setMessages]    = useState(() => {
     try { const s = sessionStorage.getItem("corex_chat"); return s ? JSON.parse(s) : []; } catch { return []; }
   });
-  const [loading,   setLoading]   = useState(false);
-  const [revealing, setRevealing] = useState(null);
-  const [limitHit,  setLimitHit]  = useState(getMsgsUsed() >= FREE_LIMIT);
-  const [showLimit, setShowLimit] = useState(false);
-  const bottomRef = useRef(null);
+  const [loading,     setLoading]     = useState(false);
+  const [revealing,   setRevealing]   = useState(null);
+  const [limitHit,    setLimitHit]    = useState(getMsgsUsed() >= FREE_LIMIT);
+  const [showLimit,   setShowLimit]   = useState(false);
+  const [inputHidden, setInputHidden] = useState(false);
+  const bottomRef    = useRef(null);
+  const scrollRef    = useRef(null);
+  const lastScrollY  = useRef(0);
 
   useEffect(() => {
     if (!sessionStorage.getItem("corex_session_id"))
@@ -499,8 +502,26 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
     } catch {}
   }, [messages]);
 
-  // Scroll to bottom
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, loading]);
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    if (!inputHidden) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
+  // Auto-hide input on scroll up, show on scroll down
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const current = el.scrollTop;
+    const isNearBottom = el.scrollHeight - current - el.clientHeight < 80;
+    if (isNearBottom) {
+      setInputHidden(false);
+    } else if (current < lastScrollY.current - 10) {
+      setInputHidden(true);
+    } else if (current > lastScrollY.current + 10) {
+      setInputHidden(false);
+    }
+    lastScrollY.current = current;
+  }, []);
 
   function trackUsage() {
     const key  = getTodayKey();
@@ -513,9 +534,14 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
     if ((!text?.trim() && !files.length) || loading) return;
     if (getMsgsUsed() >= FREE_LIMIT) { setLimitHit(true); return; }
 
-    const isNewChat = messages.length === 0;
-    const histCount = (() => { try { return JSON.parse(localStorage.getItem("corex_history")||"[]").length; } catch { return 0; } })();
+    const isNewChat  = messages.length === 0;
+    const histCount  = (() => { try { return JSON.parse(localStorage.getItem("corex_history")||"[]").length; } catch { return 0; } })();
     if (isNewChat && histCount >= 5) { setShowLimit(true); return; }
+
+    // Per-project: free users limited to 5 user messages per conversation
+    const userMsgCount = messages.filter(m => m.role === "user").length;
+    const planTier = localStorage.getItem("corex_plan") || "free";
+    if (planTier === "free" && userMsgCount >= 5) { setShowLimit(true); return; }
 
     const displayFiles = files.map(({ name, type, preview }) => ({ name, type, preview }));
     const apiFiles     = files.map(({ name, type, b64 })     => ({ name, type, b64 }));
@@ -631,7 +657,9 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
       )}
       {/* Messages scrollable area */}
       <div
+        ref={scrollRef}
         className="scroll-area"
+        onScroll={handleScroll}
         style={{
           flex: 1,
           overflowY: "auto",
@@ -706,8 +734,21 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
         )}
       </div>
 
-      {/* Fixed bottom input */}
-      <ChatInput onSend={sendMessage} disabled={loading || limitHit} userType={userType} />
+      {/* Fixed bottom input — auto-hides on scroll up */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          transform: inputHidden ? "translateY(110%)" : "translateY(0)",
+          transition: "transform 0.35s cubic-bezier(0.16,1,0.3,1)",
+          pointerEvents: inputHidden ? "none" : "auto",
+        }}
+        onMouseEnter={() => setInputHidden(false)}
+      >
+        <ChatInput onSend={sendMessage} disabled={loading || limitHit} userType={userType} embedded />
+      </div>
 
       {/* Branch grid responsive styles */}
       <style>{`

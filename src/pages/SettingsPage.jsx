@@ -83,11 +83,9 @@ function ToggleRow({ label, active, onClick, accent, accentRgba }) {
 export default function SettingsPage({ userType }) {
   const navigate   = useNavigate();
   const isCreator  = userType !== "company";
-  const accent     = isCreator ? "#2dd668" : "#a78bfa";
-  const accentRgba = isCreator ? "rgba(45,214,104," : "rgba(124,58,237,";
-  const bgStyle    = isCreator
-    ? { background: "#0a0f0b" }
-    : { background: "#0a0a12" };
+  const accent     = "#9CFCAF";
+  const accentRgba = "rgba(156,252,175,";
+  const bgStyle    = { background: "#000000" };
 
   const [activeSection, setActiveSection] = useState("Profile");
   const [saved,         setSaved]         = useState(false);
@@ -138,7 +136,7 @@ export default function SettingsPage({ userType }) {
   }
 
   return (
-    <div className="flex h-full overflow-hidden" style={bgStyle}>
+    <div className="flex h-full overflow-hidden" style={{ ...bgStyle }}>
 
       {/* Left nav */}
       <div style={{ width: 200, flexShrink: 0, padding: "32px 0 32px 24px", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
@@ -217,8 +215,8 @@ export default function SettingsPage({ userType }) {
                   whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}
                   style={{
                     marginTop: 8, padding: "12px 28px", borderRadius: 12, fontSize: 14, fontWeight: 700,
-                    background: saved ? "rgba(45,214,104,0.15)" : `linear-gradient(135deg, ${isCreator ? "#1a7a3c,#2dd668" : "#7c3aed,#a78bfa"})`,
-                    color: saved ? "#2dd668" : (isCreator ? "#050a06" : "#fff"), border: saved ? "1px solid rgba(45,214,104,0.3)" : "none",
+                    background: saved ? "rgba(156,252,175,0.1)" : "linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)",
+                    color: saved ? "#9CFCAF" : "#000000", border: saved ? "1px solid rgba(156,252,175,0.3)" : "none",
                     cursor: "pointer", fontFamily: "var(--font-body)", transition: "all 0.2s ease",
                   }}>
                   {saved ? "Saved ✓" : "Save changes"}
@@ -248,8 +246,8 @@ export default function SettingsPage({ userType }) {
                   whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}
                   style={{
                     marginTop: 8, padding: "12px 28px", borderRadius: 12, fontSize: 14, fontWeight: 700,
-                    background: saved ? "rgba(45,214,104,0.15)" : `linear-gradient(135deg, ${isCreator ? "#1a7a3c,#2dd668" : "#7c3aed,#a78bfa"})`,
-                    color: saved ? "#2dd668" : (isCreator ? "#050a06" : "#fff"), border: saved ? "1px solid rgba(45,214,104,0.3)" : "none",
+                    background: saved ? "rgba(156,252,175,0.1)" : "linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)",
+                    color: saved ? "#9CFCAF" : "#000000", border: saved ? "1px solid rgba(156,252,175,0.3)" : "none",
                     cursor: "pointer", fontFamily: "var(--font-body)", transition: "all 0.2s ease",
                   }}>
                   {saved ? "Saved ✓" : "Save preferences"}
@@ -271,7 +269,7 @@ export default function SettingsPage({ userType }) {
                   </div>
                   <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-body)", marginTop: 6 }}>15 messages per day</p>
                   <motion.button onClick={() => navigate("/app/payment")} whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}
-                    style={{ marginTop: 14, padding: "10px 20px", borderRadius: 10, fontSize: 13, fontWeight: 700, background: `linear-gradient(135deg, ${isCreator ? "#1a7a3c,#2dd668" : "#7c3aed,#a78bfa"})`, color: isCreator ? "#050a06" : "#fff", border: "none", cursor: "pointer", fontFamily: "var(--font-body)" }}>
+                    style={{ marginTop: 14, padding: "10px 20px", borderRadius: 10, fontSize: 13, fontWeight: 700, background: "linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)", color: "#000000", border: "none", cursor: "pointer", fontFamily: "var(--font-body)" }}>
                     Upgrade plan →
                   </motion.button>
                 </div>
@@ -301,7 +299,7 @@ export default function SettingsPage({ userType }) {
             className="fixed inset-0 z-50 flex items-center justify-center px-6"
             style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}>
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-              style={{ background: "#0d1410", border: "1px solid rgba(248,113,113,0.2)", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%" }}>
+              style={{ background: "#111111", border: "1px solid rgba(248,113,113,0.2)", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%" }}>
               <p style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--font-display)", color: "#f0faf2", marginBottom: 8 }}>Delete your account?</p>
               <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-body)", marginBottom: 24, lineHeight: 1.6 }}>This will permanently delete all your conversations, profile, and settings. This cannot be undone.</p>
               <div style={{ display: "flex", gap: 12 }}>

@@ -263,9 +263,8 @@ function TopRightBar({ userName, onUpgrade, navigate, onNewChat, onMobileMenuOpe
     >
       {/* Left: hamburger (mobile only) + new chat button */}
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        {/* Hamburger — mobile only */}
+        {/* Hamburger — toggles sidebar */}
         <button
-          className="md:hidden"
           onClick={onMobileMenuOpen}
           style={{
             width: 36,
@@ -410,15 +409,15 @@ function TopRightBar({ userName, onUpgrade, navigate, onNewChat, onMobileMenuOpe
                 exit={{ opacity: 0, y: -8, scale: 0.95 }}
                 transition={{ duration: 0.15 }}
                 style={{
-                  position: "absolute",
-                  right: 0,
-                  top: "calc(100% + 8px)",
+                  position: "fixed",
+                  right: 24,
+                  top: 68,
                   width: 180,
                   background: "#2a2a2a",
                   border: "1px solid rgba(255,255,255,0.1)",
                   borderRadius: 12,
                   padding: "8px 0",
-                  zIndex: 100,
+                  zIndex: 9999,
                   boxShadow: "0 16px 48px rgba(0,0,0,0.6)",
                 }}
               >
@@ -481,7 +480,8 @@ function TopRightBar({ userName, onUpgrade, navigate, onNewChat, onMobileMenuOpe
 export default function AppShell() {
   const navigate  = useNavigate();
   const location  = useLocation();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileMenuOpen,    setMobileMenuOpen]    = useState(false);
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
 
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
   const isVerified = localStorage.getItem("isVerified") === "true";
@@ -551,9 +551,11 @@ export default function AppShell() {
       }}
     >
       {/* Desktop sidebar */}
-      <div className="hidden md:flex" style={{ height: "100%" }}>
-        <Sidebar {...sidebarProps} />
-      </div>
+      {desktopSidebarOpen && (
+        <div className="hidden md:flex" style={{ height: "100%" }}>
+          <Sidebar {...sidebarProps} onClose={() => setDesktopSidebarOpen(false)} />
+        </div>
+      )}
 
       {/* Mobile sidebar drawer */}
       <AnimatePresence>
@@ -607,7 +609,10 @@ export default function AppShell() {
           onUpgrade={() => navigate("/app/payment")}
           navigate={navigate}
           onNewChat={handleNewChat}
-          onMobileMenuOpen={() => setMobileMenuOpen(p => !p)}
+          onMobileMenuOpen={() => {
+            if (window.innerWidth >= 768) setDesktopSidebarOpen(p => !p);
+            else setMobileMenuOpen(p => !p);
+          }}
         />
 
         {/* Page content */}
