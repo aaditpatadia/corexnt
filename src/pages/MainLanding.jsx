@@ -62,6 +62,7 @@ function Navbar() {
             fontFamily:"'Instrument Sans', sans-serif",
             background: active===item ? "rgba(255,255,255,0.15)" : "transparent",
             color: active===item ? "#ffffff" : "rgba(255,255,255,0.6)",
+            whiteSpace: "nowrap",
             transition:"all 0.2s ease",
           }}
           onMouseEnter={e=>{ if(active!==item){ e.currentTarget.style.color="#ffffff"; e.currentTarget.style.background="rgba(255,255,255,0.06)"; }}}
