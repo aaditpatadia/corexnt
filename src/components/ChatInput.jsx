@@ -38,7 +38,7 @@ async function extractPDFText(file) {
   } catch { return ""; }
 }
 
-export default function ChatInput({ onSend, disabled, userType }) {
+export default function ChatInput({ onSend, disabled, userType, embedded }) {
   const [text,          setText]          = useState("");
   const [files,         setFiles]         = useState([]);
   const [dragging,      setDragging]      = useState(false);
@@ -154,7 +154,12 @@ export default function ChatInput({ onSend, disabled, userType }) {
 
   return (
     <div
-      style={{
+      style={embedded ? {
+        width: "min(680px, calc(100% - 48px))",
+        margin: "0 auto",
+        paddingBottom: 24,
+        paddingTop: 8,
+      } : {
         position: "absolute",
         bottom: 40,
         left: "50%",

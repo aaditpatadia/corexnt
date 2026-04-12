@@ -13,7 +13,7 @@ function timeAgo(ts) {
   return "Just now";
 }
 
-function ProjectCard({ project, onContinue, delay }) {
+function ProjectCard({ project, onContinue, onDelete, delay }) {
   const [hovered, setHovered] = useState(false);
   const msgCount = project.messages?.length || 0;
   const lastMsg  = project.messages?.slice().reverse().find(m => m.role === "assistant");
@@ -36,10 +36,41 @@ function ProjectCard({ project, onContinue, delay }) {
         gap: 12,
         transition: "all 0.2s ease",
         cursor: "pointer",
+        position: "relative",
       }}
       onClick={() => onContinue(project)}
     >
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+      {/* Delete button — top right */}
+      {hovered && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(project.id); }}
+          style={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+            width: 28,
+            height: 28,
+            borderRadius: 8,
+            border: "1px solid rgba(248,113,113,0.2)",
+            background: "rgba(248,113,113,0.06)",
+            color: "rgba(248,113,113,0.6)",
+            fontSize: 13,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            transition: "all 0.15s",
+            zIndex: 2,
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(248,113,113,0.15)"; e.currentTarget.style.color = "#f87171"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(248,113,113,0.06)"; e.currentTarget.style.color = "rgba(248,113,113,0.6)"; }}
+          title="Delete project"
+        >
+          ✕
+        </button>
+      )}
+
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, paddingRight: hovered ? 32 : 0, transition: "padding 0.15s" }}>
         <h3
           style={{
             fontFamily: "'Instrument Sans', sans-serif",
@@ -140,6 +171,12 @@ export default function ProjectsPage() {
   const handleNew = () => {
     if (typeof window.__corex_newChat === "function") window.__corex_newChat();
     navigate("/app/chat");
+  };
+
+  const handleDelete = (id) => {
+    const updated = projects.filter(p => p.id !== id);
+    setProjects(updated);
+    localStorage.setItem("corex_history", JSON.stringify(updated));
   };
 
   return (
@@ -251,6 +288,7 @@ export default function ProjectsPage() {
                 key={project.id}
                 project={project}
                 onContinue={handleContinue}
+                onDelete={handleDelete}
                 delay={i * 0.05}
               />
             ))}
