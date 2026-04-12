@@ -42,49 +42,55 @@ function Navbar() {
   };
 
   return (
-    <motion.div initial={{ opacity:0, y:-20 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.5, ease:[0.16,1,0.3,1] }}
-      style={{
-        position:"fixed", top:32, left:"50%", transform:"translateX(-50%)",
-        zIndex:50, display:"inline-flex", alignItems:"center", gap:2,
-        padding:"6px",
-        background: scrolled ? "rgba(20,20,20,0.95)" : "#222222",
-        borderRadius:100,
-        boxShadow: scrolled ? "0 8px 32px rgba(0,0,0,0.7)" : "0 4px 24px rgba(0,0,0,0.5)",
-        backdropFilter:"blur(20px)",
-        border:"1px solid rgba(255,255,255,0.06)",
-        transition:"all 0.3s ease",
-      }}>
-      {items.map((item) => (
-        <button key={item} onClick={() => handleNav(item)}
-          style={{
-            padding:"8px 18px", borderRadius:100, border:"none", cursor:"pointer",
-            fontSize:14, fontWeight:active===item?600:400,
-            fontFamily:"'Instrument Sans', sans-serif",
-            background: active===item ? "rgba(255,255,255,0.15)" : "transparent",
-            color: active===item ? "#ffffff" : "rgba(255,255,255,0.6)",
-            whiteSpace: "nowrap",
-            transition:"all 0.2s ease",
-          }}
-          onMouseEnter={e=>{ if(active!==item){ e.currentTarget.style.color="#ffffff"; e.currentTarget.style.background="rgba(255,255,255,0.06)"; }}}
-          onMouseLeave={e=>{ if(active!==item){ e.currentTarget.style.color="rgba(255,255,255,0.6)"; e.currentTarget.style.background="transparent"; }}}>
-          {item}
-        </button>
-      ))}
-      <motion.button
-        onClick={() => handleGetStarted(navigate)}
-        whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
+    <>
+      <style>{`@media (max-width: 560px) { .corex-nav-link { display: none !important; } }`}</style>
+      <motion.div initial={{ opacity:0, y:-20 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.5, ease:[0.16,1,0.3,1] }}
         style={{
-          padding:"9px 20px", borderRadius:100, border:"none", cursor:"pointer",
-          background:"linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)",
-          color:"#000000", fontSize:14, fontWeight:700,
-          fontFamily:"'Instrument Sans', sans-serif",
-          transition:"opacity 0.2s",
-        }}
-        onMouseEnter={e=>e.currentTarget.style.opacity="0.88"}
-        onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
-        Launch →
-      </motion.button>
-    </motion.div>
+          position:"fixed", top:20, left:"50%", transform:"translateX(-50%)",
+          zIndex:50, display:"inline-flex", alignItems:"center", gap:2,
+          padding:"6px",
+          background: scrolled ? "rgba(20,20,20,0.95)" : "#222222",
+          borderRadius:100,
+          boxShadow: scrolled ? "0 8px 32px rgba(0,0,0,0.7)" : "0 4px 24px rgba(0,0,0,0.5)",
+          backdropFilter:"blur(20px)",
+          border:"1px solid rgba(255,255,255,0.06)",
+          transition:"all 0.3s ease",
+          maxWidth: "calc(100vw - 32px)",
+        }}>
+        {items.map((item) => (
+          <button key={item} onClick={() => handleNav(item)}
+            className="corex-nav-link"
+            style={{
+              padding:"8px 16px", borderRadius:100, border:"none", cursor:"pointer",
+              fontSize:14, fontWeight:active===item?600:400,
+              fontFamily:"'Instrument Sans', sans-serif",
+              background: active===item ? "rgba(255,255,255,0.15)" : "transparent",
+              color: active===item ? "#ffffff" : "rgba(255,255,255,0.6)",
+              whiteSpace: "nowrap",
+              transition:"all 0.2s ease",
+            }}
+            onMouseEnter={e=>{ if(active!==item){ e.currentTarget.style.color="#ffffff"; e.currentTarget.style.background="rgba(255,255,255,0.06)"; }}}
+            onMouseLeave={e=>{ if(active!==item){ e.currentTarget.style.color="rgba(255,255,255,0.6)"; e.currentTarget.style.background="transparent"; }}}>
+            {item}
+          </button>
+        ))}
+        <motion.button
+          onClick={() => handleGetStarted(navigate)}
+          whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
+          style={{
+            padding:"9px 20px", borderRadius:100, border:"none", cursor:"pointer",
+            background:"linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)",
+            color:"#000000", fontSize:14, fontWeight:700,
+            fontFamily:"'Instrument Sans', sans-serif",
+            whiteSpace:"nowrap",
+            transition:"opacity 0.2s",
+          }}
+          onMouseEnter={e=>e.currentTarget.style.opacity="0.88"}
+          onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
+          Launch →
+        </motion.button>
+      </motion.div>
+    </>
   );
 }
 
