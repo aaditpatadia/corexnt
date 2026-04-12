@@ -21,6 +21,7 @@ import Team              from "../pages/app/Team";
 import ModesPage         from "../pages/app/ModesPage";
 import ProjectsPage      from "../pages/app/ProjectsPage";
 import SettingsPage      from "../pages/SettingsPage";
+import MyResourcesPage   from "../pages/app/MyResourcesPage";
 import { hasProfile }    from "../utils/userProfile";
 
 /* ─── Sidebar ─── */
@@ -35,7 +36,7 @@ function Sidebar({ open, onClose, navigate, location, userName, onNewChat, onUpg
 
   const navItems = [
     { icon: "📁", label: "Projects",     path: "projects" },
-    { icon: "📄", label: "My Resources", path: "history" },
+    { icon: "📄", label: "My Resources", path: "resources" },
     { icon: "⊞",  label: "Modes",        path: "modes" },
   ];
 
@@ -256,6 +257,8 @@ function TopRightBar({ userName, onUpgrade, navigate, onNewChat, onMobileMenuOpe
         padding: "0 24px",
         background: "transparent",
         flexShrink: 0,
+        position: "relative",
+        zIndex: 50,
       }}
     >
       {/* Left: hamburger (mobile only) + new chat button */}
@@ -544,6 +547,7 @@ export default function AppShell() {
         overflow: "hidden",
         background: "#000000",
         animation: "fadeUp 0.35s cubic-bezier(0.16,1,0.3,1)",
+        position: "relative",
       }}
     >
       {/* Desktop sidebar */}
@@ -603,7 +607,7 @@ export default function AppShell() {
           onUpgrade={() => navigate("/app/payment")}
           navigate={navigate}
           onNewChat={handleNewChat}
-          onMobileMenuOpen={() => setMobileMenuOpen(true)}
+          onMobileMenuOpen={() => setMobileMenuOpen(p => !p)}
         />
 
         {/* Page content */}
@@ -614,6 +618,8 @@ export default function AppShell() {
             position: "relative",
             animation: "fadeUp 0.3s ease both",
             minHeight: 0,
+            display: "flex",
+            flexDirection: "column",
           }}
         >
           <Routes>
@@ -628,6 +634,7 @@ export default function AppShell() {
             <Route path="growth-audit"     element={<GrowthAudit />} />
             <Route path="templates"        element={<Templates />} />
             <Route path="history"          element={<History />} />
+            <Route path="resources"        element={<MyResourcesPage />} />
             <Route path="payment"          element={<PaymentPage onBack={() => navigate("/app/dashboard")} userType={userType} />} />
             <Route path="trend-engine"     element={<TrendEngine />} />
             <Route path="brand-deals"      element={<BrandDeals />} />
