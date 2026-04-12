@@ -155,6 +155,7 @@ export default function ChatInput({ onSend, disabled, userType, embedded }) {
   return (
     <div
       style={embedded ? {
+        position: "relative",
         width: "min(680px, calc(100% - 48px))",
         margin: "0 auto",
         paddingBottom: 24,
