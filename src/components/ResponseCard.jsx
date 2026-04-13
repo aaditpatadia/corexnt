@@ -116,7 +116,7 @@ function UserBubble({ message }) {
           {copied ? "✓ Copied" : "Copy"}
         </motion.button>
       )}
-      <div style={{ maxWidth:"68%", minWidth:0 }}>
+      <div style={{ maxWidth:"min(72%, 520px)", minWidth:0, width: (content?.length || 0) > 200 ? "min(72%, 520px)" : "auto" }}>
         {files.length > 0 && (
           <div style={{ display:"flex", flexWrap:"wrap", gap:8, justifyContent:"flex-end", marginBottom:6 }}>
             {files.map((f, i) => f.preview
@@ -390,7 +390,7 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
 
   if (role === "user") return <UserBubble message={message}/>;
 
-  const { title, cleanBody, steps, example, graphData, mindmapData, flowchartData, chips, followups } = parseResponse(message.content);
+  const { title, cleanBody, steps, example, graphData, mindmapData, flowchartData, chips, followups, clarifyOptions } = parseResponse(message.content);
   const showChart = shouldShowChart(graphData);
   const bodyText  = stripMarkdown(cleanBody || "");
 
@@ -469,6 +469,36 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
           </motion.div>
         );
       })()}
+
+      {/* Clarify options — shown as clickable direction cards */}
+      {clarifyOptions && clarifyOptions.length > 0 && (
+        <motion.div
+          initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }}
+          transition={{ delay:0.05 }}
+          style={{ marginBottom:20, display:"flex", flexWrap:"wrap", gap:10 }}
+        >
+          {clarifyOptions.map((opt, i) => (
+            <motion.button
+              key={i}
+              onClick={() => onChip?.(opt)}
+              whileHover={{ scale:1.02 }}
+              whileTap={{ scale:0.97 }}
+              style={{
+                padding:"10px 18px", borderRadius:24, fontSize:14,
+                fontFamily:"var(--font-body)", fontWeight:500,
+                background:"rgba(156,252,175,0.07)",
+                border:"1px solid rgba(156,252,175,0.25)",
+                color:"rgba(255,255,255,0.85)", cursor:"pointer",
+                transition:"all 0.15s ease",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background="rgba(156,252,175,0.14)"; e.currentTarget.style.borderColor="rgba(156,252,175,0.5)"; e.currentTarget.style.color="#ffffff"; }}
+              onMouseLeave={e => { e.currentTarget.style.background="rgba(156,252,175,0.07)"; e.currentTarget.style.borderColor="rgba(156,252,175,0.25)"; e.currentTarget.style.color="rgba(255,255,255,0.85)"; }}
+            >
+              {opt}
+            </motion.button>
+          ))}
+        </motion.div>
+      )}
 
       {/* Mindmap */}
       {mindmapData && <MindmapCard data={mindmapData} />}

@@ -93,23 +93,6 @@ function Sidebar({ open, onClose, navigate, location, userName, onNewChat, onUpg
           >
             ⊞
           </button>
-          {onClose && (
-            <button
-              onClick={onClose}
-              style={{
-                width: 28, height: 28, borderRadius: 8,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.06)",
-                border: "none", cursor: "pointer", fontSize: 16, lineHeight: 1,
-                transition: "all 0.15s",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = "#ffffff"; e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
-              title="Close sidebar"
-            >
-              ✕
-            </button>
-          )}
         </div>
       </div>
 
