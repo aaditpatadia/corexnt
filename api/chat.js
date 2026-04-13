@@ -22,6 +22,24 @@ GRAPH RULES:
 - GRAPH_DATA must be valid JSON: {"labels":[...],"values":[...],"title":"..."}
 - NEVER include GRAPH_DATA in execution playbooks or next-steps responses — numbers there are milestones, not chart data
 
+MINDMAP RULES — use MINDMAP_DATA when presenting:
+- Brand strategy with multiple pillars
+- Competitive landscape mapping
+- Campaign architecture with multiple channels
+- Content strategy frameworks
+- Audience segmentation
+Format: MINDMAP_DATA: {"center":"[Central Topic]","branches":[{"title":"[Branch Name]","items":["item 1","item 2","item 3"]},{"title":"[Branch Name]","items":["item 1","item 2"]}]}
+Max 6 branches, 4 items each. MINDMAP replaces the body text for strategic overviews — give a 1-line intro above it, then the MINDMAP_DATA, then Action Steps.
+
+FLOWCHART RULES — use FLOWCHART_DATA when presenting:
+- Execution playbooks and launch sequences
+- Step-by-step processes
+- Decision trees for brand or campaign choices
+- "How to" implementation guides
+Format: FLOWCHART_DATA: {"title":"[Playbook Name]","firstMove":"[One specific thing to do RIGHT NOW in 30 minutes]","steps":[{"id":1,"label":"[Step Name]","desc":"[Specific detail with tool/budget/timeline]","type":"start|action|decision|result|end"}]}
+Max 7 steps. FLOWCHART_DATA replaces Action Steps for process/execution responses — still include Real Example after it.
+Types: start (kick-off), action (do this), decision (choose between paths), result (expected outcome), end (completion state).
+
 FORMATTING — CRITICAL:
 - NEVER use checkbox characters (☐ □ ☑ ✓ at start of line). ALWAYS use numbered lists: 1. 2. 3.
 - NEVER use bullet points (- •) for action items. Use numbered lists only.

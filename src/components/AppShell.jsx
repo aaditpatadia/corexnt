@@ -631,7 +631,7 @@ export default function AppShell() {
             <Route index element={<Navigate to={defaultRoute} replace />} />
             <Route path="dashboard"        element={<PersonalDashboard userType={userType} userName={userName} />} />
             <Route path="profile-setup"    element={<ProfileSetup userType={userType} userName={userName} />} />
-            <Route path="settings"         element={<SettingsPage userType={userType} />} />
+            <Route path="settings"         element={<SettingsPage />} />
             <Route path="chat"             element={<ChatDashboard userType={userType} userName={userName} onUpgrade={() => navigate("/app/payment")} />} />
             <Route path="modes"            element={<ModesPage />} />
             <Route path="projects"         element={<ProjectsPage />} />
