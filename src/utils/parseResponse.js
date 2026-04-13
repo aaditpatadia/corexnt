@@ -1,6 +1,5 @@
 /**
- * parseResponse v5.2 — strips all markdown, extracts structured data.
- * Charts ONLY when response contains real GRAPH_DATA with meaningful variance.
+ * parseResponse v8 — strips all markdown, extracts structured data.
  */
 
 function extractGraphData(raw) {
@@ -13,10 +12,26 @@ function extractGraphData(raw) {
   return null;
 }
 
-/**
- * Only show chart if values have meaningful variance (>10% range vs max).
- * This prevents charts showing for flat/meaningless data.
- */
+function extractMindmapData(raw) {
+  const match = raw.match(/MINDMAP_DATA:\s*(\{[\s\S]*?\})\s*(?=\n|$|\})/);
+  if (!match) return null;
+  try {
+    const md = JSON.parse(match[1]);
+    if (md.center && Array.isArray(md.branches)) return md;
+  } catch {}
+  return null;
+}
+
+function extractFlowchartData(raw) {
+  const match = raw.match(/FLOWCHART_DATA:\s*(\{[\s\S]*?\})\s*(?=\n|$|\})/);
+  if (!match) return null;
+  try {
+    const fd = JSON.parse(match[1]);
+    if (Array.isArray(fd.steps)) return fd;
+  } catch {}
+  return null;
+}
+
 export function shouldShowChart(graphData) {
   if (!graphData) return false;
   const values = graphData.values;
@@ -38,13 +53,10 @@ function extractFollowups(raw) {
 }
 
 function extractChips(raw) {
-  // Single-quoted
   const sq = raw.match(/Chips:\s*'([^']+)'\s*\|\s*'([^']+)'\s*(?:\|\s*'([^']+)')?/);
   if (sq) return [sq[1], sq[2], sq[3]].filter(Boolean);
-  // Double-quoted
   const dq = raw.match(/Chips:\s*"([^"]+)"\s*\|\s*"([^"]+)"\s*(?:\|\s*"([^"]+)")?/);
   if (dq) return [dq[1], dq[2], dq[3]].filter(Boolean);
-  // Bare pipe-separated
   const bare = raw.match(/Chips:\s*(.+)/);
   if (bare) {
     return bare[1]
@@ -58,48 +70,48 @@ function extractChips(raw) {
 
 export function stripMarkdown(text) {
   return text
-    .replace(/\*{1,3}([^*\n]+)\*{1,3}/g, "$1")  // bold/italic
-    .replace(/\*+/g, "")                           // remaining asterisks
-    .replace(/^#{1,6}\s+/gm, "")                   // headings
-    .replace(/`{1,3}[^`]*`{1,3}/g, "")             // code
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")        // links
-    .replace(/^[-•]\s+/gm, "")                      // list bullets
-    .replace(/_{1,2}([^_\n]+)_{1,2}/g, "$1")        // underline/italic
-    .replace(/~~([^~]+)~~/g, "$1")                  // strikethrough
-    .replace(/^>\s+/gm, "")                          // blockquotes
+    .replace(/\*{1,3}([^*\n]+)\*{1,3}/g, "$1")
+    .replace(/\*+/g, "")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/`{1,3}[^`]*`{1,3}/g, "")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/^[-•]\s+/gm, "")
+    .replace(/_{1,2}([^_\n]+)_{1,2}/g, "$1")
+    .replace(/~~([^~]+)~~/g, "$1")
+    .replace(/^>\s+/gm, "")
+    .replace(/[☐□☑✓□]\s*/g, "")
     .trim();
 }
 
 export function parseResponse(raw) {
   if (!raw) {
-    return { title:"", summary:"", steps:[], example:"", graphData:null, chips:[], keyMetric:null, cleanBody:"" };
+    return { title:"", summary:"", steps:[], example:"", graphData:null, mindmapData:null, flowchartData:null, chips:[], keyMetric:null, cleanBody:"", followups:[] };
   }
 
-  // Extract structured data first (from raw, before stripping)
-  const graphData = extractGraphData(raw);
-  const chips     = extractChips(raw);
-  const followups = extractFollowups(raw);
+  const graphData     = extractGraphData(raw);
+  const mindmapData   = extractMindmapData(raw);
+  const flowchartData = extractFlowchartData(raw);
+  const chips         = extractChips(raw);
+  const followups     = extractFollowups(raw);
 
-  // Remove structured tokens from display text
   let clean = raw
     .replace(/GRAPH_DATA:\s*\{[\s\S]*?\}\s*(?=\n|$)/g, "")
+    .replace(/MINDMAP_DATA:\s*\{[\s\S]*?\}\s*(?=\n|$)/g, "")
+    .replace(/FLOWCHART_DATA:\s*\{[\s\S]*?\}\s*(?=\n|$)/g, "")
     .replace(/Chips:\s*.+$/m, "")
     .replace(/FOLLOWUPS:\s*\[[\s\S]*?\]/m, "")
     .trim();
 
   clean = stripMarkdown(clean);
 
-  // Normalise blank lines
   const lines = clean.split("\n").map(l => l.trimEnd());
 
-  // First non-empty line = title (if under 80 chars)
   const titleIdx = lines.findIndex(l => l.trim().length > 0);
   let title = "";
   let bodyStart = 0;
 
   if (titleIdx >= 0) {
     const candidate = lines[titleIdx].trim();
-    // Title if: short enough and doesn't start with a numbered step or section keyword
     if (candidate.length < 80 && !candidate.match(/^(\d+[.)]\s|Action Steps|Real Example)/i)) {
       title = candidate;
       bodyStart = titleIdx + 1;
@@ -108,7 +120,6 @@ export function parseResponse(raw) {
 
   const bodyLines = lines.slice(bodyStart);
 
-  // Find structured sections
   const actionStart      = bodyLines.findIndex(l => /^action steps/i.test(l.trim()));
   const realExampleStart = bodyLines.findIndex(l => /^real example/i.test(l.trim()));
 
@@ -138,11 +149,9 @@ export function parseResponse(raw) {
   const example   = exampleLines.join(" ").trim();
   const cleanBody = mainBodyLines.join("\n").trim();
   const summary   = mainBodyLines.find(l => l.trim().length > 0)?.trim() || "";
-
-  // Key metric extraction (only from body, not title)
   const keyMetric = extractKeyMetric(cleanBody);
 
-  return { title, summary, cleanBody, steps, example, graphData, chips, followups, keyMetric };
+  return { title, summary, cleanBody, steps, example, graphData, mindmapData, flowchartData, chips, followups, keyMetric };
 }
 
 function extractKeyMetric(text) {

@@ -86,11 +86,37 @@ function buildChart(graphData) {
 
 /* ── User bubble ── */
 function UserBubble({ message }) {
+  const [copied,   setCopied]   = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const { content, files = [] } = message;
+  const isLong = (content?.length || 0) > 280;
+
+  const copy = () => {
+    navigator.clipboard.writeText(content || "").catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
   return (
     <motion.div initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }}
-      style={{ display:"flex", justifyContent:"flex-end", marginBottom:20 }}>
-      <div style={{ maxWidth:"65%" }}>
+      style={{ display:"flex", justifyContent:"flex-end", marginBottom:20, gap:8, alignItems:"flex-end" }}>
+      {/* Copy button — left of bubble */}
+      {content && (
+        <motion.button
+          onClick={copy}
+          whileTap={{ scale: 0.9 }}
+          style={{
+            flexShrink:0, fontSize:11, padding:"4px 10px", borderRadius:20,
+            border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.05)",
+            color: copied ? "#9CFCAF" : "rgba(255,255,255,0.35)",
+            cursor:"pointer", fontFamily:"var(--font-body)", transition:"all 0.15s",
+            alignSelf:"flex-end", marginBottom:4,
+          }}
+        >
+          {copied ? "✓ Copied" : "Copy"}
+        </motion.button>
+      )}
+      <div style={{ maxWidth:"68%", minWidth:0 }}>
         {files.length > 0 && (
           <div style={{ display:"flex", flexWrap:"wrap", gap:8, justifyContent:"flex-end", marginBottom:6 }}>
             {files.map((f, i) => f.preview
@@ -102,16 +128,252 @@ function UserBubble({ message }) {
           </div>
         )}
         {content && (
-          <div style={{
-            background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.1)",
-            borderRadius:"20px 20px 4px 20px", padding:"12px 18px",
-            fontSize:15, color:"#ffffff", lineHeight:1.6,
-            fontFamily:"var(--font-body)",
-          }}>
-            {content}
+          <div style={{ position:"relative" }}>
+            <div style={{
+              background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.1)",
+              borderRadius:"20px 20px 4px 20px", padding:"12px 18px",
+              fontSize:15, color:"#ffffff", lineHeight:1.6,
+              fontFamily:"var(--font-body)",
+              maxHeight: isLong && !expanded ? "120px" : "none",
+              overflow: "hidden",
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+              transition:"max-height 0.3s ease",
+            }}>
+              {content}
+            </div>
+            {isLong && !expanded && (
+              <div style={{
+                position:"absolute", bottom:0, left:0, right:0, height:48,
+                background:"linear-gradient(to top, rgba(34,34,34,0.95), transparent)",
+                borderRadius:"0 0 4px 20px", pointerEvents:"none",
+              }}/>
+            )}
           </div>
         )}
+        {isLong && (
+          <button
+            onClick={() => setExpanded(p=>!p)}
+            style={{
+              marginTop:4, fontSize:12, color:"rgba(255,255,255,0.4)",
+              background:"none", border:"none", cursor:"pointer",
+              fontFamily:"var(--font-body)", float:"right",
+              transition:"color 0.15s",
+            }}
+            onMouseEnter={e => e.currentTarget.style.color = "rgba(255,255,255,0.75)"}
+            onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.4)"}
+          >
+            {expanded ? "Show less ↑" : "Show more ↓"}
+          </button>
+        )}
       </div>
+    </motion.div>
+  );
+}
+
+/* ── Mindmap Card ── */
+function MindmapCard({ data }) {
+  const [activeNode, setActiveNode] = useState(null);
+  const colors = ["#226FF7","#6BC3CE","#9CFCAF","#FFEA71","#f97316","#a855f7"];
+
+  return (
+    <motion.div
+      initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }}
+      style={{ marginBottom:28, width:"100%" }}
+    >
+      {/* Central concept */}
+      <div style={{ display:"flex", justifyContent:"center", marginBottom:24 }}>
+        <div style={{
+          padding:"12px 28px", borderRadius:100,
+          background:"linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)",
+          fontSize:16, fontWeight:700, color:"#000000",
+          fontFamily:"var(--font-body)", letterSpacing:"-0.3px",
+          boxShadow:"0 4px 24px rgba(107,195,206,0.25)",
+        }}>
+          {data.center}
+        </div>
+      </div>
+
+      {/* Branches grid */}
+      <div style={{
+        display:"grid",
+        gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))",
+        gap:12,
+      }}>
+        {data.branches.map((branch, bi) => {
+          const color = colors[bi % colors.length];
+          const isActive = activeNode === bi;
+          return (
+            <motion.div
+              key={bi}
+              onClick={() => setActiveNode(isActive ? null : bi)}
+              whileHover={{ scale:1.02, translateY:-2 }}
+              transition={{ duration:0.2 }}
+              style={{
+                padding:"16px 18px", borderRadius:16, cursor:"pointer",
+                border: isActive ? `1px solid ${color}55` : "1px solid rgba(255,255,255,0.08)",
+                background: isActive ? `${color}10` : "rgba(255,255,255,0.03)",
+                transition:"all 0.2s ease",
+              }}
+            >
+              <div style={{
+                display:"flex", alignItems:"center", gap:8, marginBottom:10,
+              }}>
+                <div style={{
+                  width:8, height:8, borderRadius:"50%",
+                  background:color, flexShrink:0,
+                  boxShadow:`0 0 6px ${color}60`,
+                }}/>
+                <span style={{
+                  fontSize:13, fontWeight:700, color:"#ffffff",
+                  fontFamily:"var(--font-body)",
+                }}>
+                  {branch.title}
+                </span>
+              </div>
+              <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+                {(branch.items || []).map((item, ii) => (
+                  <div key={ii} style={{
+                    display:"flex", alignItems:"flex-start", gap:6,
+                  }}>
+                    <span style={{
+                      fontSize:9, color:color, marginTop:5, flexShrink:0,
+                    }}>●</span>
+                    <span style={{
+                      fontSize:13, color:"rgba(255,255,255,0.65)",
+                      fontFamily:"var(--font-body)", lineHeight:1.5,
+                    }}>
+                      {item}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
+}
+
+/* ── Flowchart Card ── */
+function FlowchartCard({ data }) {
+  const typeStyles = {
+    start:    { bg:"rgba(34,111,247,0.12)",  border:"rgba(34,111,247,0.35)",  color:"#6BB1FF", label:"START"    },
+    action:   { bg:"rgba(156,252,175,0.08)", border:"rgba(156,252,175,0.25)", color:"#9CFCAF", label:"ACTION"   },
+    decision: { bg:"rgba(255,234,113,0.08)", border:"rgba(255,234,113,0.25)", color:"#FFEA71", label:"DECIDE"   },
+    result:   { bg:"rgba(249,115,22,0.08)",  border:"rgba(249,115,22,0.25)",  color:"#f97316", label:"RESULT"   },
+    end:      { bg:"rgba(168,85,247,0.1)",   border:"rgba(168,85,247,0.3)",   color:"#a855f7", label:"DONE"     },
+  };
+
+  const firstMove = data.firstMove || "";
+
+  return (
+    <motion.div
+      initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }}
+      style={{ marginBottom:28, width:"100%" }}
+    >
+      {data.title && (
+        <p style={{
+          fontSize:11, fontWeight:700, letterSpacing:"2px", textTransform:"uppercase",
+          color:"rgba(255,255,255,0.4)", fontFamily:"var(--font-body)", marginBottom:16,
+        }}>
+          {data.title}
+        </p>
+      )}
+
+      <div style={{ maxWidth:560, margin:"0 auto" }}>
+        {(data.steps || []).map((step, i) => {
+          const t = typeStyles[step.type] || typeStyles.action;
+          return (
+            <div key={i}>
+              <motion.div
+                initial={{ opacity:0, x:-12 }}
+                animate={{ opacity:1, x:0 }}
+                transition={{ delay: i * 0.07, duration:0.3 }}
+                style={{
+                  display:"flex", gap:14, alignItems:"flex-start",
+                  padding:"14px 18px", borderRadius:16,
+                  background:t.bg, border:`1px solid ${t.border}`,
+                }}
+              >
+                {/* Number badge */}
+                <div style={{
+                  width:28, height:28, borderRadius:"50%", flexShrink:0,
+                  background:`${t.border}`, border:`1px solid ${t.color}`,
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  fontSize:12, fontWeight:700, color:t.color,
+                  fontFamily:"var(--font-body)",
+                }}>
+                  {i + 1}
+                </div>
+                <div style={{ flex:1 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+                    <span style={{
+                      fontSize:14, fontWeight:700, color:"#ffffff",
+                      fontFamily:"var(--font-body)",
+                    }}>
+                      {step.label}
+                    </span>
+                    <span style={{
+                      fontSize:9, fontWeight:700, padding:"2px 7px", borderRadius:20,
+                      background:`${t.border}`, color:t.color,
+                      fontFamily:"var(--font-body)", letterSpacing:"1px",
+                    }}>
+                      {t.label}
+                    </span>
+                  </div>
+                  {step.desc && (
+                    <p style={{
+                      fontSize:13, color:"rgba(255,255,255,0.6)",
+                      fontFamily:"var(--font-body)", lineHeight:1.5, margin:0,
+                    }}>
+                      {step.desc}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Connector line */}
+              {i < (data.steps.length - 1) && (
+                <div style={{
+                  width:2, height:16, background:"rgba(255,255,255,0.1)",
+                  margin:"0 auto", marginLeft:32,
+                }}/>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {firstMove && (
+        <motion.div
+          initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }}
+          transition={{ delay:0.3 }}
+          style={{
+            marginTop:20, padding:"14px 18px", borderRadius:16,
+            background:"rgba(156,252,175,0.06)",
+            border:"1px solid rgba(156,252,175,0.2)",
+            display:"flex", gap:12, alignItems:"flex-start",
+          }}
+        >
+          <span style={{ fontSize:16, flexShrink:0 }}>⚡</span>
+          <div>
+            <p style={{
+              fontSize:11, fontWeight:700, letterSpacing:"1.5px", textTransform:"uppercase",
+              color:"rgba(156,252,175,0.7)", fontFamily:"var(--font-body)", marginBottom:4,
+            }}>
+              Your first move, right now
+            </p>
+            <p style={{
+              fontSize:14, color:"rgba(255,255,255,0.85)",
+              fontFamily:"var(--font-body)", lineHeight:1.6, margin:0,
+            }}>
+              {firstMove}
+            </p>
+          </div>
+        </motion.div>
+      )}
     </motion.div>
   );
 }
@@ -128,7 +390,7 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
 
   if (role === "user") return <UserBubble message={message}/>;
 
-  const { title, cleanBody, steps, example, graphData, chips, followups } = parseResponse(message.content);
+  const { title, cleanBody, steps, example, graphData, mindmapData, flowchartData, chips, followups } = parseResponse(message.content);
   const showChart = shouldShowChart(graphData);
   const bodyText  = stripMarkdown(cleanBody || "");
 
@@ -208,6 +470,12 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
         );
       })()}
 
+      {/* Mindmap */}
+      {mindmapData && <MindmapCard data={mindmapData} />}
+
+      {/* Flowchart */}
+      {flowchartData && <FlowchartCard data={flowchartData} />}
+
       {/* Next moves / action steps */}
       {steps.length > 0 && (
         <div style={{ marginTop:20, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:16, padding:"16px 18px" }}>
@@ -218,12 +486,13 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
             {steps.map((s, i) => (
               <div key={i} style={{ display:"flex", gap:12, marginBottom:10, alignItems:"flex-start" }}>
                 <div style={{
-                  width:18, height:18, borderRadius:4, flexShrink:0, marginTop:3,
-                  border:"1.5px solid rgba(255,255,255,0.25)", background:"transparent",
+                  width:22, height:22, borderRadius:"50%", flexShrink:0, marginTop:2,
+                  background:"rgba(156,252,175,0.1)", border:"1px solid rgba(156,252,175,0.25)",
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  fontSize:11, fontWeight:700, color:"#9CFCAF", fontFamily:"var(--font-body)",
+                  letterSpacing:"-0.5px",
                 }}>
-                  <svg width="18" height="18" viewBox="0 0 18 18" style={{ opacity:0 }}>
-                    <polyline points="3 9 7 13 15 5" stroke="#ffffff" strokeWidth="2" fill="none" strokeLinecap="round"/>
-                  </svg>
+                  {i + 1}
                 </div>
                 <span style={{ fontSize:14, color:"rgba(255,255,255,0.8)", lineHeight:1.6, fontFamily:"var(--font-body)", wordBreak:"break-word", overflowWrap:"break-word" }}>
                   {stripMarkdown(s)}
