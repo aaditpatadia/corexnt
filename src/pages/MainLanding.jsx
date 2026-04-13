@@ -44,17 +44,19 @@ function Navbar() {
   return (
     <>
       <style>{`@media (max-width: 560px) { .corex-nav-link { display: none !important; } }`}</style>
+      {/* Outer full-width container handles centering — no transform conflict with Framer Motion */}
+      <div style={{ position:"fixed", top:20, left:0, right:0, zIndex:50, display:"flex", justifyContent:"center", pointerEvents:"none" }}>
       <motion.div initial={{ opacity:0, y:-20 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.5, ease:[0.16,1,0.3,1] }}
         style={{
-          position:"fixed", top:20, left:"50%", transform:"translateX(-50%)",
-          zIndex:50, display:"inline-flex", alignItems:"center", gap:2,
+          pointerEvents:"auto",
+          display:"inline-flex", alignItems:"center", gap:2,
           padding:"6px",
           background: scrolled ? "rgba(20,20,20,0.95)" : "#222222",
           borderRadius:100,
           boxShadow: scrolled ? "0 8px 32px rgba(0,0,0,0.7)" : "0 4px 24px rgba(0,0,0,0.5)",
           backdropFilter:"blur(20px)",
           border:"1px solid rgba(255,255,255,0.06)",
-          transition:"all 0.3s ease",
+          transition:"background 0.3s ease, box-shadow 0.3s ease",
           maxWidth: "calc(100vw - 32px)",
         }}>
         {items.map((item) => (
@@ -90,6 +92,7 @@ function Navbar() {
           Launch →
         </motion.button>
       </motion.div>
+      </div>
     </>
   );
 }
