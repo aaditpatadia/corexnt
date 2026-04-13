@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ChatInput    from "../../components/ChatInput";
 import ResponseCard from "../../components/ResponseCard";
 import { stripMarkdown } from "../../utils/parseResponse";
 import { getProfileContext } from "../../utils/userProfile";
+import { ThemeContext } from "../../App";
 
 const FREE_LIMIT = 15;
 
@@ -392,56 +393,85 @@ function LimitBanner({ onUpgrade }) {
 
 /* ── Welcome screen ── */
 function WelcomeScreen({ userName }) {
+  const theme = useContext(ThemeContext);
+  const plan  = localStorage.getItem("corex_plan") || "free";
+
+  const configs = {
+    free: {
+      icon: <div style={{ width:56, height:56, borderRadius:"50%", background:"rgba(26,122,60,0.15)", border:"1px solid rgba(26,122,60,0.3)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, color:"#2dd668", fontWeight:700, marginBottom:20 }}>C</div>,
+      greeting: `Hey ${userName?.split(" ")[0] || "there"},`,
+      title: "What idea are we exploring today?",
+      subtitle: "Reels · Growth · Campaigns · Ideas",
+      subtitleColor: "rgba(255,255,255,0.3)",
+      titleFont: "'Instrument Sans', sans-serif",
+      titleStyle: {},
+    },
+    spark: {
+      icon: <div style={{ width:56, height:56, borderRadius:"50%", background:"rgba(37,99,235,0.15)", border:"1px solid rgba(37,99,235,0.3)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, marginBottom:20 }}>⚡</div>,
+      greeting: `Hey ${userName?.split(" ")[0] || "there"},`,
+      title: "What idea are we exploring today?",
+      subtitle: "Reels · Growth · Campaigns · Ideas",
+      subtitleColor: "rgba(96,165,250,0.6)",
+      titleFont: "'Instrument Sans', sans-serif",
+      titleStyle: {},
+    },
+    nineteen_twentys: {
+      icon: <div style={{ width:56, height:56, borderRadius:"50%", background:"rgba(201,168,76,0.12)", border:"1px solid rgba(201,168,76,0.4)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, color:"#c9a84c", marginBottom:20 }}>✦</div>,
+      greeting: `Welcome back, ${userName?.split(" ")[0] || ""},`,
+      title: "What shall we create today?",
+      subtitle: "Strategy · Narrative · Direction · Excellence",
+      subtitleColor: "rgba(201,168,76,0.5)",
+      titleFont: theme.font,
+      titleStyle: { fontStyle:"italic" },
+    },
+    canvas_enterprise: {
+      icon: <div style={{ width:56, height:56, borderRadius:"50%", background:"rgba(124,58,237,0.12)", border:"1px solid rgba(124,58,237,0.35)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, color:"#a78bfa", marginBottom:20 }}>◈</div>,
+      greeting: `Good to have you back, ${userName?.split(" ")[0] || ""},`,
+      title: "Where does today's idea begin?",
+      subtitle: "Canvas · Strategy · Teams · Execution",
+      subtitleColor: "rgba(167,139,250,0.5)",
+      titleFont: "'Montserrat', sans-serif",
+      titleStyle: { fontWeight:800 },
+    },
+  };
+
+  const cfg = configs[plan] || configs.free;
+  const textColor = theme.text || "#ffffff";
+
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100%",
-        padding: "40px 24px 180px",
-        textAlign: "center",
-      }}
-    >
+    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"100%", padding:"40px 24px 180px", textAlign:"center", position:"relative" }}>
+      {/* Enterprise purple glow */}
+      {plan === "canvas_enterprise" && (
+        <div style={{ position:"absolute", top:"30%", left:"50%", transform:"translateX(-50%)", width:400, height:400, borderRadius:"50%", background:"radial-gradient(ellipse at 50% 50%, rgba(124,58,237,0.15) 0%, transparent 60%)", pointerEvents:"none" }}/>
+      )}
+      {/* 1920s grain */}
+      {plan === "nineteen_twentys" && (
+        <div style={{ position:"absolute", inset:0, backgroundImage:"url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/><feColorMatrix type='saturate' values='0'/></filter><rect width='300' height='300' filter='url(%23n)' opacity='0.03'/></svg>\")", pointerEvents:"none" }}/>
+      )}
+
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+        initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }}
+        transition={{ duration:0.5, ease:[0.16,1,0.3,1] }}
+        style={{ display:"flex", flexDirection:"column", alignItems:"center", position:"relative", zIndex:1 }}
       >
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          style={{
-            fontFamily: "'Instrument Serif', serif",
-            fontStyle: "italic",
-            fontSize: 32,
-            color: "#ffffff",
-            marginBottom: 4,
-            textAlign: "center",
-          }}
-        >
-          Hey {userName?.split(" ")[0] || "there"},
+        {cfg.icon}
+
+        <motion.p initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.1 }}
+          style={{ fontFamily:"'Instrument Serif', serif", fontStyle:"italic", fontSize:32, color:textColor, marginBottom:4, textAlign:"center" }}>
+          {cfg.greeting}
         </motion.p>
 
-        <motion.h1
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          style={{
-            fontFamily: "'Instrument Sans', sans-serif",
-            fontWeight: 500,
-            fontSize: 28,
-            color: "#ffffff",
-            textAlign: "center",
-            margin: 0,
-            lineHeight: 1.3,
-          }}
-        >
-          What idea are we exploring today?
+        <motion.h1 initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.15 }}
+          style={{ fontFamily:cfg.titleFont, fontWeight:500, fontSize:28, color:textColor, textAlign:"center", margin:0, lineHeight:1.3, ...cfg.titleStyle }}>
+          {cfg.title}
         </motion.h1>
+
+        {cfg.subtitle && (
+          <motion.p initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.22 }}
+            style={{ marginTop:10, fontSize:13, color:cfg.subtitleColor, fontFamily:cfg.titleFont, letterSpacing:"1px" }}>
+            {cfg.subtitle}
+          </motion.p>
+        )}
       </motion.div>
     </div>
   );
@@ -593,6 +623,10 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
           conversationTurn: isFirstMessage ? 1 : fullHistory.filter(m => m.role === "user").length,
           attachedDocs:     JSON.parse(localStorage.getItem("corex_attached_docs") || "[]"),
           sharedLinks:      JSON.parse(localStorage.getItem("corex_shared_links")   || "[]"),
+          plan:             localStorage.getItem("corex_plan") || "free",
+          adminModel:       localStorage.getItem("userEmail") === "corexnt@gmail.com"
+                              ? (localStorage.getItem("corex_model_override") || undefined)
+                              : undefined,
         }),
       });
 

@@ -1,757 +1,363 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { applyTheme, getPlanTheme } from "../utils/planTheme";
 
-/* ─── Currency detection ─── */
-function detectIndia() {
-  const locale = navigator.language || "en-IN";
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-  return (
-    locale.toLowerCase().includes("in") ||
-    tz.includes("Calcutta") ||
-    tz.includes("Kolkata")
-  );
-}
-
-/* ─── Pill toggle ─── */
-function PillToggle({ options, value, onChange, small }) {
-  return (
-    <div style={{
-      display:"inline-flex", background:"rgba(255,255,255,0.06)",
-      border:"1px solid rgba(255,255,255,0.08)", borderRadius:100,
-      padding:4, gap:4,
-    }}>
-      {options.map((opt) => (
-        <button key={opt.value} onClick={() => onChange(opt.value)}
-          style={{
-            padding: small ? "8px 20px" : "10px 28px",
-            borderRadius:100, border:"none", cursor:"pointer",
-            fontFamily:"'Instrument Sans', sans-serif",
-            fontSize: small ? 13 : 14,
-            fontWeight:600,
-            background: value === opt.value
-              ? "linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)"
-              : "transparent",
-            color: value === opt.value ? "#000000" : "rgba(255,255,255,0.5)",
-            transition:"all 0.2s ease",
-            whiteSpace:"nowrap",
-          }}>
-          {opt.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-/* ─── Price display ─── */
-function Price({ monthly, threeMonth, billing, isIndia }) {
-  const cur = isIndia ? "₹" : "$";
-  const mo = isIndia ? monthly.inr : monthly.usd;
-  const disc = isIndia ? threeMonth.inr : threeMonth.usd;
-  const billed = isIndia ? threeMonth.billedInr : threeMonth.billedUsd;
-
-  if (mo === "Custom") {
-    return (
-      <div>
-        <div style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:44, fontWeight:800, color:"#ffffff", lineHeight:1 }}>
-          Custom
-        </div>
-        <div style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:12, color:"rgba(255,255,255,0.4)", marginTop:4 }}>
-          {isIndia ? "Starting ₹15,000/month" : "Starting $199/month"}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      {billing === "3month" ? (
-        <>
-          <div style={{ display:"flex", alignItems:"baseline", gap:6 }}>
-            <span style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:44, fontWeight:800, color:"#ffffff", lineHeight:1 }}>
-              {cur}{disc}
-            </span>
-            <span style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:15, color:"rgba(255,255,255,0.4)" }}>/mo</span>
-          </div>
-          <div style={{ display:"flex", alignItems:"center", gap:8, marginTop:4 }}>
-            <span style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:13, color:"rgba(255,255,255,0.25)", textDecoration:"line-through" }}>
-              {cur}{mo}/mo
-            </span>
-          </div>
-          <div style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:12, color:"rgba(255,255,255,0.35)", marginTop:2 }}>
-            Billed {isIndia ? `₹${billed}` : `$${billed}`} every 3 months
-          </div>
-        </>
-      ) : (
-        <div style={{ display:"flex", alignItems:"baseline", gap:6 }}>
-          <span style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:44, fontWeight:800, color:"#ffffff", lineHeight:1 }}>
-            {cur}{mo}
-          </span>
-          <span style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:15, color:"rgba(255,255,255,0.4)" }}>/month</span>
-        </div>
-      )}
-      <div style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:11, color:"rgba(255,255,255,0.25)", marginTop:6 }}>
-        {isIndia ? "Prices in Indian Rupees (₹)" : "Prices in USD ($)"}
-      </div>
-    </div>
-  );
-}
-
-/* ─── Plan card ─── */
-function PlanCard({ plan, billing, isIndia, delay }) {
-  const [hovered, setHovered] = useState(false);
-
-  const isPopular = plan.badge === "Most Popular";
-
-  const cardStyle = {
-    position:"relative",
-    borderRadius:24,
-    padding:28,
-    display:"flex",
-    flexDirection:"column",
-    transition:"all 0.25s cubic-bezier(0.16,1,0.3,1)",
-    transform: hovered ? "translateY(-4px)" : "translateY(0)",
-    ...(isPopular
-      ? {
-          background: "linear-gradient(#0a0a0a,#0a0a0a) padding-box, linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71) border-box",
-          border: "1px solid transparent",
-          boxShadow: "0 20px 60px rgba(34,111,247,0.15)",
-        }
-      : {
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.08)",
-        }),
+/* ── Toast helper ── */
+function PlanToast({ plan }) {
+  const config = {
+    spark:             { icon:"⚡", label:"SPARK activated!",           bg:"#2563eb", color:"#fff" },
+    nineteen_twentys:  { icon:"✦", label:"Nineteen Twentys unlocked",   bg:"linear-gradient(90deg,#c9a84c,#f0c040)", color:"#0a0a0a" },
+    canvas_enterprise: { icon:"◈", label:"Canvas Enterprise ready",     bg:"#7c3aed", color:"#fff" },
   };
-
+  const c = config[plan] || config.spark;
   return (
     <motion.div
-      initial={{ opacity:0, y:20 }}
-      animate={{ opacity:1, y:0 }}
-      transition={{ delay, duration:0.45, ease:[0.16,1,0.3,1] }}
-      style={cardStyle}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      initial={{ opacity:0, y:20, scale:0.9 }}
+      animate={{ opacity:1, y:0, scale:1 }}
+      exit={{ opacity:0, y:-10 }}
+      transition={{ type:"spring", stiffness:500, damping:30 }}
+      style={{
+        position:"fixed", bottom:90, left:"50%", transform:"translateX(-50%)",
+        padding:"12px 28px", borderRadius:100,
+        background:c.bg, color:c.color,
+        fontFamily:"Montserrat, sans-serif", fontWeight:600, fontSize:14,
+        zIndex:9999, whiteSpace:"nowrap",
+        boxShadow:"0 8px 32px rgba(0,0,0,0.35)",
+      }}
     >
-      {/* Badge */}
-      {plan.badge && (
-        <div style={{
-          position:"absolute", top:-14, left:"50%", transform:"translateX(-50%)",
-          padding:"5px 16px", borderRadius:100,
-          fontFamily:"'Instrument Sans', sans-serif", fontSize:11, fontWeight:600,
-          whiteSpace:"nowrap",
-          background:"linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)",
-          color:"#000000",
-        }}>
-          {plan.badge}
-        </div>
-      )}
-
-      {/* Plan name */}
-      <div style={{
-        fontFamily:"'Instrument Sans', sans-serif", fontSize:13, fontWeight:600,
-        color:"rgba(255,255,255,0.4)", letterSpacing:1, textTransform:"uppercase", marginBottom:8,
-        marginTop: plan.badge ? 8 : 0,
-      }}>
-        {plan.name}
-      </div>
-
-      {/* Price */}
-      <div style={{ marginBottom:24 }}>
-        <Price
-          monthly={plan.monthly}
-          threeMonth={plan.threeMonth}
-          billing={billing}
-          isIndia={isIndia}
-        />
-      </div>
-
-      {/* Divider */}
-      <div style={{ height:1, background:"rgba(255,255,255,0.07)", marginBottom:20 }}/>
-
-      {/* Features */}
-      <ul style={{ listStyle:"none", padding:0, margin:"0 0 24px 0", flex:1 }}>
-        {plan.features.map((f) => (
-          <li key={f} style={{ display:"flex", alignItems:"flex-start", gap:10, marginBottom:10 }}>
-            <span style={{
-              display:"inline-flex", alignItems:"center", justifyContent:"center",
-              width:18, height:18, borderRadius:"50%",
-              background:"rgba(156,252,175,0.1)", flexShrink:0, marginTop:2,
-            }}>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-                stroke="#9CFCAF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </span>
-            <span style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:14, fontWeight:400, color:"rgba(255,255,255,0.7)", lineHeight:1.5 }}>
-              {f}
-            </span>
-          </li>
-        ))}
-      </ul>
-
-      {/* CTA */}
-      <PlanButton plan={plan} isPopular={isPopular}/>
+      {c.icon} {c.label}
     </motion.div>
   );
 }
 
-function PlanButton({ plan, isPopular }) {
-  const [btnHov, setBtnHov] = useState(false);
-
-  if (plan.enterprise) {
-    return (
-      <a href="mailto:corexnt@gmail.com"
-        onMouseEnter={() => setBtnHov(true)}
-        onMouseLeave={() => setBtnHov(false)}
-        style={{
-          display:"block", textAlign:"center", textDecoration:"none",
-          padding:"14px 0", borderRadius:100,
-          fontFamily:"'Instrument Sans', sans-serif", fontSize:15, fontWeight:600,
-          border:"1px solid rgba(255,255,255,0.2)",
-          background: btnHov ? "rgba(255,255,255,0.08)" : "transparent",
-          color: "#ffffff",
-          transition:"all 0.2s ease",
-        }}>
-        {plan.cta}
-      </a>
-    );
-  }
-
-  if (isPopular) {
-    return (
-      <button
-        onMouseEnter={() => setBtnHov(true)}
-        onMouseLeave={() => setBtnHov(false)}
-        onClick={() => alert("Payments launching soon — you'll be notified!")}
-        style={{
-          width:"100%", padding:"14px 0", borderRadius:100, border:"none",
-          fontFamily:"'Instrument Sans', sans-serif", fontSize:15, fontWeight:600,
-          background:"linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)",
-          color:"#000000", cursor:"pointer",
-          opacity: btnHov ? 0.88 : 1,
-          transition:"all 0.2s ease",
-        }}>
-        {plan.cta}
-      </button>
-    );
-  }
-
-  return (
-    <button
-      onMouseEnter={() => setBtnHov(true)}
-      onMouseLeave={() => setBtnHov(false)}
-      onClick={() => alert("Payments launching soon — you'll be notified!")}
-      style={{
-        width:"100%", padding:"14px 0", borderRadius:100,
-        fontFamily:"'Instrument Sans', sans-serif", fontSize:15, fontWeight:600,
-        border:"1px solid rgba(255,255,255,0.15)",
-        background: btnHov ? "rgba(255,255,255,0.08)" : "transparent",
-        color: "#ffffff",
-        cursor:"pointer",
-        transition:"all 0.2s ease",
-      }}>
-      {plan.cta}
-    </button>
-  );
-}
-
-/* ─── Plan data ─── */
-const CREATOR_PLANS = [
-  {
-    name:"Starter",
-    monthly:{ inr:"349", usd:"4.99" },
-    threeMonth:{ inr:"279", usd:"3.99", billedInr:"838", billedUsd:"11.97" },
-    features:[
-      "Claude AI (Sonnet)",
-      "30 messages per day",
-      "3 file uploads per day",
-      "Reel Script Engine",
-      "3 Growth Audits per month",
-      "Download responses as PDF",
-      "30-day conversation history",
-    ],
-    cta:"Get Started",
-  },
-  {
-    name:"Pro",
-    badge:"Most Popular",
-    monthly:{ inr:"499", usd:"9.99" },
-    threeMonth:{ inr:"399", usd:"7.99", billedInr:"1,198", billedUsd:"23.97" },
-    features:[
-      "Claude AI (Sonnet) — full access",
-      "Unlimited messages",
-      "Unlimited file uploads",
-      "All Creator tools",
-      "Trend Engine with live data",
-      "Brand Deal Calculator",
-      "Content Calendar generator",
-      "Priority support",
-      "1 year conversation history",
-    ],
-    cta:"Get Pro",
-  },
-  {
-    name:"Elite",
-    badge:"Best Value",
-    monthly:{ inr:"999", usd:"19.99" },
-    threeMonth:{ inr:"799", usd:"15.99", billedInr:"2,398", billedUsd:"47.97" },
-    features:[
-      "Claude AI (Opus) — most powerful",
-      "Everything in Pro",
-      "Custom AI persona",
-      "Track 5 competitors",
-      "Weekly strategy digest",
-      "Early access to new features",
-      "Dedicated support",
-    ],
-    cta:"Get Elite",
-  },
+/* ── Social proof marquee ── */
+const MARQUEE_ITEMS = [
+  "Aadit just upgraded to Nineteen Twentys",
+  "A designer in Mumbai started SPARK",
+  "Nineteen Twentys client — building campaigns",
+  "A founder in Bangalore joined SPARK",
+  "Canvas Enterprise — strategic launch live",
+  "Content director in Delhi activated 1920s",
+  "Growth lead in Chennai started SPARK",
+  "Agency in Pune moved to Canvas Enterprise",
 ];
 
-const BRAND_PLANS = [
-  {
-    name:"Starter",
-    monthly:{ inr:"1,999", usd:"29" },
-    threeMonth:{ inr:"1,599", usd:"23", billedInr:"4,797", billedUsd:"69" },
-    features:[
-      "Claude AI (Sonnet)",
-      "3 team seats",
-      "Campaign Builder (5/month)",
-      "Budget Allocator",
-      "Track 3 competitors",
-      "Brand Audit (1/month)",
-      "Downloadable briefs and reports",
-      "30-day history",
-    ],
-    cta:"Get Started",
-  },
-  {
-    name:"Growth",
-    badge:"Most Popular",
-    monthly:{ inr:"4,999", usd:"79" },
-    threeMonth:{ inr:"3,999", usd:"63", billedInr:"11,997", billedUsd:"189" },
-    features:[
-      "Claude Sonnet + Opus",
-      "10 team seats",
-      "Unlimited campaigns",
-      "Full competitor intelligence",
-      "Influencer matching",
-      "Weekly market intelligence report",
-      "Priority support (4hr response)",
-      "Custom brand memory",
-      "1 year history",
-    ],
-    cta:"Get Growth",
-  },
-  {
-    name:"Enterprise",
-    monthly:{ inr:"Custom", usd:"Custom" },
-    threeMonth:{ inr:"Custom", usd:"Custom", billedInr:"", billedUsd:"" },
-    enterprise:true,
-    features:[
-      "Custom Claude deployment",
-      "Unlimited everything",
-      "API access",
-      "White label option",
-      "Dedicated account manager",
-      "Custom integrations",
-      "SLA guarantee",
-    ],
-    cta:"Contact Us",
-  },
-];
-
-/* ─── Comparison table ─── */
-const CREATOR_TABLE = {
-  headers:["Feature","Starter","Pro","Elite"],
-  rows:[
-    ["Messages/day","30","Unlimited","Unlimited"],
-    ["File uploads","3/day","Unlimited","Unlimited"],
-    ["Claude model","Sonnet","Sonnet","Opus"],
-    ["Reel Scripts",true,true,true],
-    ["Growth Audit","3/month","Unlimited","Unlimited"],
-    ["Trend Engine",false,true,true],
-    ["Brand Deals",false,true,true],
-    ["Content Calendar",false,true,true],
-    ["Competitor tracking",false,false,"5 brands"],
-    ["Custom AI persona",false,false,true],
-    ["PDF downloads",true,true,true],
-    ["History","30 days","1 year","1 year"],
-    ["Support","Standard","Priority","Dedicated"],
-  ],
-};
-
-const BRAND_TABLE = {
-  headers:["Feature","Starter","Growth","Enterprise"],
-  rows:[
-    ["Team seats","3","10","Unlimited"],
-    ["Campaign Builder","5/month","Unlimited","Unlimited"],
-    ["Competitor tracking","3","Unlimited","Unlimited"],
-    ["Brand Audit","1/month","Unlimited","Unlimited"],
-    ["Claude model","Sonnet","Sonnet+Opus","Custom"],
-    ["Influencer matching",false,true,true],
-    ["Market intel report",false,"Weekly","Custom"],
-    ["API access",false,false,true],
-    ["White label",false,false,true],
-    ["History","30 days","1 year","Unlimited"],
-    ["Support","Standard","Priority (4hr)","Dedicated SLA"],
-  ],
-};
-
-function TableCell({ value }) {
-  if (value === true) {
-    return (
-      <td style={{ padding:"12px 16px", textAlign:"center" }}>
-        <span style={{
-          display:"inline-flex", alignItems:"center", justifyContent:"center",
-          width:22, height:22, borderRadius:"50%", background:"rgba(156,252,175,0.1)",
-        }}>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-            stroke="#9CFCAF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-        </span>
-      </td>
-    );
-  }
-  if (value === false) {
-    return (
-      <td style={{ padding:"12px 16px", textAlign:"center" }}>
-        <span style={{
-          display:"inline-block", width:16, height:2, background:"rgba(255,255,255,0.12)",
-          borderRadius:2, verticalAlign:"middle",
-        }}/>
-      </td>
-    );
-  }
+function Marquee() {
+  const doubled = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS];
   return (
-    <td style={{
-      padding:"12px 16px", textAlign:"center",
-      fontFamily:"'Instrument Sans', sans-serif", fontSize:13, color:"rgba(255,255,255,0.6)",
-    }}>
-      {value}
-    </td>
-  );
-}
-
-function ComparisonTable({ userType }) {
-  const table = userType === "brand" ? BRAND_TABLE : CREATOR_TABLE;
-  return (
-    <div style={{ marginTop:60 }}>
-      <h2 style={{
-        fontFamily:"'Instrument Serif', serif", fontStyle:"italic",
-        fontSize:24, fontWeight:400, color:"#ffffff", marginBottom:20,
-      }}>
-        Compare all features
-      </h2>
-      <div style={{
-        background:"rgba(255,255,255,0.03)", borderRadius:20,
-        border:"1px solid rgba(255,255,255,0.07)", overflow:"auto",
-      }}>
-        <table style={{ width:"100%", borderCollapse:"collapse", minWidth:520 }}>
-          <thead>
-            <tr style={{ borderBottom:"1px solid rgba(255,255,255,0.07)" }}>
-              {table.headers.map((h, i) => (
-                <th key={h} style={{
-                  padding:"14px 16px",
-                  textAlign: i === 0 ? "left" : "center",
-                  fontFamily:"'Instrument Sans', sans-serif", fontSize:13, fontWeight:600,
-                  color:"rgba(255,255,255,0.5)",
-                }}>
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {table.rows.map((row, ri) => (
-              <tr key={ri} style={{ background: ri % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
-                <td style={{
-                  padding:"12px 16px",
-                  fontFamily:"'Instrument Sans', sans-serif", fontSize:13, fontWeight:500,
-                  color:"rgba(255,255,255,0.7)",
-                }}>
-                  {row[0]}
-                </td>
-                {row.slice(1).map((val, ci) => <TableCell key={ci} value={val}/>)}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-/* ─── FAQ accordion ─── */
-const FAQS = [
-  {
-    q:"Can I cancel anytime?",
-    a:"Yes, completely. Cancel from your settings with one click. No questions, no fees. Your access continues until the end of your billing period.",
-  },
-  {
-    q:"What's the difference between GPT and Claude?",
-    a:"Free plan users get GPT-4o-mini — fast and capable. Paid users get Claude by Anthropic — significantly better at strategy, nuance, and long-form thinking. Most users notice the difference immediately in response quality.",
-  },
-  {
-    q:"Can I switch between Creator and Brand plans?",
-    a:"Yes. Contact us at corexnt@gmail.com and we'll switch your plan. We're working on self-serve plan switching — coming soon.",
-  },
-  {
-    q:"Do you offer refunds?",
-    a:"We offer a full refund within 48 hours of your first payment if you're not satisfied. After that, we don't offer refunds but you can cancel anytime.",
-  },
-];
-
-function FAQ() {
-  const [open, setOpen] = useState(null);
-  return (
-    <div style={{ marginTop:64 }}>
-      <h2 style={{
-        fontFamily:"'Instrument Serif', serif", fontStyle:"italic",
-        fontSize:28, fontWeight:400, color:"#ffffff",
-        textAlign:"center", marginBottom:28,
-      }}>
-        Questions? We have answers.
-      </h2>
-      <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-        {FAQS.map((faq, i) => (
-          <div key={i} style={{
-            background:"rgba(255,255,255,0.04)", borderRadius:20,
-            border:"1px solid rgba(255,255,255,0.07)", overflow:"hidden",
-          }}>
-            <button
-              onClick={() => setOpen(open === i ? null : i)}
-              style={{
-                width:"100%", display:"flex", justifyContent:"space-between", alignItems:"center",
-                padding:"18px 20px", border:"none", background:"transparent", cursor:"pointer",
-                textAlign:"left",
-              }}>
-              <span style={{
-                fontFamily:"'Instrument Sans', sans-serif", fontSize:15, fontWeight:600, color:"#ffffff",
-              }}>
-                {faq.q}
-              </span>
-              <span style={{
-                flexShrink:0, marginLeft:16,
-                fontFamily:"'Instrument Sans', sans-serif", fontSize:22, fontWeight:300,
-                color:"rgba(255,255,255,0.4)", lineHeight:1,
-              }}>
-                {open === i ? "−" : "+"}
-              </span>
-            </button>
-            <AnimatePresence>
-              {open === i && (
-                <motion.div
-                  initial={{ height:0, opacity:0 }}
-                  animate={{ height:"auto", opacity:1 }}
-                  exit={{ height:0, opacity:0 }}
-                  transition={{ duration:0.22, ease:[0.16,1,0.3,1] }}
-                  style={{ overflow:"hidden" }}>
-                  <div style={{
-                    padding:"0 20px 18px",
-                    borderTop:"1px solid rgba(255,255,255,0.06)",
-                    fontFamily:"'Instrument Sans', sans-serif", fontSize:14, color:"rgba(255,255,255,0.55)",
-                    lineHeight:1.65, paddingTop:14,
-                  }}>
-                    {faq.a}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+    <div style={{ overflow:"hidden", width:"100%", padding:"16px 0", borderTop:"1px solid rgba(255,255,255,0.05)", borderBottom:"1px solid rgba(255,255,255,0.05)", marginBottom:64 }}>
+      <div className="marquee-track">
+        {doubled.map((item, i) => (
+          <span key={i} style={{ fontSize:12, color:"rgba(255,255,255,0.3)", fontFamily:"Montserrat, sans-serif", whiteSpace:"nowrap", display:"inline-flex", alignItems:"center", gap:10, marginRight:48 }}>
+            <span style={{ width:5, height:5, borderRadius:"50%", background:"rgba(201,168,76,0.5)", display:"inline-block", flexShrink:0 }}/>
+            {item}
+          </span>
         ))}
       </div>
     </div>
   );
 }
 
-/* ─── Waitlist banner ─── */
-function WaitlistBanner() {
-  const [email, setEmail] = useState("");
-  const [done, setDone] = useState(false);
-
-  const savedEmail = (() => {
-    try { return JSON.parse(localStorage.getItem("corex_waitlist") || "[]"); } catch { return []; }
-  })();
-
-  function handleSubmit(e) {
-    e.preventDefault();
-    if (!email.includes("@")) return;
-    const list = savedEmail;
-    if (!list.includes(email)) list.push(email);
-    localStorage.setItem("corex_waitlist", JSON.stringify(list));
-    setDone(true);
-  }
-
+/* ── Feature row ── */
+function Feature({ text, included, color }) {
   return (
-    <div style={{
-      background:"rgba(255,235,113,0.06)", border:"1px solid rgba(255,235,113,0.15)", borderRadius:16,
-      padding:"16px 20px", marginBottom:28, textAlign:"center",
-    }}>
-      {done ? (
-        <p style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:14, fontWeight:500, color:"#9CFCAF", margin:0 }}>
-          You&apos;re on the list! We&apos;ll email you at <strong>{email}</strong> when we go live.
-        </p>
-      ) : (
-        <>
-          <p style={{ fontFamily:"'Instrument Sans', sans-serif", fontSize:14, fontWeight:500, color:"rgba(255,235,113,0.8)", margin:"0 0 12px 0" }}>
-            ⚡ Payments launching soon — Join the waitlist and get 30 days free when we go live.
-          </p>
-          <form onSubmit={handleSubmit}
-            style={{ display:"flex", justifyContent:"center", gap:8, flexWrap:"wrap" }}>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              style={{
-                padding:"10px 20px", borderRadius:100,
-                border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.06)",
-                fontFamily:"'Instrument Sans', sans-serif", fontSize:14, color:"#ffffff",
-                outline:"none", minWidth:220,
-              }}
-            />
-            <button type="submit" style={{
-              padding:"10px 20px", borderRadius:100, border:"none",
-              background:"linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)",
-              color:"#000000",
-              fontFamily:"'Instrument Sans', sans-serif", fontSize:14, fontWeight:600,
-              cursor:"pointer",
-            }}>
-              Join Waitlist
-            </button>
-          </form>
-        </>
-      )}
+    <div style={{ display:"flex", alignItems:"flex-start", gap:10, marginBottom:9 }}>
+      <span style={{ fontSize:13, flexShrink:0, marginTop:1, color: included ? color : "rgba(255,255,255,0.2)" }}>
+        {included ? "✓" : "✗"}
+      </span>
+      <span style={{ fontSize:13, color: included ? "rgba(255,255,255,0.78)" : "rgba(255,255,255,0.2)", fontFamily:"Montserrat, sans-serif", lineHeight:1.5 }}>
+        {text}
+      </span>
     </div>
   );
 }
 
-/* ─── Main page ─── */
-export default function PaymentPage({ onBack, userType: initType = "creator" }) {
-  const [tab, setTab] = useState(initType === "company" ? "brand" : "creator");
-  const [billing, setBilling] = useState("monthly");
-  const [isIndia, setIsIndia] = useState(true);
+/* ── FAQ accordion item ── */
+function FAQ({ q, a }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ borderBottom:"1px solid rgba(255,255,255,0.07)" }}>
+      <button
+        onClick={() => setOpen(p => !p)}
+        style={{
+          width:"100%", textAlign:"left", padding:"18px 0",
+          display:"flex", justifyContent:"space-between", alignItems:"center", gap:16,
+          background:"none", border:"none", cursor:"pointer",
+          fontFamily:"Montserrat, sans-serif", fontSize:15, fontWeight:600,
+          color:"rgba(255,255,255,0.85)",
+        }}
+      >
+        {q}
+        <span style={{ fontSize:18, color:"#c9a84c", flexShrink:0, transition:"transform 0.25s", transform:open?"rotate(45deg)":"none" }}>+</span>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height:0, opacity:0 }} animate={{ height:"auto", opacity:1 }} exit={{ height:0, opacity:0 }}
+            transition={{ duration:0.25, ease:[0.4,0,0.2,1] }}
+            style={{ overflow:"hidden" }}
+          >
+            <p style={{ fontSize:14, color:"rgba(255,255,255,0.5)", fontFamily:"Montserrat, sans-serif", lineHeight:1.7, paddingBottom:18, margin:0 }}>
+              {a}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
-  useEffect(() => { setIsIndia(detectIndia()); }, []);
+/* ═══════ MAIN ═══════ */
+export default function PaymentPage() {
+  const navigate = useNavigate();
+  const [billing, setBilling] = useState("annual");
+  const [toastPlan, setToastPlan] = useState(null);
 
-  const plans = tab === "brand" ? BRAND_PLANS : CREATOR_PLANS;
+  const activatePlan = (planKey) => {
+    localStorage.setItem("corex_plan", planKey);
+    applyTheme(getPlanTheme(planKey));
+    if (window.__corex_setTheme) window.__corex_setTheme(planKey);
+    setToastPlan(planKey);
+    setTimeout(() => {
+      setToastPlan(null);
+      navigate("/app/chat");
+    }, 2800);
+  };
+
+  const ann = billing === "annual";
 
   return (
-    <>
-      <style>{`
-        @keyframes subtlePulse {
-          0%, 100% { box-shadow: 0 8px 32px rgba(34,111,247,0.12); }
-          50% { box-shadow: 0 8px 40px rgba(34,111,247,0.22); }
-        }
-        @media (max-width: 768px) {
-          .payment-grid { grid-template-columns: 1fr !important; }
-          .payment-toggles { flex-direction: column; align-items: center; gap: 10px !important; }
-        }
-      `}</style>
+    <div style={{
+      minHeight:"100vh",
+      background:"#080810",
+      backgroundImage:`radial-gradient(ellipse at 20% 30%, rgba(26,122,60,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 70%, rgba(124,58,237,0.06) 0%, transparent 50%)`,
+      overflowX:"hidden", fontFamily:"Montserrat, sans-serif",
+    }}>
+      <AnimatePresence>
+        {toastPlan && <PlanToast key={toastPlan} plan={toastPlan}/>}
+      </AnimatePresence>
 
-      <div style={{ background:"#000000", minHeight:"100%", overflowY:"auto", padding:"32px 24px 80px" }}>
-        <div style={{ maxWidth:1100, margin:"0 auto" }}>
+      {/* Back nav */}
+      <div style={{ padding:"24px 24px 0", maxWidth:1100, margin:"0 auto" }}>
+        <button onClick={() => navigate(-1)} style={{ background:"none", border:"none", cursor:"pointer", color:"rgba(255,255,255,0.4)", fontSize:14, fontFamily:"Montserrat, sans-serif" }}>
+          ← Back
+        </button>
+      </div>
 
-          {/* Back */}
-          <button onClick={onBack}
-            style={{
-              display:"inline-flex", alignItems:"center", gap:8,
-              fontFamily:"'Instrument Sans', sans-serif", fontSize:14, color:"rgba(255,255,255,0.4)",
-              background:"none", border:"none", cursor:"pointer",
-              marginBottom:36, padding:0, transition:"color 0.15s",
-            }}
-            onMouseEnter={e => e.currentTarget.style.color="#ffffff"}
-            onMouseLeave={e => e.currentTarget.style.color="rgba(255,255,255,0.4)"}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M19 12H5M12 5l-7 7 7 7"/>
-            </svg>
-            Back to dashboard
-          </button>
+      {/* Hero */}
+      <div style={{ textAlign:"center", paddingTop:56, paddingBottom:48, paddingLeft:24, paddingRight:24 }}>
+        <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }}
+          style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"6px 18px", borderRadius:100, background:"rgba(201,168,76,0.12)", border:"1px solid rgba(201,168,76,0.3)", marginBottom:24 }}>
+          <span style={{ width:6, height:6, borderRadius:"50%", background:"#c9a84c", animation:"livePulse 2s infinite", display:"inline-block" }}/>
+          <span style={{ fontSize:12, fontWeight:600, color:"#c9a84c", letterSpacing:"0.5px" }}>Limited Early Access Pricing</span>
+        </motion.div>
 
-          {/* Header */}
-          <div style={{ textAlign:"center", marginBottom:32 }}>
-            <h1 style={{
-              fontFamily:"'Instrument Serif', serif", fontStyle:"italic",
-              fontSize:40, fontWeight:400, color:"#ffffff", margin:"0 0 8px 0",
+        <motion.h1 initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.05 }}
+          style={{ fontSize:"clamp(32px, 6vw, 52px)", fontWeight:900, color:"#ffffff", lineHeight:1.1, marginBottom:16 }}>
+          Choose your creative<br/>intelligence.
+        </motion.h1>
+        <motion.p initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.1 }}
+          style={{ fontSize:16, color:"rgba(255,255,255,0.45)", marginBottom:32 }}>
+          From first idea to final output.
+        </motion.p>
+
+        {/* Billing toggle */}
+        <motion.div initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }} transition={{ delay:0.12 }}
+          style={{ display:"inline-flex", background:"rgba(255,255,255,0.06)", borderRadius:100, padding:4, gap:2, marginBottom:28 }}>
+          {["monthly","annual"].map(b => (
+            <button key={b} onClick={() => setBilling(b)} style={{
+              padding:"8px 20px", borderRadius:100, border:"none", cursor:"pointer",
+              fontFamily:"Montserrat, sans-serif", fontWeight:600, fontSize:13,
+              background: billing===b ? "#ffffff" : "transparent",
+              color: billing===b ? "#0a0a0a" : "rgba(255,255,255,0.45)",
+              transition:"all 0.25s ease",
+              display:"flex", alignItems:"center", gap:8,
             }}>
-              Choose your plan
-            </h1>
-            <p style={{
-              fontFamily:"'Instrument Sans', sans-serif", fontSize:16, fontWeight:400,
-              color:"rgba(255,255,255,0.4)", margin:0,
-            }}>
-              Start free. Upgrade when ready. Cancel anytime.
-            </p>
-          </div>
+              {b === "monthly" ? "Monthly" : "Yearly"}
+              {b === "annual" && <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:100, background:"rgba(26,122,60,0.8)", color:"#fff" }}>Save 25%</span>}
+            </button>
+          ))}
+        </motion.div>
 
-          {/* Toggles */}
-          <div className="payment-toggles" style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:16, marginBottom:40 }}>
-            <PillToggle
-              options={[
-                { label:"For Creators", value:"creator" },
-                { label:"For Brands",   value:"brand" },
-              ]}
-              value={tab}
-              onChange={setTab}
-            />
-            <PillToggle
-              options={[
-                { label:"Monthly",              value:"monthly" },
-                { label:"3 Months (Save 20%)",  value:"3month" },
-              ]}
-              value={billing}
-              onChange={setBilling}
-              small
-            />
-          </div>
+        {/* Social proof */}
+        <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.18 }}
+          style={{ display:"flex", justifyContent:"center", flexWrap:"wrap", gap:"12px 32px", fontSize:13, color:"rgba(255,255,255,0.35)" }}>
+          <span>★★★★★ &nbsp;Loved by 500+ creatives</span>
+          <span style={{ color:"rgba(255,255,255,0.15)" }}>|</span>
+          <span>Nineteen Twentys — Active client</span>
+          <span style={{ color:"rgba(255,255,255,0.15)" }}>|</span>
+          <span>Powered by GPT-4o</span>
+        </motion.div>
+      </div>
 
-          {/* Waitlist banner */}
-          <WaitlistBanner/>
+      {/* Cards grid */}
+      <div style={{ maxWidth:1100, margin:"0 auto", padding:"0 24px 80px" }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(280px, 1fr))", gap:24, alignItems:"start" }}>
 
-          {/* Plan cards */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={tab}
-              initial={{ opacity:0 }}
-              animate={{ opacity:1 }}
-              exit={{ opacity:0 }}
-              transition={{ duration:0.15 }}
-            >
-              <div className="payment-grid" style={{
-                display:"grid",
-                gridTemplateColumns:"repeat(3, 1fr)",
-                gap:16,
-              }}>
-                {plans.map((plan, i) => (
-                  <PlanCard
-                    key={plan.name}
-                    plan={plan}
-                    billing={billing}
-                    isIndia={isIndia}
-                    delay={i * 0.1}
-                  />
-                ))}
+          {/* ─ SPARK ─ */}
+          <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }} className="card"
+            style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:24, padding:"32px 28px", position:"relative" }}>
+            <div style={{ width:48, height:48, borderRadius:"50%", background:"rgba(37,99,235,0.15)", border:"1px solid rgba(37,99,235,0.3)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, marginBottom:16 }}>⚡</div>
+            <div style={{ fontSize:11, fontWeight:700, letterSpacing:3, color:"#60a5fa", marginBottom:8 }}>SPARK</div>
+            <div style={{ display:"flex", alignItems:"baseline", gap:6, marginBottom:4 }}>
+              <span style={{ fontSize:48, fontWeight:800, color:"#ffffff", lineHeight:1 }}>{ann ? "₹249" : "₹399"}</span>
+              {ann && <span style={{ fontSize:15, color:"rgba(255,255,255,0.3)", textDecoration:"line-through" }}>₹399</span>}
+              <span style={{ fontSize:14, color:"rgba(255,255,255,0.4)", marginLeft:2 }}>/month</span>
+            </div>
+            <div style={{ fontSize:12, color:"#60a5fa", fontStyle:"italic", marginBottom:6 }}>just {ann?"₹8":"₹13"}/day</div>
+            <p style={{ fontSize:13, color:"rgba(255,255,255,0.45)", marginBottom:20, lineHeight:1.5 }}>For creatives exploring their first ideas</p>
+            <div style={{ height:1, background:"rgba(255,255,255,0.06)", marginBottom:20 }}/>
+            {[[true,"Creative AI chat (15 msgs/day)"],[true,"Idea branching (3 branches)"],[true,"5 Creative modes"],[true,"Basic structured outputs"],[true,"PDF downloads"],[true,"2 file uploads/day"],[true,"Web search on responses"],[false,"Flowcharts & Mindmaps"],[false,"Visual workspace"],[false,"Custom AI persona"],[false,"Team features"]]
+              .map(([inc,text],i)=><Feature key={i} included={inc} text={text} color="#60a5fa"/>)}
+            <button onClick={() => activatePlan("spark")} style={{ width:"100%", marginTop:24, padding:"14px 0", borderRadius:100, border:"1.5px solid rgba(37,99,235,0.5)", background:"transparent", color:"#60a5fa", fontFamily:"Montserrat, sans-serif", fontWeight:600, fontSize:15, cursor:"pointer", transition:"all 0.25s cubic-bezier(0.16,1,0.3,1)" }}
+              onMouseEnter={e=>{e.currentTarget.style.background="rgba(37,99,235,0.15)";e.currentTarget.style.transform="translateY(-1px)";}}
+              onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.transform="none";}}>
+              Start with Spark
+            </button>
+          </motion.div>
+
+          {/* ─ NINETEEN TWENTYS ─ */}
+          <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.15 }} className="card"
+            style={{ background:"linear-gradient(135deg,rgba(201,168,76,0.12) 0%,rgba(240,192,64,0.06) 50%,rgba(201,168,76,0.08) 100%)", border:"1.5px solid rgba(201,168,76,0.4)", borderRadius:24, padding:"32px 28px", position:"relative", animation:"goldShimmer 3s ease-in-out infinite" }}>
+            <div style={{ position:"absolute", top:-14, left:"50%", transform:"translateX(-50%)", background:"linear-gradient(90deg,#c9a84c,#f0c040)", color:"#0a0a0a", fontFamily:"Montserrat, sans-serif", fontWeight:700, fontSize:11, padding:"5px 20px", borderRadius:100, whiteSpace:"nowrap" }}>✦ Most Popular</div>
+            <div style={{ width:48, height:48, borderRadius:"50%", background:"rgba(201,168,76,0.15)", border:"1px solid rgba(201,168,76,0.4)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, marginBottom:16 }}>✦</div>
+            <div style={{ fontSize:11, fontWeight:700, letterSpacing:3, color:"#c9a84c", marginBottom:8 }}>NINETEEN TWENTYS</div>
+            <div style={{ display:"flex", alignItems:"baseline", gap:6, marginBottom:4 }}>
+              <span style={{ fontSize:48, fontWeight:800, color:"#c9a84c", lineHeight:1 }}>{ann?"₹1,649":"₹2,199"}</span>
+              {ann && <span style={{ fontSize:15, color:"rgba(201,168,76,0.4)", textDecoration:"line-through" }}>₹2,199</span>}
+              <span style={{ fontSize:14, color:"rgba(201,168,76,0.5)", marginLeft:2 }}>/month</span>
+            </div>
+            <div style={{ fontSize:12, color:"#c9a84c", fontStyle:"italic", marginBottom:3 }}>just {ann?"₹55":"₹73"}/day</div>
+            <div style={{ fontSize:11, color:"rgba(255,255,255,0.2)", marginBottom:14 }}>Less than a coffee ☕</div>
+            <p style={{ fontSize:13, color:"rgba(245,240,232,0.6)", fontStyle:"italic", marginBottom:20, lineHeight:1.5 }}>The serious creative's operating system</p>
+            <div style={{ height:1, background:"rgba(201,168,76,0.15)", marginBottom:20 }}/>
+            {["Everything in SPARK, plus:","Unlimited messages (60/day)","GPT-4o — full intelligence","Flowchart generation (export PDF)","Mindmap generation (export PDF)","Visual workspace","Custom AI persona","5 team workspaces","1 year history","Priority response speed","Early access to features"]
+              .map((text,i)=>(
+              <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:10, marginBottom:9 }}>
+                <span style={{ color:"#c9a84c", flexShrink:0, marginTop:1, fontSize:13 }}>✦</span>
+                <span style={{ fontSize:13, color:i===0?"#c9a84c":"rgba(245,240,232,0.75)", fontFamily:"Montserrat, sans-serif", lineHeight:1.5, fontWeight:i===0?700:400 }}>{text}</span>
               </div>
-            </motion.div>
-          </AnimatePresence>
+            ))}
+            <button onClick={() => activatePlan("nineteen_twentys")} style={{ width:"100%", marginTop:24, padding:"16px 0", borderRadius:100, border:"none", background:"linear-gradient(90deg,#c9a84c,#f0c040)", color:"#0a0a0a", fontFamily:"Montserrat, sans-serif", fontWeight:700, fontSize:15, cursor:"pointer", transition:"all 0.25s cubic-bezier(0.16,1,0.3,1)" }}
+              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 8px 30px rgba(201,168,76,0.35)";}}
+              onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";}}>
+              Go Nineteen Twentys
+            </button>
+          </motion.div>
 
-          {/* Comparison table */}
-          <ComparisonTable userType={tab}/>
+          {/* ─ CANVAS ENTERPRISE ─ */}
+          <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.2 }} className="card"
+            style={{ background:"rgba(124,58,237,0.06)", border:"1px solid rgba(124,58,237,0.25)", borderRadius:24, padding:"32px 28px", position:"relative" }}>
+            <div style={{ width:48, height:48, borderRadius:"50%", background:"rgba(124,58,237,0.15)", border:"1px solid rgba(124,58,237,0.3)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, marginBottom:16 }}>◈</div>
+            <div style={{ fontSize:11, fontWeight:700, letterSpacing:3, color:"#a78bfa", marginBottom:8 }}>CANVAS ENTERPRISE</div>
+            <div style={{ display:"flex", alignItems:"baseline", gap:6, marginBottom:4 }}>
+              <span style={{ fontSize:48, fontWeight:800, color:"#ffffff", lineHeight:1 }}>{ann?"₹3,749":"₹4,999"}</span>
+              {ann && <span style={{ fontSize:15, color:"rgba(255,255,255,0.3)", textDecoration:"line-through" }}>₹4,999</span>}
+              <span style={{ fontSize:12, color:"rgba(255,255,255,0.35)", marginLeft:2 }}>/seat/month</span>
+            </div>
+            <div style={{ fontSize:12, color:"#a78bfa", fontStyle:"italic", marginBottom:3 }}>{ann?"₹125":"₹166"}/seat/day</div>
+            <div style={{ fontSize:11, color:"rgba(255,255,255,0.2)", marginBottom:14 }}>One hire costs 30× more</div>
+            <p style={{ fontSize:13, color:"rgba(255,255,255,0.45)", marginBottom:20, lineHeight:1.5 }}>Full creative intelligence for teams. Min 3 seats.</p>
+            <div style={{ height:1, background:"rgba(124,58,237,0.15)", marginBottom:20 }}/>
+            {["Everything in NINETEEN TWENTYS, plus:","Unlimited team seats","Full visual creative canvas","Advanced flowchart engine","Presentation deck generation","Brand knowledge base (RAG)","API access","White label option","Dedicated account manager","SLA: 4hr support response","Custom onboarding"]
+              .map((text,i)=>(
+              <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:10, marginBottom:9 }}>
+                <span style={{ color:"#a78bfa", flexShrink:0, marginTop:1, fontSize:13 }}>◈</span>
+                <span style={{ fontSize:13, color:i===0?"#a78bfa":"rgba(255,255,255,0.7)", fontFamily:"Montserrat, sans-serif", lineHeight:1.5, fontWeight:i===0?700:400 }}>{text}</span>
+              </div>
+            ))}
+            <button onClick={() => activatePlan("canvas_enterprise")} style={{ width:"100%", marginTop:24, padding:"14px 0", borderRadius:100, border:"1.5px solid rgba(124,58,237,0.5)", background:"transparent", color:"#a78bfa", fontFamily:"Montserrat, sans-serif", fontWeight:600, fontSize:15, cursor:"pointer", transition:"all 0.25s cubic-bezier(0.16,1,0.3,1)" }}
+              onMouseEnter={e=>{e.currentTarget.style.background="rgba(124,58,237,0.1)";e.currentTarget.style.transform="translateY(-1px)";}}
+              onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.transform="none";}}>
+              Contact for Enterprise
+            </button>
+          </motion.div>
+        </div>
+        <p style={{ textAlign:"center", fontSize:12, color:"rgba(255,255,255,0.2)", marginTop:24 }}>
+          All prices in INR · USD and GBP available at checkout · Cancel anytime
+        </p>
+      </div>
 
-          {/* FAQ */}
-          <FAQ/>
+      {/* Marquee */}
+      <Marquee/>
 
-          <p style={{
-            textAlign:"center", marginTop:48,
-            fontFamily:"'Instrument Sans', sans-serif", fontSize:12, color:"rgba(255,255,255,0.2)",
-          }}>
-            Stripe-secured payments · Cancel anytime · No contracts
-          </p>
-
+      {/* Feature comparison */}
+      <div style={{ maxWidth:900, margin:"0 auto 80px", padding:"0 24px" }}>
+        <h2 style={{ textAlign:"center", fontSize:24, fontWeight:800, color:"#ffffff", marginBottom:32 }}>Full feature comparison</h2>
+        <div style={{ borderRadius:16, overflow:"hidden", border:"1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr", background:"rgba(255,255,255,0.04)", padding:"14px 20px" }}>
+            {["Feature","SPARK","NINETEEN TWENTYS","CANVAS"].map((h,i)=>(
+              <span key={i} style={{ fontSize:11, fontWeight:700, letterSpacing:1.5, color:i===2?"#c9a84c":"rgba(255,255,255,0.4)", textAlign:i===0?"left":"center" }}>{h}</span>
+            ))}
+          </div>
+          {[
+            ["AI chat messages/day","15","60","Unlimited"],
+            ["AI model","GPT-4o Mini","GPT-4o","GPT-4o Heavy"],
+            ["Flowcharts & Mindmaps","✗","✓","✓"],
+            ["Visual workspace","✗","✓","✓"],
+            ["Custom AI persona","✗","✓","✓"],
+            ["Team workspaces","✗","5","Unlimited"],
+            ["File uploads","2/day","20/day","Unlimited"],
+            ["Conversation history","7 days","1 year","Forever"],
+            ["PDF exports","✓","✓","✓"],
+            ["API access","✗","✗","✓"],
+            ["Dedicated support","✗","Email","4hr SLA"],
+          ].map(([feat,s,n,c],i)=>(
+            <div key={i} style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr", padding:"12px 20px", background:i%2===0?"rgba(255,255,255,0.02)":"transparent", borderTop:"1px solid rgba(255,255,255,0.04)" }}>
+              <span style={{ fontSize:13, color:"rgba(255,255,255,0.65)" }}>{feat}</span>
+              {[s,n,c].map((val,j)=>(
+                <span key={j} style={{ textAlign:"center", fontSize:13, color: val==="✓"?(j===1?"#c9a84c":j===2?"#a78bfa":"#60a5fa"):val==="✗"?"rgba(255,255,255,0.2)":(j===1?"#c9a84c":j===2?"#a78bfa":"rgba(255,255,255,0.65)") }}>
+                  {val}
+                </span>
+              ))}
+            </div>
+          ))}
         </div>
       </div>
-    </>
+
+      {/* Testimonial */}
+      <div style={{ maxWidth:720, margin:"0 auto 80px", padding:"0 24px" }}>
+        <motion.div initial={{ opacity:0, y:16 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }}
+          style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:20, padding:"36px 40px" }}>
+          <div style={{ fontSize:64, color:"#c9a84c", opacity:0.25, lineHeight:0.8, marginBottom:16, fontFamily:"Georgia, serif" }}>"</div>
+          <p style={{ fontSize:18, fontStyle:"italic", color:"rgba(255,255,255,0.85)", lineHeight:1.7, marginBottom:20 }}>
+            We built a full campaign strategy inside COREX in under 2 hours. It replaced a week of agency briefing work.
+          </p>
+          <div style={{ fontWeight:700, color:"#c9a84c", fontSize:14 }}>Nineteen Twentys</div>
+          <div style={{ fontSize:12, color:"rgba(255,255,255,0.35)", marginTop:2 }}>Premium lifestyle brand — Active COREX client</div>
+        </motion.div>
+      </div>
+
+      {/* FAQ */}
+      <div style={{ maxWidth:720, margin:"0 auto 80px", padding:"0 24px" }}>
+        <h2 style={{ textAlign:"center", fontSize:24, fontWeight:800, color:"#ffffff", marginBottom:40 }}>Common questions</h2>
+        {[
+          ["Can I switch plans later?","Yes. Upgrade or downgrade any time. Upgrades take effect immediately; downgrades at the end of your billing cycle."],
+          ["What is Nineteen Twentys?","Our premium plan for serious creatives — GPT-4o, visual outputs (flowcharts, mindmaps), 60 messages/day. Named after the creative golden age."],
+          ["Is there a free trial?","The free plan is yours indefinitely — no credit card required. 10 messages/day so you can experience COREX before committing."],
+          ["How does billing work?","Monthly plans renew each month. Annual plans are billed once and save 25%. Both cancel any time from settings."],
+          ["What is Canvas Enterprise?","Team-focused plan with unlimited seats, API access, brand knowledge base, and dedicated account manager. Contact us for volume pricing."],
+          ["Which AI model powers COREX?","SPARK uses GPT-4o Mini — fast for most creative tasks. Nineteen Twentys and Canvas Enterprise run full GPT-4o for deeper strategic intelligence."],
+        ].map(([q,a],i)=><FAQ key={i} q={q} a={a}/>)}
+      </div>
+
+      {/* Enterprise CTA */}
+      <div style={{ maxWidth:720, margin:"0 auto 100px", padding:"0 24px" }}>
+        <motion.div initial={{ opacity:0, y:16 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }}
+          style={{ background:"rgba(124,58,237,0.08)", border:"1px solid rgba(124,58,237,0.25)", borderRadius:20, padding:40, textAlign:"center" }}>
+          <h3 style={{ fontSize:22, fontWeight:800, color:"#ffffff", marginBottom:10 }}>Interested in Canvas Enterprise?</h3>
+          <p style={{ fontSize:14, color:"rgba(255,255,255,0.45)", marginBottom:28 }}>Custom onboarding, team training, SLA support and white label options.</p>
+          <div style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap" }}>
+            <input type="email" placeholder="your@email.com" style={{ padding:"12px 20px", borderRadius:100, border:"1px solid rgba(124,58,237,0.4)", background:"rgba(124,58,237,0.08)", color:"#ffffff", fontFamily:"Montserrat, sans-serif", fontSize:14, width:260, outline:"none" }}/>
+            <button style={{ padding:"12px 28px", borderRadius:100, border:"none", background:"linear-gradient(90deg,#7c3aed,#a78bfa)", color:"#ffffff", fontFamily:"Montserrat, sans-serif", fontWeight:700, fontSize:14, cursor:"pointer", transition:"all 0.25s cubic-bezier(0.16,1,0.3,1)" }}
+              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 8px 28px rgba(124,58,237,0.4)";}}
+              onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";}}>
+              Book a Demo
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    </div>
   );
 }
