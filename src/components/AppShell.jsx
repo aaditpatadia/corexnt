@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthFlow          from "./AuthFlow";
+import { getPlanTheme, applyTheme, PLAN_THEMES } from "../utils/planTheme";
+import { isAdmin }       from "../utils/modelConfig";
 import ChatDashboard     from "../pages/app/ChatDashboard";
 import PersonalDashboard from "../pages/app/PersonalDashboard";
 import ProfileSetup      from "../pages/app/ProfileSetup";
@@ -459,6 +461,54 @@ function TopRightBar({ userName, onUpgrade, navigate, onNewChat, onMobileMenuOpe
   );
 }
 
+/* ─── Admin Bar ─── */
+function AdminBar() {
+  const [model, setModel]   = useState(localStorage.getItem("corex_model_override") || "gpt-4o");
+  const [plan,  setPlanKey] = useState(localStorage.getItem("corex_plan") || "free");
+
+  const handleModel = (m) => {
+    setModel(m);
+    localStorage.setItem("corex_model_override", m);
+  };
+
+  const handlePlan = (p) => {
+    setPlanKey(p);
+    localStorage.setItem("corex_plan", p);
+    const theme = getPlanTheme(p);
+    applyTheme(theme);
+    if (window.__corex_setTheme) window.__corex_setTheme(p);
+  };
+
+  const selectStyle = {
+    background:"#2d1a4e", border:"1px solid #5b21b6", color:"#ffffff",
+    borderRadius:8, padding:"4px 10px", fontSize:12,
+    fontFamily:"'Instrument Sans', sans-serif", cursor:"pointer",
+  };
+
+  return (
+    <div style={{
+      height:36, display:"flex", alignItems:"center", gap:12, padding:"0 16px",
+      background:"#1a0a2e", borderBottom:"1px solid #3d1a6e", flexShrink:0, zIndex:100,
+    }}>
+      <span style={{ fontSize:11, fontWeight:700, color:"#a78bfa", letterSpacing:"0.5px" }}>Admin Mode</span>
+      <select value={model} onChange={e => handleModel(e.target.value)} style={selectStyle}>
+        <option value="gpt-4o-mini">GPT-4o Mini (SPARK)</option>
+        <option value="gpt-4o">GPT-4o Full (1920s)</option>
+        <option value="gpt-4o-turbo">GPT-4o Turbo</option>
+      </select>
+      <select value={plan} onChange={e => handlePlan(e.target.value)} style={selectStyle}>
+        <option value="free">Free Plan</option>
+        <option value="spark">SPARK Theme</option>
+        <option value="nineteen_twentys">NINETEEN TWENTYS Theme</option>
+        <option value="canvas_enterprise">CANVAS ENTERPRISE Theme</option>
+      </select>
+      <span style={{ marginLeft:"auto", fontSize:11, color:"rgba(167,139,250,0.6)", fontFamily:"'Instrument Sans', sans-serif" }}>
+        Testing as: <strong style={{ color:"#a78bfa" }}>{PLAN_THEMES[plan]?.name || plan}</strong>
+      </span>
+    </div>
+  );
+}
+
 /* ─── AppShell ─── */
 export default function AppShell() {
   const navigate  = useNavigate();
@@ -586,6 +636,9 @@ export default function AppShell() {
           minWidth: 0,
         }}
       >
+        {/* Admin bar — only for corexnt@gmail.com */}
+        {isAdmin() && <AdminBar/>}
+
         {/* Top-right bar */}
         <TopRightBar
           userName={userName}

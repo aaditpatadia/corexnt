@@ -1,13 +1,20 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { Component }  from "react";
+import { Component, createContext, useContext, useEffect, useState } from "react";
 import { ToastProvider, setGlobalToast, useToast } from "./components/Toast";
 import MainLanding    from "./pages/MainLanding";
 import CreatorLanding from "./pages/CreatorLanding";
 import BrandLanding   from "./pages/BrandLanding";
 import AppShell       from "./components/AppShell";
-import { useEffect }  from "react";
+import { getPlanTheme, getCurrentPlan, applyTheme, PLAN_THEMES } from "./utils/planTheme";
 
-/* ── Global error boundary — prevents blank screen on runtime crash ── */
+/* ── Theme context ── */
+export const ThemeContext = createContext(PLAN_THEMES.free);
+
+export function useTheme() {
+  return useContext(ThemeContext);
+}
+
+/* ── Global error boundary ── */
 class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
@@ -29,9 +36,7 @@ class ErrorBoundary extends Component {
           padding: 32, textAlign: "center",
         }}>
           <div style={{ fontSize: 40, marginBottom: 16 }}>⚠️</div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>
-            Something went wrong
-          </h2>
+          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Something went wrong</h2>
           <p style={{ color: "rgba(240,250,242,0.5)", fontSize: 14, marginBottom: 24, maxWidth: 360 }}>
             {this.state.error?.message || "An unexpected error occurred."}
           </p>
@@ -44,9 +49,6 @@ class ErrorBoundary extends Component {
             }}>
             Back to home
           </button>
-          <p style={{ color: "rgba(240,250,242,0.2)", fontSize: 11, marginTop: 32 }}>
-            Corex v5.3 — {this.state.error?.stack?.split("\n")[0] || ""}
-          </p>
         </div>
       );
     }
@@ -61,18 +63,36 @@ function ToastBridge() {
 }
 
 export default function App() {
+  const [currentTheme, setCurrentTheme] = useState(() => getPlanTheme(getCurrentPlan()));
+
+  useEffect(() => {
+    applyTheme(currentTheme);
+  }, [currentTheme]);
+
+  // Expose theme setter globally so AppShell admin bar can trigger it
+  useEffect(() => {
+    window.__corex_setTheme = (planKey) => {
+      const theme = getPlanTheme(planKey);
+      setCurrentTheme(theme);
+      applyTheme(theme);
+    };
+    return () => { delete window.__corex_setTheme; };
+  }, []);
+
   return (
     <ErrorBoundary>
-      <ToastProvider>
-        <ToastBridge />
-        <Routes>
-          <Route path="/"         element={<MainLanding />} />
-          <Route path="/creators" element={<CreatorLanding />} />
-          <Route path="/brands"   element={<BrandLanding />} />
-          <Route path="/app/*"    element={<AppShell />} />
-          <Route path="*"         element={<Navigate to="/" replace />} />
-        </Routes>
-      </ToastProvider>
+      <ThemeContext.Provider value={currentTheme}>
+        <ToastProvider>
+          <ToastBridge />
+          <Routes>
+            <Route path="/"         element={<MainLanding />} />
+            <Route path="/creators" element={<CreatorLanding />} />
+            <Route path="/brands"   element={<BrandLanding />} />
+            <Route path="/app/*"    element={<AppShell />} />
+            <Route path="*"         element={<Navigate to="/" replace />} />
+          </Routes>
+        </ToastProvider>
+      </ThemeContext.Provider>
     </ErrorBoundary>
   );
 }

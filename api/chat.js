@@ -247,7 +247,7 @@ export default async function handler(req, res) {
   if (req.method !== "POST")   return res.status(405).json({ error: "Method not allowed" });
 
   try {
-    const { messages = [], files = [], userType = "creator", engineMode, profileContext, userProfile, attachedDocs = [], sharedLinks = [] } = req.body || {};
+    const { messages = [], files = [], userType = "creator", engineMode, profileContext, userProfile, attachedDocs = [], sharedLinks = [], adminModel, plan } = req.body || {};
 
     const lastUser = [...messages].reverse().find(m => m.role === "user");
     if (!lastUser?.content?.trim() && !(files?.length > 0)) {
@@ -382,13 +382,15 @@ Rules: Each branch must be a genuinely different angle — not variations of the
         "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model:       hasImages ? "gpt-4o" : "gpt-4o-mini",
+        model: hasImages
+          ? "gpt-4o"
+          : (adminModel || (plan === "canvas_enterprise" || plan === "nineteen_twentys" ? "gpt-4o" : "gpt-4o-mini")),
         instructions: basePrompt,
         tools:       [{ type: "web_search_preview", search_context_size: "medium" }],
         tool_choice: "auto",
         input:       inputMessages,
         temperature: 0.8,
-        max_output_tokens: 2000,
+        max_output_tokens: plan === "canvas_enterprise" ? 3000 : plan === "nineteen_twentys" ? 2500 : 2000,
       }),
     });
 
