@@ -66,7 +66,7 @@ export default function ChatInput({ onSend, disabled, userType, embedded }) {
     const el = textRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 160) + "px";
+    el.style.height = Math.min(el.scrollHeight, 120) + "px";
   }, [text]);
 
   // Detect URLs
@@ -371,7 +371,7 @@ export default function ChatInput({ onSend, disabled, userType, embedded }) {
           onInput={e => {
             const el = e.target;
             el.style.height = "auto";
-            el.style.height = Math.min(el.scrollHeight, 160) + "px";
+            el.style.height = Math.min(el.scrollHeight, 120) + "px";
           }}
           onKeyDown={onKey}
           onFocus={() => setFocused(true)}
@@ -389,7 +389,7 @@ export default function ChatInput({ onSend, disabled, userType, embedded }) {
             caretColor: "rgba(156,252,175,0.8)",
             lineHeight: 1.5,
             minHeight: 24,
-            maxHeight: 160,
+            maxHeight: 120,
             overflowY: "auto",
             fontFamily: "'Instrument Sans', sans-serif",
           }}
