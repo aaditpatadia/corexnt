@@ -1,245 +1,189 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { saveUserProfile } from "../../utils/userProfile";
 
-const CREATOR_STEPS = [
-  {
-    key: "niche",
-    question: "What kind of content do you create?",
-    options: ["Fitness", "Finance", "Comedy", "Fashion", "Food", "Tech", "Travel", "Business", "Lifestyle", "Other"],
-  },
-  {
-    key: "platform",
-    question: "Which platform is your main focus?",
-    options: ["Instagram", "YouTube", "TikTok", "LinkedIn", "All"],
-  },
-  {
-    key: "followers",
-    question: "How many followers do you have right now?",
-    options: ["Under 1K", "1K–10K", "10K–50K", "50K–100K", "100K–500K", "500K+"],
-  },
-  {
-    key: "challenge",
-    question: "What's your biggest challenge right now?",
-    options: ["Getting more views", "Growing followers", "Brand deals", "Content ideas", "Going viral", "Monetising"],
-  },
-];
+const FONT = "'Instrument Sans', sans-serif";
 
-const BRAND_STEPS = [
-  {
-    key: "company",
-    question: "What's your company or brand name?",
-    placeholder: "e.g. Zepto, boAt, Wakefit",
-    isText: true,
-  },
-  {
-    key: "industry",
-    question: "What industry are you in?",
-    options: ["D2C / E-commerce", "SaaS / Tech", "Food & Beverage", "Fashion", "Health & Wellness", "Finance", "Education", "Other"],
-  },
-  {
-    key: "competitors",
-    question: "Who are your main competitors?",
-    placeholder: "e.g. Blinkit, Swiggy Instamart (comma separated)",
-    isText: true,
-  },
-  {
-    key: "budget",
-    question: "What's your monthly marketing budget?",
-    options: ["Under ₹1L", "₹1–5L", "₹5–20L", "₹20–50L", "₹50L+", "Prefer not to say"],
-  },
-];
+export default function ProfileSetup() {
+  const navigate = useNavigate();
+  const [name, setName] = useState(localStorage.getItem("corex_user_name") || "");
+  const [brand, setBrand] = useState(localStorage.getItem("corex_brand_name") || "");
+  const [saving, setSaving] = useState(false);
 
-export default function ProfileSetup({ userType, userName }) {
-  const navigate  = useNavigate();
-  const isCreator = userType !== "company";
-  const steps     = isCreator ? CREATOR_STEPS : BRAND_STEPS;
-  const accent    = isCreator ? "#2dd668" : "#a78bfa";
-  const accentRgba = isCreator ? "rgba(45,214,104," : "rgba(124,58,237,";
-
-  const [step,    setStep]    = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [textVal, setTextVal] = useState("");
-
-  const current  = steps[step];
-  const progress = (step / steps.length) * 100;
-  const name     = userName?.split(" ")[0] || "there";
-
-  function handleSelect(value) {
-    const next = { ...answers, [current.key]: value };
-    setAnswers(next);
-    advance(next);
-  }
-
-  function handleTextNext() {
-    if (!textVal.trim()) { advance(answers); return; }
-    const next = { ...answers, [current.key]: textVal.trim() };
-    setAnswers(next);
-    setTextVal("");
-    advance(next);
+  function handleSubmit(e) {
+    e.preventDefault();
+    setSaving(true);
+    const n = name.trim();
+    const b = brand.trim();
+    localStorage.setItem("corex_user_name", n);
+    localStorage.setItem("corex_brand_name", b);
+    if (n) localStorage.setItem("userName", n);
+    if (!localStorage.getItem("corex_credits")) {
+      localStorage.setItem("corex_credits", "50");
+    }
+    localStorage.setItem("corex_plan", localStorage.getItem("corex_plan") || "free");
+    localStorage.setItem("corex_profile_done", "true");
+    setTimeout(() => navigate("/app/dashboard", { replace: true }), 300);
   }
 
   function handleSkip() {
-    if (step < steps.length - 1) {
-      setTextVal("");
-      setStep(s => s + 1);
-    } else {
-      finish(answers);
-    }
-  }
-
-  function advance(ans) {
-    if (step < steps.length - 1) {
-      setStep(s => s + 1);
-    } else {
-      finish(ans);
-    }
-  }
-
-  function finish(ans) {
-    saveUserProfile({ ...ans, name: localStorage.getItem("userName") || "" });
     localStorage.setItem("corex_profile_done", "true");
+    if (!localStorage.getItem("corex_credits")) {
+      localStorage.setItem("corex_credits", "50");
+    }
     navigate("/app/dashboard", { replace: true });
   }
 
   return (
     <div
-      className="flex flex-col items-center justify-center min-h-screen px-6"
-      style={{ background: isCreator ? "#080c09" : "#06040f" }}
+      className="page-enter"
+      style={{
+        minHeight: "100vh",
+        background: "#000000",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "40px 24px",
+      }}
     >
-      {/* Progress bar */}
-      <div className="w-full max-w-md mb-10">
-        <div className="flex items-center justify-between mb-2">
-          <span style={{ fontSize: 13, color: `${accentRgba}0.7)`, fontFamily: "'Instrument Sans', sans-serif", fontWeight: 600 }}>
-            Step {step + 1} of {steps.length}
-          </span>
-          <button
-            onClick={() => { localStorage.setItem("corex_skip_profile", "true"); navigate("/app/dashboard", { replace: true }); }}
-            style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", fontFamily: "'Instrument Sans', sans-serif", background: "none", border: "none", cursor: "pointer" }}
-            onMouseEnter={e => e.currentTarget.style.color = "rgba(255,255,255,0.6)"}
-            onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.3)"}
-          >
-            Skip all →
-          </button>
-        </div>
-        <div style={{ height: 3, borderRadius: 99, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
-          <motion.div
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            style={{ height: "100%", borderRadius: 99, background: `linear-gradient(90deg, ${accent}, ${accentRgba}0.6))` }}
-          />
-        </div>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        style={{ width: "100%", maxWidth: 440 }}
+      >
+        {/* Logo mark */}
+        <div
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: "50%",
+            background: "linear-gradient(#000,#000) padding-box, linear-gradient(135deg,#226FF7,#6BC3CE,#9CFCAF,#FFEA71) border-box",
+            border: "2px solid transparent",
+            marginBottom: 32,
+          }}
+        />
 
-      {/* Question card */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={step}
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-md"
+        <p style={{ fontSize: 13, fontFamily: FONT, color: "rgba(255,255,255,0.35)", marginBottom: 8 }}>
+          One quick thing —
+        </p>
+        <h1
+          style={{
+            fontFamily: "'Instrument Serif', serif",
+            fontStyle: "italic",
+            fontWeight: 400,
+            fontSize: "clamp(24px, 4vw, 32px)",
+            color: "#ffffff",
+            lineHeight: 1.25,
+            marginBottom: 32,
+          }}
         >
-          {step === 0 && (
-            <p style={{ fontSize: 13, color: `${accentRgba}0.6)`, fontFamily: "'Instrument Sans', sans-serif", marginBottom: 4 }}>
-              Hey {name} 👋
-            </p>
-          )}
+          What should we call you and your brand?
+        </h1>
 
-          <h2 style={{ fontSize: "clamp(20px, 3vw, 26px)", fontFamily: "'Instrument Serif', serif", fontStyle: "italic", fontWeight: 400, color: "#f0faf2", lineHeight: 1.3, marginBottom: 28 }}>
-            {current.question}
-          </h2>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div>
+            <label style={{ display: "block", fontSize: 11, fontFamily: FONT, fontWeight: 600, color: "rgba(255,255,255,0.4)", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>
+              Your name
+            </label>
+            <input
+              autoFocus
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Aadit, Priya, Rohan"
+              style={{
+                width: "100%",
+                padding: "13px 16px",
+                borderRadius: 12,
+                fontSize: 15,
+                fontFamily: FONT,
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                color: "#ffffff",
+                caretColor: "#9CFCAF",
+                outline: "none",
+                boxSizing: "border-box",
+                transition: "border-color 0.2s ease",
+              }}
+              onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(156,252,175,0.4)")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
+            />
+          </div>
 
-          {/* Option buttons */}
-          {!current.isText && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              {current.options.map(opt => (
-                <motion.button
-                  key={opt}
-                  whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
-                  onClick={() => handleSelect(opt)}
-                  style={{
-                    padding: "14px 16px", borderRadius: 14, textAlign: "left", fontSize: 14,
-                    fontFamily: "'Instrument Sans', sans-serif", fontWeight: 500,
-                    background: answers[current.key] === opt ? `${accentRgba}0.12)` : "rgba(255,255,255,0.04)",
-                    border: answers[current.key] === opt ? `1px solid ${accentRgba}0.4)` : "1px solid rgba(255,255,255,0.08)",
-                    color: answers[current.key] === opt ? accent : "rgba(255,255,255,0.7)",
-                    cursor: "pointer", transition: "all 0.18s ease",
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = `${accentRgba}0.07)`; e.currentTarget.style.color = "#f0faf2"; }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.background = answers[current.key] === opt ? `${accentRgba}0.12)` : "rgba(255,255,255,0.04)";
-                    e.currentTarget.style.color = answers[current.key] === opt ? accent : "rgba(255,255,255,0.7)";
-                  }}
-                >
-                  {opt}
-                </motion.button>
-              ))}
-            </div>
-          )}
+          <div>
+            <label style={{ display: "block", fontSize: 11, fontFamily: FONT, fontWeight: 600, color: "rgba(255,255,255,0.4)", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>
+              Your brand or project name
+            </label>
+            <input
+              type="text"
+              value={brand}
+              onChange={(e) => setBrand(e.target.value)}
+              placeholder="e.g. Lumē Skincare, NineteenTwentys, @yourhandle"
+              style={{
+                width: "100%",
+                padding: "13px 16px",
+                borderRadius: 12,
+                fontSize: 15,
+                fontFamily: FONT,
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                color: "#ffffff",
+                caretColor: "#9CFCAF",
+                outline: "none",
+                boxSizing: "border-box",
+                transition: "border-color 0.2s ease",
+              }}
+              onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(156,252,175,0.4)")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
+            />
+          </div>
 
-          {/* Text input */}
-          {current.isText && (
-            <div>
-              <input
-                autoFocus
-                type="text"
-                value={textVal}
-                onChange={e => setTextVal(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handleTextNext()}
-                placeholder={current.placeholder || "Type your answer..."}
-                style={{
-                  width: "100%", padding: "14px 16px", borderRadius: 14, fontSize: 15,
-                  fontFamily: "'Instrument Sans', sans-serif", background: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.1)", color: "#f0faf2",
-                  caretColor: accent, outline: "none", boxSizing: "border-box",
-                }}
-                onFocus={e => e.currentTarget.style.borderColor = `${accentRgba}0.5)`}
-                onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"}
-              />
-              <div className="flex gap-3 mt-4">
-                <motion.button
-                  whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}
-                  onClick={handleTextNext}
-                  style={{
-                    flex: 1, padding: "13px 20px", borderRadius: 12, fontSize: 14, fontWeight: 700,
-                    background: `linear-gradient(135deg, ${isCreator ? "#1a7a3c,#2dd668" : "#7c3aed,#a78bfa"})`,
-                    color: isCreator ? "#050a06" : "#fff", border: "none", cursor: "pointer",
-                    fontFamily: "'Instrument Sans', sans-serif",
-                  }}
-                >
-                  Continue →
-                </motion.button>
-                <button
-                  onClick={handleSkip}
-                  style={{
-                    padding: "13px 16px", borderRadius: 12, fontSize: 13,
-                    fontFamily: "'Instrument Sans', sans-serif",
-                    background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                    color: "rgba(255,255,255,0.4)", cursor: "pointer",
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.color = "rgba(255,255,255,0.7)"}
-                  onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.4)"}
-                >
-                  Skip
-                </button>
-              </div>
-            </div>
-          )}
+          <motion.button
+            type="submit"
+            disabled={saving}
+            whileHover={{ translateY: -1 }}
+            whileTap={{ scale: 0.98 }}
+            style={{
+              marginTop: 8,
+              padding: "14px 20px",
+              borderRadius: 12,
+              fontSize: 15,
+              fontFamily: FONT,
+              fontWeight: 700,
+              background: "linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)",
+              color: "#000000",
+              border: "none",
+              cursor: saving ? "default" : "pointer",
+              transition: "all 0.2s cubic-bezier(0.16,1,0.3,1)",
+              opacity: saving ? 0.7 : 1,
+            }}
+          >
+            {saving ? "Setting up…" : "Let's create →"}
+          </motion.button>
+        </form>
 
-          {/* Skip for option questions */}
-          {!current.isText && (
-            <button
-              onClick={handleSkip}
-              style={{ marginTop: 20, fontSize: 13, color: "rgba(255,255,255,0.3)", fontFamily: "'Instrument Sans', sans-serif", background: "none", border: "none", cursor: "pointer" }}
-              onMouseEnter={e => e.currentTarget.style.color = "rgba(255,255,255,0.6)"}
-              onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.3)"}
-            >
-              Skip for now →
-            </button>
-          )}
-        </motion.div>
-      </AnimatePresence>
+        <button
+          onClick={handleSkip}
+          style={{
+            marginTop: 20,
+            display: "block",
+            width: "100%",
+            textAlign: "center",
+            fontSize: 13,
+            fontFamily: FONT,
+            color: "rgba(255,255,255,0.25)",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.5)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}
+        >
+          Skip for now →
+        </button>
+      </motion.div>
     </div>
   );
 }

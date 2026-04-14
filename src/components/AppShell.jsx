@@ -2,178 +2,138 @@ import { useState, useEffect, useCallback } from "react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthFlow          from "./AuthFlow";
-import { getPlanTheme, applyTheme, PLAN_THEMES } from "../utils/planTheme";
-import { isAdmin }       from "../utils/modelConfig";
+import CreditModal       from "./CreditModal";
 import ChatDashboard     from "../pages/app/ChatDashboard";
 import PersonalDashboard from "../pages/app/PersonalDashboard";
 import ProfileSetup      from "../pages/app/ProfileSetup";
-import ReelScripts       from "../pages/app/ReelScripts";
-import GrowthAudit       from "../pages/app/GrowthAudit";
-import Templates         from "../pages/app/Templates";
-import History           from "../pages/app/History";
 import PaymentPage       from "./PaymentPage";
-import TrendEngine       from "../pages/app/TrendEngine";
-import BrandDeals        from "../pages/app/BrandDeals";
-import CampaignBuilder   from "../pages/app/CampaignBuilder";
-import BudgetAllocator   from "../pages/app/BudgetAllocator";
-import BrandAudit        from "../pages/app/BrandAudit";
 import CompetitorIntel   from "../pages/app/CompetitorIntel";
-import Reports           from "../pages/app/Reports";
-import Team              from "../pages/app/Team";
-import ModesPage         from "../pages/app/ModesPage";
 import ProjectsPage      from "../pages/app/ProjectsPage";
 import SettingsPage      from "../pages/SettingsPage";
-import MyResourcesPage   from "../pages/app/MyResourcesPage";
 import { hasProfile }    from "../utils/userProfile";
+import { getCredits, translateCredits } from "../utils/credits";
+import { isAdmin }       from "../utils/modelConfig";
+import { getPlanTheme, applyTheme, PLAN_THEMES } from "../utils/planTheme";
 
-/* ─── Sidebar ─── */
-function Sidebar({ open, onClose, navigate, location, userName, onNewChat, onUpgrade }) {
+const FONT = "'Instrument Sans', sans-serif";
+
+/* ─── Sidebar nav item ─── */
+function NavItem({ icon, label, active, onClick, premium }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        padding: "10px 12px",
+        borderRadius: 10,
+        border: "none",
+        cursor: "pointer",
+        fontFamily: FONT,
+        fontSize: 14,
+        fontWeight: active ? 600 : 400,
+        color: active ? "#ffffff" : "rgba(255,255,255,0.55)",
+        background: active ? "rgba(255,255,255,0.07)" : "transparent",
+        textAlign: "left",
+        width: "100%",
+        transition: "all 0.2s cubic-bezier(0.16,1,0.3,1)",
+      }}
+      onMouseEnter={(e) => {
+        if (!active) {
+          e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+          e.currentTarget.style.color = "#ffffff";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!active) {
+          e.currentTarget.style.background = "transparent";
+          e.currentTarget.style.color = "rgba(255,255,255,0.55)";
+        }
+      }}
+    >
+      <span style={{ fontSize: 15, width: 20, textAlign: "center", flexShrink: 0 }}>{icon}</span>
+      <span style={{ flex: 1 }}>{label}</span>
+      {premium && (
+        <span style={{ fontSize: 10, color: "rgba(156,252,175,0.6)", fontWeight: 600, letterSpacing: "0.5px" }}>PRO</span>
+      )}
+    </button>
+  );
+}
+
+/* ─── Left Sidebar ─── */
+function Sidebar({ navigate, location, onNewChat, onClose }) {
+  const active = location.pathname.replace("/app/", "").split("/")[0] || "dashboard";
+
   const history = (() => {
-    try { return JSON.parse(localStorage.getItem("corex_history") || "[]").slice(0, 10); }
+    try { return JSON.parse(localStorage.getItem("corex_history") || "[]").slice(0, 8); }
     catch { return []; }
   })();
 
-  const initials = (userName || "CX").slice(0, 2).toUpperCase();
-  const active   = location.pathname.replace("/app/", "").split("/")[0] || "dashboard";
-
-  const navItems = [
-    { icon: "📁", label: "Projects",     path: "projects" },
-    { icon: "📄", label: "My Resources", path: "resources" },
-    { icon: "⊞",  label: "Modes",        path: "modes" },
+  const nav = [
+    { icon: "+", label: "New chat",        path: "chat",             action: () => { onNewChat(); navigate("/app/chat"); onClose?.(); } },
+    { icon: "📁", label: "Projects",       path: "projects",         action: () => { navigate("/app/projects"); onClose?.(); } },
+    { icon: "✦",  label: "Brief Builder",  path: "brief-builder",    action: () => { navigate("/app/chat"); onClose?.(); }, premium: true },
+    { icon: "◎",  label: "Competitor Intel", path: "competitor-intel", action: () => { navigate("/app/competitor-intel"); onClose?.(); } },
   ];
 
-  const content = (
+  return (
     <div
       style={{
-        width: 260,
-        background: "#222222",
+        width: 220,
+        background: "#0D0D0D",
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        borderRight: "1px solid rgba(255,255,255,0.06)",
+        borderRight: "1px solid rgba(255,255,255,0.07)",
         flexShrink: 0,
-        overflowY: "auto",
+        overflow: "hidden",
       }}
     >
-      {/* Logo + grid + close */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "24px 20px 16px",
-        }}
-      >
+      {/* Wordmark */}
+      <div style={{ padding: "20px 16px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <button
           onClick={() => { navigate("/app/dashboard"); onClose?.(); }}
-          style={{
-            fontFamily: "'Instrument Sans', sans-serif",
-            fontWeight: 700,
-            fontSize: 18,
-            color: "#ffffff",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: 0,
-          }}
+          style={{ fontFamily: FONT, fontWeight: 600, fontSize: 16, color: "#ffffff", background: "none", border: "none", cursor: "pointer", padding: 0 }}
         >
           Corex
         </button>
-        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <button
-            onClick={() => { navigate("/app/dashboard"); onClose?.(); }}
-            style={{
-              color: "rgba(255,255,255,0.4)",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontSize: 18,
-              lineHeight: 1,
-              padding: 4,
-            }}
-            title="Dashboard"
-          >
-            ⊞
-          </button>
-        </div>
       </div>
 
       {/* Nav items */}
-      <div style={{ padding: "0 12px", display: "flex", flexDirection: "column", gap: 2 }}>
-        {navItems.map(({ icon, label, path }) => (
-          <button
-            key={path}
-            onClick={() => { navigate(`/app/${path}`); onClose?.(); }}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "10px 10px",
-              borderRadius: 10,
-              border: "none",
-              cursor: "pointer",
-              fontFamily: "'Instrument Sans', sans-serif",
-              fontSize: 14,
-              fontWeight: active === path ? 600 : 400,
-              color: active === path ? "#ffffff" : "rgba(255,255,255,0.6)",
-              background: active === path ? "rgba(255,255,255,0.08)" : "transparent",
-              textAlign: "left",
-              transition: "all 0.15s ease",
-            }}
-            onMouseEnter={(e) => { if (active !== path) { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "#ffffff"; } }}
-            onMouseLeave={(e) => { if (active !== path) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; } }}
-          >
-            <span style={{ fontSize: 16, width: 20, textAlign: "center" }}>{icon}</span>
-            {label}
-          </button>
+      <div style={{ padding: "0 8px", display: "flex", flexDirection: "column", gap: 2 }}>
+        {nav.map((item) => (
+          <NavItem
+            key={item.path}
+            icon={item.icon}
+            label={item.label}
+            active={active === item.path}
+            onClick={item.action}
+            premium={item.premium}
+          />
         ))}
       </div>
 
-      {/* Spacer */}
-      <div style={{ flex: 1 }} />
+      {/* Divider */}
+      <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "16px 12px" }} />
 
       {/* History */}
-      <div style={{ padding: "0 12px 16px" }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "8px 10px",
-            marginBottom: 6,
-          }}
-        >
-          <span style={{ fontSize: 16 }}>🕐</span>
-          <span
-            style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: "rgba(255,255,255,0.4)",
-              fontFamily: "'Instrument Sans', sans-serif",
-              letterSpacing: "0.5px",
-              textTransform: "uppercase",
-            }}
-          >
-            History
-          </span>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <div style={{ padding: "0 8px", flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 2 }}>
+        <p style={{ fontSize: 10, fontFamily: FONT, fontWeight: 600, color: "rgba(255,255,255,0.25)", letterSpacing: "2px", textTransform: "uppercase", padding: "0 10px 8px" }}>
+          History
+        </p>
+        <div style={{ overflowY: "auto", flex: 1 }}>
           {history.length === 0 ? (
-            <p
-              style={{
-                fontSize: 12,
-                color: "rgba(255,255,255,0.25)",
-                padding: "6px 10px",
-                fontFamily: "'Instrument Sans', sans-serif",
-              }}
-            >
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", padding: "6px 10px", fontFamily: FONT }}>
               No conversations yet
             </p>
           ) : (
-            history.map((h) => (
-              <button
+            history.map((h, i) => (
+              <motion.button
                 key={h.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: i * 0.05 }}
                 onClick={() => {
                   if (typeof window.__corex_loadConversation === "function") {
                     window.__corex_loadConversation(h);
@@ -184,156 +144,123 @@ function Sidebar({ open, onClose, navigate, location, userName, onNewChat, onUpg
                 style={{
                   display: "block",
                   width: "100%",
-                  padding: "7px 10px",
+                  padding: "8px 10px",
                   borderRadius: 8,
                   border: "none",
                   cursor: "pointer",
-                  background: "rgba(255,255,255,0.03)",
-                  color: "rgba(255,255,255,0.55)",
-                  fontSize: 13,
-                  fontFamily: "'Instrument Sans', sans-serif",
+                  background: "transparent",
+                  color: "rgba(255,255,255,0.5)",
+                  fontSize: 12,
+                  fontFamily: FONT,
                   textAlign: "left",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
-                  maxWidth: 200,
-                  marginBottom: 2,
+                  maxWidth: "100%",
                   transition: "all 0.15s ease",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#ffffff"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "#ffffff"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
               >
-                {h.title || "Untitled"}
-              </button>
+                {(h.title || "Untitled").slice(0, 28)}
+              </motion.button>
             ))
           )}
         </div>
       </div>
     </div>
   );
-
-  return content;
 }
 
-/* ─── Top-right bar ─── */
-function TopRightBar({ userName, onUpgrade, navigate, onNewChat, onMobileMenuOpen }) {
+/* ─── Top Bar ─── */
+function TopBar({ userName, navigate, onNewChat, onCreditClick, onMobileMenuOpen }) {
   const [showDropdown, setShowDropdown] = useState(false);
-  const initials = (userName || "CX").slice(0, 2).toUpperCase();
+  const [credits, setCredits] = useState(getCredits);
+  const initials = (userName || localStorage.getItem("corex_user_name") || "CX").slice(0, 2).toUpperCase();
+  const isLow = credits < 30;
+
+  // Refresh credits on focus
+  useEffect(() => {
+    const refresh = () => setCredits(getCredits());
+    window.addEventListener("focus", refresh);
+    const interval = setInterval(refresh, 5000);
+    return () => { window.removeEventListener("focus", refresh); clearInterval(interval); };
+  }, []);
 
   const signOut = () => {
-    ["isLoggedIn","isVerified","sessionToken","sessionExpiry"].forEach(k => localStorage.removeItem(k));
+    ["isLoggedIn","isVerified","sessionToken","sessionExpiry"].forEach((k) => localStorage.removeItem(k));
     sessionStorage.clear();
     navigate("/");
   };
 
-  const msgsLeft = (() => {
-    const today = new Date().toDateString();
-    const used  = parseInt(localStorage.getItem(`corex_msgs_${today}`) || "0", 10);
-    return Math.max(0, 15 - used);
-  })();
-
   return (
     <div
       style={{
-        height: 60,
+        height: 56,
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "0 24px",
-        background: "transparent",
+        padding: "0 20px",
+        borderBottom: "1px solid rgba(255,255,255,0.04)",
         flexShrink: 0,
         position: "relative",
         zIndex: 50,
+        background: "#000000",
       }}
     >
-      {/* Left: hamburger (mobile only) + new chat button */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        {/* Hamburger — toggles sidebar */}
+      {/* Left: mobile menu + wordmark */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <button
           onClick={onMobileMenuOpen}
+          className="flex md:hidden"
           style={{
-            width: 36,
-            height: 36,
-            borderRadius: 8,
-            border: "none",
-            background: "rgba(255,255,255,0.08)",
-            color: "#ffffff",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 18,
+            width: 32, height: 32, borderRadius: 8, border: "none",
+            background: "rgba(255,255,255,0.06)", color: "#ffffff",
+            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16,
           }}
         >
           ☰
         </button>
-
-        {/* New chat */}
-        <button
-          onClick={() => {
-            if (typeof window.__corex_newChat === "function") window.__corex_newChat();
-            navigate("/app/chat");
-          }}
-          title="New chat"
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 8,
-            border: "none",
-            background: "transparent",
-            color: "rgba(255,255,255,0.4)",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 18,
-            transition: "all 0.15s",
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = "#ffffff"; e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; e.currentTarget.style.background = "transparent"; }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-        </button>
+        <span style={{ fontFamily: FONT, fontWeight: 600, fontSize: 16, color: "#ffffff" }}>Corex</span>
       </div>
 
-      {/* Right: msgs indicator + settings + upgrade + avatar */}
+      {/* Right: credit pill + settings + avatar */}
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        {msgsLeft <= 5 && (
-          <button
-            onClick={onUpgrade}
-            style={{
-              fontSize: 12,
-              color: msgsLeft === 0 ? "#f87171" : "rgba(255,255,255,0.4)",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontFamily: "'Instrument Sans', sans-serif",
-            }}
-          >
-            {msgsLeft === 0 ? "No messages left" : `${msgsLeft} left`}
-          </button>
-        )}
+        {/* Credit pill */}
+        <button
+          onClick={onCreditClick}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 5,
+            padding: "6px 14px",
+            borderRadius: 100,
+            background: "rgba(255,255,255,0.06)",
+            border: `1px solid ${isLow ? "rgba(255,234,113,0.4)" : "rgba(255,255,255,0.07)"}`,
+            cursor: "pointer",
+            fontFamily: FONT,
+            fontSize: 13,
+            color: isLow ? "#FFEA71" : "rgba(255,255,255,0.7)",
+            transition: "all 0.2s ease",
+            whiteSpace: "nowrap",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.color = "#ffffff"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = isLow ? "rgba(255,234,113,0.4)" : "rgba(255,255,255,0.07)"; e.currentTarget.style.color = isLow ? "#FFEA71" : "rgba(255,255,255,0.7)"; }}
+        >
+          ⚡ {isLow ? `${credits} left` : `${credits} credits`}
+        </button>
 
         {/* Settings */}
         <button
           onClick={() => navigate("/app/settings")}
           title="Settings"
           style={{
-            width: 32,
-            height: 32,
-            borderRadius: 8,
-            border: "none",
-            background: "transparent",
-            color: "rgba(255,255,255,0.4)",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            transition: "all 0.15s",
+            width: 32, height: 32, borderRadius: 8, border: "none",
+            background: "transparent", color: "rgba(255,255,255,0.4)",
+            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "all 0.2s ease",
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = "#ffffff"; e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = "#ffffff"; e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; e.currentTarget.style.background = "transparent"; }}
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
@@ -342,50 +269,20 @@ function TopRightBar({ userName, onUpgrade, navigate, onNewChat, onMobileMenuOpe
           </svg>
         </button>
 
-        {/* Upgrade */}
-        <button
-          onClick={onUpgrade}
-          style={{
-            padding: "8px 20px",
-            borderRadius: 100,
-            border: "none",
-            cursor: "pointer",
-            background: "linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)",
-            color: "#000000",
-            fontSize: 14,
-            fontWeight: 600,
-            fontFamily: "'Instrument Sans', sans-serif",
-            transition: "opacity 0.2s",
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.opacity = "0.88"}
-          onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
-        >
-          Upgrade
-        </button>
-
         {/* Avatar */}
         <div style={{ position: "relative" }}>
           <button
-            onClick={() => setShowDropdown(p => !p)}
+            onClick={() => setShowDropdown((p) => !p)}
             style={{
-              width: 36,
-              height: 36,
-              borderRadius: "50%",
-              border: "none",
+              width: 32, height: 32, borderRadius: "50%", border: "none",
               cursor: "pointer",
               background: "linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)",
-              color: "#000000",
-              fontSize: 13,
-              fontWeight: 700,
-              fontFamily: "'Instrument Sans', sans-serif",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              color: "#000000", fontSize: 12, fontWeight: 600, fontFamily: FONT,
+              display: "flex", alignItems: "center", justifyContent: "center",
             }}
           >
             {initials}
           </button>
-
           <AnimatePresence>
             {showDropdown && (
               <motion.div
@@ -394,37 +291,25 @@ function TopRightBar({ userName, onUpgrade, navigate, onNewChat, onMobileMenuOpe
                 exit={{ opacity: 0, y: -8, scale: 0.95 }}
                 transition={{ duration: 0.15 }}
                 style={{
-                  position: "fixed",
-                  right: 24,
-                  top: 68,
-                  width: 180,
-                  background: "#2a2a2a",
+                  position: "fixed", right: 16, top: 64,
+                  width: 180, background: "#1a1a1a",
                   border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 12,
-                  padding: "8px 0",
-                  zIndex: 9999,
+                  borderRadius: 12, padding: "8px 0", zIndex: 9999,
                   boxShadow: "0 16px 48px rgba(0,0,0,0.6)",
                 }}
               >
                 {[
-                  { label: "Dashboard",  action: () => { navigate("/app/dashboard"); setShowDropdown(false); } },
-                  { label: "Settings",   action: () => { navigate("/app/settings");  setShowDropdown(false); } },
-                  { label: "Upgrade",    action: () => { navigate("/app/payment");   setShowDropdown(false); } },
-                ].map(item => (
+                  { label: "Dashboard", action: () => { navigate("/app/dashboard"); setShowDropdown(false); } },
+                  { label: "Settings",  action: () => { navigate("/app/settings");  setShowDropdown(false); } },
+                  { label: "Top up",    action: () => { setShowDropdown(false); document.dispatchEvent(new CustomEvent("corex:openCredits")); } },
+                ].map((item) => (
                   <button
                     key={item.label}
                     onClick={item.action}
                     style={{
-                      width: "100%",
-                      padding: "10px 16px",
-                      border: "none",
-                      background: "transparent",
-                      color: "rgba(255,255,255,0.7)",
-                      fontSize: 14,
-                      fontFamily: "'Instrument Sans', sans-serif",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      transition: "all 0.15s",
+                      width: "100%", padding: "10px 16px", border: "none",
+                      background: "transparent", color: "rgba(255,255,255,0.7)",
+                      fontSize: 14, fontFamily: FONT, textAlign: "left", cursor: "pointer",
                     }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "#ffffff"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
@@ -436,16 +321,9 @@ function TopRightBar({ userName, onUpgrade, navigate, onNewChat, onMobileMenuOpe
                 <button
                   onClick={signOut}
                   style={{
-                    width: "100%",
-                    padding: "10px 16px",
-                    border: "none",
-                    background: "transparent",
-                    color: "#f87171",
-                    fontSize: 14,
-                    fontFamily: "'Instrument Sans', sans-serif",
-                    textAlign: "left",
-                    cursor: "pointer",
-                    transition: "background 0.15s",
+                    width: "100%", padding: "10px 16px", border: "none",
+                    background: "transparent", color: "#f87171",
+                    fontSize: 14, fontFamily: FONT, textAlign: "left", cursor: "pointer",
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.background = "rgba(248,113,113,0.06)"}
                   onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
@@ -461,72 +339,71 @@ function TopRightBar({ userName, onUpgrade, navigate, onNewChat, onMobileMenuOpe
   );
 }
 
-/* ─── Admin Bar ─── */
+/* ─── Admin Bar (admin only, hidden from regular users) ─── */
 function AdminBar() {
-  const [model, setModel]   = useState(localStorage.getItem("corex_model_override") || "gpt-4o");
-  const [plan,  setPlanKey] = useState(localStorage.getItem("corex_plan") || "free");
-
-  const handleModel = (m) => {
-    setModel(m);
-    localStorage.setItem("corex_model_override", m);
-  };
-
-  const handlePlan = (p) => {
-    setPlanKey(p);
-    localStorage.setItem("corex_plan", p);
-    const theme = getPlanTheme(p);
-    applyTheme(theme);
-    if (window.__corex_setTheme) window.__corex_setTheme(p);
-  };
+  const [model, setModel] = useState(localStorage.getItem("corex_model_override") || "gpt-4o");
+  const [plan, setPlanKey] = useState(localStorage.getItem("corex_plan") || "free");
 
   const selectStyle = {
-    background:"#2d1a4e", border:"1px solid #5b21b6", color:"#ffffff",
-    borderRadius:8, padding:"4px 10px", fontSize:12,
-    fontFamily:"'Instrument Sans', sans-serif", cursor:"pointer",
+    background: "#2d1a4e", border: "1px solid #5b21b6", color: "#ffffff",
+    borderRadius: 8, padding: "4px 10px", fontSize: 12, fontFamily: FONT, cursor: "pointer",
   };
 
   return (
     <div style={{
-      height:36, display:"flex", alignItems:"center", gap:12, padding:"0 16px",
-      background:"#1a0a2e", borderBottom:"1px solid #3d1a6e", flexShrink:0, zIndex:100,
+      height: 36, display: "flex", alignItems: "center", gap: 12, padding: "0 16px",
+      background: "#1a0a2e", borderBottom: "1px solid #3d1a6e", flexShrink: 0, zIndex: 100,
     }}>
-      <span style={{ fontSize:11, fontWeight:700, color:"#a78bfa", letterSpacing:"0.5px" }}>Admin Mode</span>
-      <select value={model} onChange={e => handleModel(e.target.value)} style={selectStyle}>
-        <option value="gpt-4o-mini">GPT-4o Mini (SPARK)</option>
-        <option value="gpt-4o">GPT-4o Full (1920s)</option>
-        <option value="gpt-4o-turbo">GPT-4o Turbo</option>
+      <span style={{ fontSize: 11, fontWeight: 700, color: "#a78bfa", letterSpacing: "0.5px" }}>Admin</span>
+      <select value={model} onChange={(e) => { setModel(e.target.value); localStorage.setItem("corex_model_override", e.target.value); }} style={selectStyle}>
+        <option value="gpt-4o-mini">GPT-4o Mini</option>
+        <option value="gpt-4o">GPT-4o Full</option>
       </select>
-      <select value={plan} onChange={e => handlePlan(e.target.value)} style={selectStyle}>
-        <option value="free">Free Plan</option>
-        <option value="spark">SPARK Theme</option>
-        <option value="nineteen_twentys">NINETEEN TWENTYS Theme</option>
-        <option value="canvas_enterprise">CANVAS ENTERPRISE Theme</option>
+      <select value={plan} onChange={(e) => {
+        setPlanKey(e.target.value);
+        localStorage.setItem("corex_plan", e.target.value);
+        const theme = getPlanTheme(e.target.value);
+        applyTheme(theme);
+        if (window.__corex_setTheme) window.__corex_setTheme(e.target.value);
+      }} style={selectStyle}>
+        {Object.keys(PLAN_THEMES).map((k) => (
+          <option key={k} value={k}>{PLAN_THEMES[k]?.name || k}</option>
+        ))}
       </select>
-      <span style={{ marginLeft:"auto", fontSize:11, color:"rgba(167,139,250,0.6)", fontFamily:"'Instrument Sans', sans-serif" }}>
-        Testing as: <strong style={{ color:"#a78bfa" }}>{PLAN_THEMES[plan]?.name || plan}</strong>
-      </span>
     </div>
   );
 }
 
 /* ─── AppShell ─── */
 export default function AppShell() {
-  const navigate  = useNavigate();
-  const location  = useLocation();
-  const [mobileMenuOpen,    setMobileMenuOpen]    = useState(false);
-  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [creditModalOpen, setCreditModalOpen] = useState(false);
 
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
   const isVerified = localStorage.getItem("isVerified") === "true";
 
-  // Session expiry check
+  // Session expiry
   useEffect(() => {
     const expiry = localStorage.getItem("sessionExpiry");
     if (expiry && Date.now() > parseInt(expiry, 10)) {
-      ["isLoggedIn","isVerified","sessionToken","sessionExpiry"].forEach(k => localStorage.removeItem(k));
+      ["isLoggedIn","isVerified","sessionToken","sessionExpiry"].forEach((k) => localStorage.removeItem(k));
       navigate("/app", { replace: true });
     }
   }, [location.pathname]);
+
+  // Listen for credit modal trigger from dropdown
+  useEffect(() => {
+    const handler = () => setCreditModalOpen(true);
+    document.addEventListener("corex:openCredits", handler);
+    return () => document.removeEventListener("corex:openCredits", handler);
+  }, []);
+
+  const handleNewChat = useCallback(() => {
+    if (typeof window.__corex_newChat === "function") window.__corex_newChat();
+    if (!location.pathname.includes("/chat")) navigate("/app/chat");
+  }, [location.pathname, navigate]);
 
   const handleLoadConversation = useCallback((conv) => {
     if (typeof window.__corex_loadConversation === "function") {
@@ -535,26 +412,24 @@ export default function AppShell() {
     if (!location.pathname.includes("/chat")) navigate("/app/chat");
   }, [location.pathname, navigate]);
 
-  const handleNewChat = useCallback(() => {
-    if (typeof window.__corex_newChat === "function") window.__corex_newChat();
-    if (!location.pathname.includes("/chat")) navigate("/app/chat");
-  }, [location.pathname, navigate]);
-
   if (!isLoggedIn || !isVerified) {
-    return <AuthFlow onSuccess={() => {
-      const skipProfile = localStorage.getItem("corex_skip_profile") === "true";
-      const profileDone = localStorage.getItem("corex_profile_done") === "true";
-      if (!skipProfile && !profileDone && !hasProfile()) {
-        navigate("/app/profile-setup", { replace: true });
-      } else {
-        navigate("/app/dashboard", { replace: true });
-      }
-    }} />;
+    return (
+      <AuthFlow
+        onSuccess={() => {
+          const skipProfile = localStorage.getItem("corex_skip_profile") === "true";
+          const profileDone = localStorage.getItem("corex_profile_done") === "true";
+          if (!skipProfile && !profileDone && !hasProfile()) {
+            navigate("/app/profile-setup", { replace: true });
+          } else {
+            navigate("/app/dashboard", { replace: true });
+          }
+        }}
+      />
+    );
   }
 
-  const userType  = localStorage.getItem("userType")  || "creator";
-  const userName  = localStorage.getItem("userName")  || "";
-  const userEmail = localStorage.getItem("userEmail") || "";
+  const userName  = localStorage.getItem("corex_user_name") || localStorage.getItem("userName") || "";
+  const userType  = localStorage.getItem("userType") || "creator";
 
   const defaultRoute = (() => {
     const skip = localStorage.getItem("corex_skip_profile") === "true";
@@ -566,9 +441,7 @@ export default function AppShell() {
   const sidebarProps = {
     navigate,
     location,
-    userName,
     onNewChat: handleNewChat,
-    onUpgrade: () => navigate("/app/payment"),
   };
 
   return (
@@ -579,16 +452,13 @@ export default function AppShell() {
         width: "100vw",
         overflow: "hidden",
         background: "#000000",
-        animation: "fadeUp 0.35s cubic-bezier(0.16,1,0.3,1)",
         position: "relative",
       }}
     >
       {/* Desktop sidebar */}
-      {desktopSidebarOpen && (
-        <div className="hidden md:flex" style={{ height: "100%" }}>
-          <Sidebar {...sidebarProps} onClose={() => setDesktopSidebarOpen(false)} />
-        </div>
-      )}
+      <div className="hidden md:flex" style={{ height: "100%" }}>
+        <Sidebar {...sidebarProps} />
+      </div>
 
       {/* Mobile sidebar drawer */}
       <AnimatePresence>
@@ -599,25 +469,14 @@ export default function AppShell() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileMenuOpen(false)}
-              style={{
-                position: "fixed",
-                inset: 0,
-                background: "rgba(0,0,0,0.6)",
-                zIndex: 200,
-              }}
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200 }}
             />
             <motion.div
-              initial={{ x: -260 }}
+              initial={{ x: -220 }}
               animate={{ x: 0 }}
-              exit={{ x: -260 }}
+              exit={{ x: -220 }}
               transition={{ type: "spring", stiffness: 400, damping: 40 }}
-              style={{
-                position: "fixed",
-                top: 0,
-                left: 0,
-                height: "100vh",
-                zIndex: 201,
-              }}
+              style={{ position: "fixed", top: 0, left: 0, height: "100vh", zIndex: 201 }}
             >
               <Sidebar {...sidebarProps} onClose={() => setMobileMenuOpen(false)} />
             </motion.div>
@@ -625,70 +484,36 @@ export default function AppShell() {
         )}
       </AnimatePresence>
 
-      {/* Main area */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          overflow: "visible",
-          position: "relative",
-          minWidth: 0,
-        }}
-      >
-        {/* Admin bar — only for corexnt@gmail.com */}
-        {isAdmin() && <AdminBar/>}
+      {/* Main column */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
+        {isAdmin() && <AdminBar />}
 
-        {/* Top-right bar */}
-        <TopRightBar
+        <TopBar
           userName={userName}
-          onUpgrade={() => navigate("/app/payment")}
           navigate={navigate}
           onNewChat={handleNewChat}
-          onMobileMenuOpen={() => {
-            if (window.innerWidth >= 768) setDesktopSidebarOpen(p => !p);
-            else setMobileMenuOpen(p => !p);
-          }}
+          onCreditClick={() => setCreditModalOpen(true)}
+          onMobileMenuOpen={() => setMobileMenuOpen((p) => !p)}
         />
 
         {/* Page content */}
-        <div
-          style={{
-            flex: 1,
-            overflow: "hidden",
-            position: "relative",
-            animation: "fadeUp 0.3s ease both",
-            minHeight: 0,
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
+        <div style={{ flex: 1, overflow: "hidden", position: "relative", display: "flex", flexDirection: "column", minHeight: 0 }}>
           <Routes>
             <Route index element={<Navigate to={defaultRoute} replace />} />
-            <Route path="dashboard"        element={<PersonalDashboard userType={userType} userName={userName} />} />
-            <Route path="profile-setup"    element={<ProfileSetup userType={userType} userName={userName} />} />
-            <Route path="settings"         element={<SettingsPage />} />
-            <Route path="chat"             element={<ChatDashboard userType={userType} userName={userName} onUpgrade={() => navigate("/app/payment")} />} />
-            <Route path="modes"            element={<ModesPage />} />
-            <Route path="projects"         element={<ProjectsPage />} />
-            <Route path="reel-scripts"     element={<ReelScripts />} />
-            <Route path="growth-audit"     element={<GrowthAudit />} />
-            <Route path="templates"        element={<Templates />} />
-            <Route path="history"          element={<History />} />
-            <Route path="resources"        element={<MyResourcesPage />} />
-            <Route path="payment"          element={<PaymentPage onBack={() => navigate("/app/dashboard")} userType={userType} />} />
-            <Route path="trend-engine"     element={<TrendEngine />} />
-            <Route path="brand-deals"      element={<BrandDeals />} />
-            <Route path="campaign-builder" element={<CampaignBuilder />} />
-            <Route path="budget-allocator" element={<BudgetAllocator />} />
-            <Route path="brand-audit"      element={<BrandAudit />} />
+            <Route path="dashboard"     element={<PersonalDashboard userName={userName} userType={userType} />} />
+            <Route path="profile-setup" element={<ProfileSetup />} />
+            <Route path="settings"      element={<SettingsPage />} />
+            <Route path="chat"          element={<ChatDashboard userType={userType} userName={userName} onUpgrade={() => setCreditModalOpen(true)} />} />
+            <Route path="projects"      element={<ProjectsPage />} />
             <Route path="competitor-intel" element={<CompetitorIntel />} />
-            <Route path="reports"          element={<Reports />} />
-            <Route path="team"             element={<Team />} />
-            <Route path="*"                element={<Navigate to={defaultRoute} replace />} />
+            <Route path="payment"       element={<PaymentPage onBack={() => navigate("/app/dashboard")} userType={userType} />} />
+            <Route path="*"             element={<Navigate to={defaultRoute} replace />} />
           </Routes>
         </div>
       </div>
+
+      {/* Credit modal */}
+      <CreditModal open={creditModalOpen} onClose={() => setCreditModalOpen(false)} />
     </div>
   );
 }
