@@ -99,28 +99,12 @@ function UserBubble({ message }) {
 
   return (
     <motion.div initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }}
-      style={{ display:"flex", justifyContent:"flex-end", marginBottom:20, gap:8, alignItems:"flex-end" }}>
-      {/* Copy button — left of bubble */}
-      {content && (
-        <motion.button
-          onClick={copy}
-          whileTap={{ scale: 0.9 }}
-          style={{
-            flexShrink:0, fontSize:11, padding:"4px 10px", borderRadius:20,
-            border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.05)",
-            color: copied ? "#9CFCAF" : "rgba(255,255,255,0.35)",
-            cursor:"pointer", fontFamily:"var(--font-body)", transition:"all 0.15s",
-            alignSelf:"flex-end", marginBottom:4,
-          }}
-        >
-          {copied ? "✓ Copied" : "Copy"}
-        </motion.button>
-      )}
-      <div style={{ maxWidth:"min(72%, 520px)", minWidth:0, width: (content?.length || 0) > 200 ? "min(72%, 520px)" : "auto" }}>
+      style={{ display:"flex", justifyContent:"flex-end", marginBottom:20, alignItems:"flex-end", maxWidth:"100%", overflow:"hidden" }}>
+      <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", maxWidth:"min(75%, 540px)", minWidth:0, flex:"0 1 auto" }}>
         {files.length > 0 && (
           <div style={{ display:"flex", flexWrap:"wrap", gap:8, justifyContent:"flex-end", marginBottom:6 }}>
             {files.map((f, i) => f.preview
-              ? <img key={i} src={f.preview} alt={f.name} style={{ width:56, height:56, borderRadius:16, objectFit:"cover" }}/>
+              ? <img key={i} src={f.preview} alt={f.name} style={{ width:60, height:60, borderRadius:14, objectFit:"cover" }}/>
               : <div key={i} style={{ display:"flex", alignItems:"center", gap:4, padding:"6px 12px", borderRadius:16, fontSize:12, background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.1)", color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>
                   📎 {f.name}
                 </div>
@@ -128,44 +112,57 @@ function UserBubble({ message }) {
           </div>
         )}
         {content && (
-          <div style={{ position:"relative" }}>
+          <div style={{ position:"relative", width:"100%" }}>
             <div style={{
               background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.1)",
               borderRadius:"20px 20px 4px 20px", padding:"12px 18px",
-              fontSize:15, color:"#ffffff", lineHeight:1.6,
+              fontSize:15, color:"#ffffff", lineHeight:1.65,
               fontFamily:"var(--font-body)",
               maxHeight: isLong && !expanded ? "120px" : "none",
               overflow: "hidden",
               whiteSpace: "pre-wrap",
               wordBreak: "break-word",
+              overflowWrap: "anywhere",
               transition:"max-height 0.3s ease",
+              boxSizing: "border-box",
             }}>
               {content}
             </div>
             {isLong && !expanded && (
               <div style={{
                 position:"absolute", bottom:0, left:0, right:0, height:48,
-                background:"linear-gradient(to top, rgba(34,34,34,0.95), transparent)",
+                background:"linear-gradient(to top, rgba(12,12,18,0.95), transparent)",
                 borderRadius:"0 0 4px 20px", pointerEvents:"none",
               }}/>
             )}
           </div>
         )}
-        {isLong && (
-          <button
-            onClick={() => setExpanded(p=>!p)}
-            style={{
-              marginTop:4, fontSize:12, color:"rgba(255,255,255,0.4)",
-              background:"none", border:"none", cursor:"pointer",
-              fontFamily:"var(--font-body)", float:"right",
-              transition:"color 0.15s",
-            }}
-            onMouseEnter={e => e.currentTarget.style.color = "rgba(255,255,255,0.75)"}
-            onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.4)"}
-          >
-            {expanded ? "Show less ↑" : "Show more ↓"}
-          </button>
-        )}
+        <div style={{ display:"flex", alignItems:"center", gap:10, marginTop:5, justifyContent:"flex-end" }}>
+          {isLong && (
+            <button
+              onClick={() => setExpanded(p=>!p)}
+              style={{ fontSize:12, color:"rgba(255,255,255,0.35)", background:"none", border:"none", cursor:"pointer", fontFamily:"var(--font-body)", transition:"color 0.15s", padding:0 }}
+              onMouseEnter={e => e.currentTarget.style.color = "rgba(255,255,255,0.7)"}
+              onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.35)"}
+            >
+              {expanded ? "Show less ↑" : "Show more ↓"}
+            </button>
+          )}
+          {content && (
+            <motion.button
+              onClick={copy}
+              whileTap={{ scale: 0.9 }}
+              style={{
+                fontSize:11, padding:"3px 10px", borderRadius:20,
+                border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.05)",
+                color: copied ? "#9CFCAF" : "rgba(255,255,255,0.3)",
+                cursor:"pointer", fontFamily:"var(--font-body)", transition:"all 0.15s",
+              }}
+            >
+              {copied ? "✓" : "Copy"}
+            </motion.button>
+          )}
+        </div>
       </div>
     </motion.div>
   );
@@ -378,6 +375,26 @@ function FlowchartCard({ data }) {
   );
 }
 
+/* ── Plan gate banner ── */
+function PlanGateBanner({ feature }) {
+  return (
+    <motion.div
+      initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }}
+      style={{ display:"flex", alignItems:"center", gap:14, padding:"14px 18px", borderRadius:16, background:"rgba(201,168,76,0.06)", border:"1px solid rgba(201,168,76,0.2)", marginBottom:20 }}
+    >
+      <span style={{ fontSize:18, flexShrink:0 }}>✦</span>
+      <div>
+        <p style={{ fontSize:13, fontWeight:600, color:"rgba(201,168,76,0.9)", fontFamily:"var(--font-body)", margin:"0 0 2px" }}>
+          {feature} is a Nineteen Twentys feature
+        </p>
+        <p style={{ fontSize:12, color:"rgba(255,255,255,0.35)", fontFamily:"var(--font-body)", margin:0 }}>
+          Upgrade to unlock visual outputs, flowcharts, and mindmaps.
+        </p>
+      </div>
+    </motion.div>
+  );
+}
+
 /* ── COREX response ── */
 export default function ResponseCard({ message, onChip, onRegenerate, userType = "creator" }) {
   const { role, searchUsed } = message;
@@ -393,6 +410,10 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
   const { title, cleanBody, steps, example, graphData, mindmapData, flowchartData, chips, followups, clarifyOptions } = parseResponse(message.content);
   const showChart = shouldShowChart(graphData);
   const bodyText  = stripMarkdown(cleanBody || "");
+
+  const plan = typeof window !== "undefined" ? (localStorage.getItem("corex_plan") || "free") : "free";
+  const isPremiumPlan = plan === "nineteen_twentys" || plan === "canvas_enterprise";
+  const isAdminUser   = typeof window !== "undefined" && localStorage.getItem("userEmail") === "corexnt@gmail.com";
 
   const nextMovesLabel = userType !== "company" ? "This week" : "Next moves";
 
@@ -501,10 +522,16 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
       )}
 
       {/* Mindmap */}
-      {mindmapData && <MindmapCard data={mindmapData} />}
+      {mindmapData && (isPremiumPlan || isAdminUser
+        ? <MindmapCard data={mindmapData} />
+        : <PlanGateBanner feature="Mindmaps" />
+      )}
 
       {/* Flowchart */}
-      {flowchartData && <FlowchartCard data={flowchartData} />}
+      {flowchartData && (isPremiumPlan || isAdminUser
+        ? <FlowchartCard data={flowchartData} />
+        : <PlanGateBanner feature="Flowcharts" />
+      )}
 
       {/* Next moves / action steps */}
       {steps.length > 0 && (
