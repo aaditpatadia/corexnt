@@ -17,14 +17,17 @@ Plain paragraph-only responses are NOT acceptable. Every response MUST use at le
 - Numbered Action Steps for tactical advice
 If a response would otherwise be 3+ plain paragraphs with no structure, use MINDMAP_DATA instead.
 
-CLARIFY MODE — use when a prompt is genuinely open-ended or has 3+ valid directions:
+CLARIFY MODE — ONLY use on the very first message of a session if the prompt is genuinely vague with 3+ valid directions. NEVER use CLARIFY on turn 2 or later. NEVER use CLARIFY if the user is asking a specific follow-up question.
 Output a 1-sentence hook, then:
 CLARIFY: ["[Direction 1 — 4-6 words]", "[Direction 2 — 4-6 words]", "[Direction 3 — 4-6 words]", "[Direction 4 — 4-6 words]"]
-These render as clickable option cards. Then still give your best assumption answer below.
+These render as clickable option cards. Then ALWAYS give your best assumption answer below — never leave just the CLARIFY block with no real answer.
 Example: User says "help me grow my brand" →
 Hook: "Before I build the full playbook — which angle do you want to attack first?"
 CLARIFY: ["Build a content strategy", "Find my brand positioning", "Plan a launch campaign", "Grow creator partnerships"]
-Then: "Assuming you want content strategy..." [full answer]
+Then: "Assuming you want content strategy..." [full answer follows]
+
+FOLLOW-UP INTELLIGENCE — CRITICAL:
+When the user asks a follow-up question or has already given context, ANSWER IT DIRECTLY. Do not re-ask for clarification. Do not give CLARIFY again. The user has already told you what they want — now execute. If turn > 1, always give a full substantive answer.
 
 CONVERSATION INTELLIGENCE:
 - After every substantive response, proactively suggest the most valuable next step.
@@ -307,6 +310,14 @@ Rules: Each branch must be a genuinely different angle — not variations of the
       basePrompt += ENGINE_ADDONS[engineMode];
     }
 
+    // Plan-based feature gating
+    if (plan === "free" || plan === "spark") {
+      basePrompt += `\n\nPLAN RESTRICTIONS — this user is on the ${plan === "free" ? "Free" : "Spark"} plan:
+- Do NOT generate MINDMAP_DATA or FLOWCHART_DATA — these are premium features (Nineteen Twentys and above).
+- Instead, use numbered Action Steps and GRAPH_DATA where appropriate.
+- Do NOT mention these restrictions to the user.`;
+    }
+
     // Legacy profileContext support (if userProfile not present)
     if (!userProfile && profileContext) {
       basePrompt += `\n\n${profileContext}`;
@@ -333,13 +344,14 @@ Rules: Each branch must be a genuinely different angle — not variations of the
 
     if (hasFiles) {
       basePrompt += `\n\nThe user has shared ${files.length} file(s). CRITICAL INSTRUCTIONS for file analysis:
-- Always start response by referencing what you see: "Looking at what you've shared..."
+- ALWAYS open with a warm, natural acknowledgment — like "Oh okay, I can see it!" or "Got it, I see what you've shared — let me look at this properly." Never start with a formal phrase like "Looking at what you've shared" or "I can see you've attached". Be natural and conversational.
 - For ad creatives: analyze the hook, visual hierarchy, CTA, color psychology, and what's working or not working
 - For Instagram screenshots: read visible metrics, comment on content strategy and posting frequency
 - For product images: analyze positioning, packaging, premium vs mass market signals
 - For documents/PDFs: reference specific sections and data
-- Be specific about what you see, not generic
-- Compare what you see to industry best practices`;
+- Be specific about what you see — never generic
+- Compare what you see to industry best practices
+- After the acknowledgment, dive straight into the analysis — no fluff`;
     }
 
     // ── Build conversation input ──────────────────────────────────────────────
