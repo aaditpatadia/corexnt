@@ -322,6 +322,9 @@ function Contact() {
   const submit = (e) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.message) return;
+    const subject = encodeURIComponent(`COREX — Message from ${form.name}`);
+    const body    = encodeURIComponent(`Name: ${form.name}\nEmail: ${form.email}\n\nMessage:\n${form.message}`);
+    window.location.href = `mailto:corexnt@gmail.com?subject=${subject}&body=${body}`;
     setSent(true);
   };
 
@@ -388,7 +391,7 @@ function Footer() {
     <footer style={{ background:"#000000", padding:"40px 24px 60px", borderTop:"1px solid rgba(255,255,255,0.06)", textAlign:"center" }}>
       <p style={{ fontFamily:"'Instrument Serif', serif", fontStyle:"italic", fontSize:20, color:"rgba(255,255,255,0.4)", marginBottom:8 }}>Corex</p>
       <p style={{ fontSize:13, color:"rgba(255,255,255,0.2)", fontFamily:"'Instrument Sans', sans-serif" }}>
-        The Creative Operating System · Built in India · © 2026 Corex
+        The Creative Operating System · © 2026 Corex
       </p>
     </footer>
   );
