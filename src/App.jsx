@@ -86,8 +86,8 @@ export default function App() {
           <ToastBridge />
           <Routes>
             <Route path="/"         element={<MainLanding />} />
-            <Route path="/creators" element={<CreatorLanding />} />
-            <Route path="/brands"   element={<BrandLanding />} />
+            <Route path="/creators" element={<Navigate to="/" replace />} />
+            <Route path="/brands"   element={<Navigate to="/" replace />} />
             <Route path="/app/*"    element={<AppShell />} />
             <Route path="*"         element={<Navigate to="/" replace />} />
           </Routes>

@@ -1,10 +1,9 @@
-import { useState, useRef, useEffect, useCallback, useContext } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ChatInput    from "../../components/ChatInput";
 import ResponseCard from "../../components/ResponseCard";
 import { stripMarkdown } from "../../utils/parseResponse";
 import { getProfileContext } from "../../utils/userProfile";
-import { ThemeContext } from "../../App";
 
 const FREE_LIMIT = 15;
 const ADMIN_EMAIL = "corexnt@gmail.com";
@@ -34,26 +33,47 @@ function saveToHistory(firstUserMsg, allMessages, userType) {
   } catch {}
 }
 
-/* ── BRANCHES parser ── */
+/* ── BRANCHES parser — supports both old pipe format and new TITLE/BODY format ── */
 function parseBranches(text) {
+  // New format: BRANCH_A_TITLE / BRANCH_A_BODY
+  const aTitle = text.match(/BRANCH_A_TITLE:\s*([^\n]+)/);
+  const aBody  = text.match(/BRANCH_A_BODY:\s*([^\n]+)/);
+  const bTitle = text.match(/BRANCH_B_TITLE:\s*([^\n]+)/);
+  const bBody  = text.match(/BRANCH_B_BODY:\s*([^\n]+)/);
+  const cTitle = text.match(/BRANCH_C_TITLE:\s*([^\n]+)/);
+  const cBody  = text.match(/BRANCH_C_BODY:\s*([^\n]+)/);
+  const t      = text.match(/THINKING:\s*([^\n]+)/);
+
+  if (aTitle && bTitle && cTitle) {
+    return {
+      branches: [
+        { label: "A", title: aTitle[1].trim(), desc: (aBody?.[1] || "").trim() },
+        { label: "B", title: bTitle[1].trim(), desc: (bBody?.[1] || "").trim() },
+        { label: "C", title: cTitle[1].trim(), desc: (cBody?.[1] || "").trim() },
+      ],
+      thinking: t?.[1]?.trim() || "",
+    };
+  }
+
+  // Legacy pipe format: BRANCH_A: title | desc
   const a = text.match(/BRANCH_A:\s*([^|\n]+)\|\s*([^\n]+)/);
   const b = text.match(/BRANCH_B:\s*([^|\n]+)\|\s*([^\n]+)/);
   const c = text.match(/BRANCH_C:\s*([^|\n]+)\|\s*([^\n]+)/);
-  const t = text.match(/THINKING:\s*([^\n]+)/);
   if (!a || !b || !c) return null;
   return {
     branches: [
-      { label: "Direction A", title: a[1].trim(), desc: a[2].trim() },
-      { label: "Direction B", title: b[1].trim(), desc: b[2].trim() },
-      { label: "Direction C", title: c[1].trim(), desc: c[2].trim() },
+      { label: "A", title: a[1].trim(), desc: a[2].trim() },
+      { label: "B", title: b[1].trim(), desc: b[2].trim() },
+      { label: "C", title: c[1].trim(), desc: c[2].trim() },
     ],
     thinking: t?.[1]?.trim() || "",
   };
 }
 
 /* ── Branch Cards ── */
-function BranchCards({ data, onSelect }) {
+function BranchCards({ data, onSelect, userMessage }) {
   const [selected, setSelected] = useState(null);
+  const preview = (userMessage || "").split(" ").slice(0, 4).join(" ");
 
   return (
     <motion.div
@@ -61,14 +81,17 @@ function BranchCards({ data, onSelect }) {
       animate={{ opacity: 1, y: 0 }}
       style={{ marginBottom: 28, width: "100%" }}
     >
+      {preview && (
+        <p style={{
+          fontSize: 11, fontFamily: "'Instrument Sans', sans-serif",
+          color: "rgba(255,255,255,0.3)", letterSpacing: "1px", textTransform: "uppercase",
+          marginBottom: 14, textAlign: "center",
+        }}>
+          Three directions for "{preview}…"
+        </p>
+      )}
       <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 16,
-          maxWidth: 900,
-          margin: "0 auto",
-        }}
+        style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, maxWidth: 820, margin: "0 auto" }}
         className="branch-grid"
       >
         {data.branches.map((branch, i) => {
@@ -76,106 +99,65 @@ function BranchCards({ data, onSelect }) {
           return (
             <motion.button
               key={i}
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.1, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               onClick={() => {
                 setSelected(i);
                 setTimeout(() => onSelect(branch.title), 300);
               }}
-              whileHover={{ translateY: -2 }}
-              transition={{ duration: 0.2 }}
+              whileHover={{ translateY: -3 }}
               style={{
-                padding: 24,
-                borderRadius: 20,
-                border: isSelected
-                  ? "1px solid rgba(156,252,175,0.4)"
-                  : "1px solid rgba(255,255,255,0.08)",
-                background: isSelected
-                  ? "rgba(156,252,175,0.04)"
-                  : "rgba(255,255,255,0.04)",
+                padding: 20,
+                borderRadius: 16,
+                border: isSelected ? "1px solid rgba(156,252,175,0.5)" : "1px solid rgba(255,255,255,0.07)",
+                background: isSelected ? "rgba(156,252,175,0.05)" : "#111111",
                 cursor: "pointer",
                 textAlign: "left",
                 display: "flex",
                 flexDirection: "column",
-                transition: "all 0.2s ease",
+                transition: "all 0.25s cubic-bezier(0.16,1,0.3,1)",
               }}
               onMouseEnter={(e) => {
                 if (!isSelected) {
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
-                  e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                  e.currentTarget.style.borderColor = "rgba(156,252,175,0.3)";
+                  e.currentTarget.style.background = "rgba(156,252,175,0.03)";
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isSelected) {
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
-                  e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)";
+                  e.currentTarget.style.background = "#111111";
                 }
               }}
             >
-              <span
-                style={{
-                  fontSize: 11,
-                  fontFamily: "'Instrument Sans', sans-serif",
-                  color: "rgba(255,255,255,0.3)",
-                  letterSpacing: "2px",
-                  textTransform: "uppercase",
-                  marginBottom: 8,
-                }}
-              >
+              <span style={{ fontSize: 10, fontFamily: "'Instrument Sans', sans-serif", color: "rgba(255,255,255,0.3)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 8 }}>
                 {branch.label}
               </span>
-              <h3
-                style={{
-                  fontFamily: "'Instrument Serif', serif",
-                  fontSize: 20,
-                  fontWeight: 400,
-                  color: "#ffffff",
-                  lineHeight: 1.3,
-                  margin: "0 0 10px",
-                }}
-              >
+              <h3 style={{ fontFamily: "'Instrument Serif', serif", fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "#ffffff", lineHeight: 1.3, margin: "0 0 10px" }}>
                 {branch.title}
               </h3>
-              <p
-                style={{
-                  fontSize: 14,
-                  color: "rgba(255,255,255,0.55)",
-                  fontFamily: "'Instrument Sans', sans-serif",
-                  lineHeight: 1.6,
-                  flex: 1,
-                }}
-              >
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", fontFamily: "'Instrument Sans', sans-serif", lineHeight: 1.6, flex: 1 }}>
                 {branch.desc}
               </p>
-              <span
-                style={{
-                  marginTop: 16,
-                  fontSize: 13,
-                  color: "rgba(255,255,255,0.3)",
-                  fontFamily: "'Instrument Sans', sans-serif",
-                }}
-              >
-                Explore this →
+              <span style={{ marginTop: 16, fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily: "'Instrument Sans', sans-serif", transition: "color 0.2s" }}>
+                Explore this direction →
               </span>
             </motion.button>
           );
         })}
       </div>
 
-      {data.thinking && (
-        <p
-          style={{
-            textAlign: "center",
-            fontSize: 13,
-            color: "rgba(255,255,255,0.3)",
-            fontFamily: "'Instrument Sans', sans-serif",
-            fontStyle: "italic",
-            marginTop: 16,
-            maxWidth: 900,
-            margin: "16px auto 0",
-          }}
-        >
-          {data.thinking}
+      <div style={{ textAlign: "center", marginTop: 16 }}>
+        {data.thinking && (
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily: "'Instrument Sans', sans-serif", fontStyle: "italic", marginBottom: 6 }}>
+            {data.thinking}
+          </p>
+        )}
+        <p style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", fontFamily: "'Instrument Sans', sans-serif" }}>
+          Selecting a direction costs 4 credits
         </p>
-      )}
+      </div>
     </motion.div>
   );
 }
@@ -369,120 +351,83 @@ function LimitBanner({ onUpgrade }) {
   );
 }
 
-/* ── Quick-start suggestions per plan ── */
-const QUICK_STARTS = {
-  free:              ["Help me grow on Instagram", "Build a content calendar", "Create a brand strategy", "What should I post this week?"],
-  spark:             ["Build a Reels content strategy", "Plan a brand deal pitch", "Grow my audience faster", "Create a 30-day content plan"],
-  nineteen_twentys:  ["Build my full creative strategy", "Map a campaign from scratch", "Analyse my market positioning", "Create a launch playbook"],
-  canvas_enterprise: ["Build a team content strategy", "Map our competitive landscape", "Create a campaign brief", "Plan our Q2 brand calendar"],
-};
-
 /* ── Welcome screen ── */
 function WelcomeScreen({ userName, onQuickStart }) {
-  const theme = useContext(ThemeContext);
-  const plan  = localStorage.getItem("corex_plan") || "free";
+  const name = localStorage.getItem("corex_user_name") || userName?.split(" ")[0] || "there";
+  const brandName = localStorage.getItem("corex_brand_name") || "";
 
-  const configs = {
-    free: {
-      icon: (
-        <div style={{ width:64, height:64, borderRadius:"50%", background:"rgba(156,252,175,0.08)", border:"1px solid rgba(156,252,175,0.2)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:24 }}>
-          <span style={{ fontSize:26, fontWeight:700, background:"linear-gradient(135deg,#9CFCAF,#2dd668)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text", fontFamily:"'Instrument Serif', serif", fontStyle:"italic" }}>C</span>
-        </div>
-      ),
-      accentColor: "#9CFCAF",
-      chipBorder: "rgba(156,252,175,0.2)",
-      chipBg: "rgba(156,252,175,0.05)",
-      chipHover: "rgba(156,252,175,0.1)",
-    },
-    spark: {
-      icon: (
-        <div style={{ width:64, height:64, borderRadius:"50%", background:"rgba(37,99,235,0.1)", border:"1px solid rgba(37,99,235,0.3)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:24 }}>
-          <span style={{ fontSize:28 }}>⚡</span>
-        </div>
-      ),
-      accentColor: "#60a5fa",
-      chipBorder: "rgba(96,165,250,0.2)",
-      chipBg: "rgba(96,165,250,0.05)",
-      chipHover: "rgba(96,165,250,0.1)",
-    },
-    nineteen_twentys: {
-      icon: (
-        <div style={{ width:64, height:64, borderRadius:"50%", background:"rgba(201,168,76,0.1)", border:"1px solid rgba(201,168,76,0.35)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:24 }}>
-          <span style={{ fontSize:26, color:"#c9a84c" }}>✦</span>
-        </div>
-      ),
-      accentColor: "#c9a84c",
-      chipBorder: "rgba(201,168,76,0.25)",
-      chipBg: "rgba(201,168,76,0.05)",
-      chipHover: "rgba(201,168,76,0.1)",
-    },
-    canvas_enterprise: {
-      icon: (
-        <div style={{ width:64, height:64, borderRadius:"50%", background:"rgba(124,58,237,0.1)", border:"1px solid rgba(124,58,237,0.3)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:24 }}>
-          <span style={{ fontSize:26, color:"#a78bfa" }}>◈</span>
-        </div>
-      ),
-      accentColor: "#a78bfa",
-      chipBorder: "rgba(167,139,250,0.25)",
-      chipBg: "rgba(167,139,250,0.05)",
-      chipHover: "rgba(167,139,250,0.1)",
-    },
-  };
-
-  const cfg = configs[plan] || configs.free;
-  const name = userName?.split(" ")[0] || "there";
-  const quickStarts = QUICK_STARTS[plan] || QUICK_STARTS.free;
+  const chips = brandName
+    ? [
+        "Brief our next campaign",
+        `What's ${brandName}'s next move?`,
+        "Find what our competitors are doing",
+        "Write 5 ad hooks right now",
+      ]
+    : [
+        "Build a content strategy",
+        "Create a campaign brief",
+        "Map my market positioning",
+        "Write 5 ad hooks right now",
+      ];
 
   return (
     <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:"100%", padding:"60px 24px 200px", textAlign:"center", position:"relative" }}>
       {/* Background glow */}
-      <div style={{ position:"absolute", top:"25%", left:"50%", transform:"translateX(-50%)", width:500, height:400, borderRadius:"50%", background:`radial-gradient(ellipse at 50% 50%, ${cfg.accentColor}0d 0%, transparent 65%)`, pointerEvents:"none" }}/>
+      <div style={{ position:"absolute", top:"25%", left:"50%", transform:"translateX(-50%)", width:500, height:400, borderRadius:"50%", background:"radial-gradient(ellipse at 50% 50%, rgba(156,252,175,0.05) 0%, transparent 65%)", pointerEvents:"none" }}/>
 
       <motion.div
         initial={{ opacity:0, y:24 }} animate={{ opacity:1, y:0 }}
         transition={{ duration:0.55, ease:[0.16,1,0.3,1] }}
-        style={{ display:"flex", flexDirection:"column", alignItems:"center", position:"relative", zIndex:1, maxWidth:540 }}
+        style={{ display:"flex", flexDirection:"column", alignItems:"center", position:"relative", zIndex:1, maxWidth:560 }}
       >
-        {cfg.icon}
+        {/* Logo mark */}
+        <div style={{
+          width:48, height:48, borderRadius:"50%",
+          background:"linear-gradient(#000,#000) padding-box, linear-gradient(135deg,#226FF7,#6BC3CE,#9CFCAF,#FFEA71) border-box",
+          border:"2px solid transparent", marginBottom:24,
+        }}/>
 
         <motion.p initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.08 }}
-          style={{ fontFamily:"'Instrument Serif', serif", fontStyle:"italic", fontSize:"clamp(28px,5vw,38px)", color:"#ffffff", margin:"0 0 6px", lineHeight:1.2 }}>
-          Good to see you, {name}.
+          style={{ fontFamily:"'Instrument Serif', serif", fontStyle:"italic", fontSize:"clamp(24px,4vw,28px)", color:"#ffffff", margin:"0 0 4px", lineHeight:1.2 }}>
+          Hey {name},
         </motion.p>
 
-        <motion.h1 initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.14 }}
-          style={{ fontFamily:"'Instrument Sans', sans-serif", fontWeight:400, fontSize:"clamp(15px,2.5vw,18px)", color:"rgba(255,255,255,0.4)", textAlign:"center", margin:0, lineHeight:1.5, letterSpacing:"0.2px" }}>
-          What are we creating today?
-        </motion.h1>
+        <motion.p initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.14 }}
+          style={{ fontFamily:"'Instrument Sans', sans-serif", fontWeight:400, fontSize:"clamp(15px,2.5vw,22px)", color:"rgba(255,255,255,0.45)", textAlign:"center", margin:0, lineHeight:1.4 }}>
+          What are we building{brandName ? ` for ${brandName}` : ""}?
+        </motion.p>
 
-        {/* Quick-start chips */}
+        {/* Quick-start chips 2x2 grid */}
         <motion.div
           initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.22 }}
-          style={{ display:"flex", flexWrap:"wrap", gap:10, justifyContent:"center", marginTop:32 }}
+          style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginTop:40, width:"100%", maxWidth:560 }}
         >
-          {quickStarts.map((s, i) => (
+          {chips.map((s, i) => (
             <motion.button
               key={i}
               onClick={() => onQuickStart?.(s)}
-              initial={{ opacity:0, scale:0.92 }}
-              animate={{ opacity:1, scale:1 }}
-              transition={{ delay:0.25 + i * 0.06 }}
-              whileHover={{ scale:1.03, translateY:-1 }}
+              initial={{ opacity:0, y:8 }}
+              animate={{ opacity:1, y:0 }}
+              transition={{ delay:0.25 + i * 0.07, ease:[0.16,1,0.3,1] }}
+              whileHover={{ translateY:-1 }}
               whileTap={{ scale:0.97 }}
               style={{
-                padding:"10px 18px", borderRadius:100, fontSize:13, fontFamily:"'Instrument Sans', sans-serif",
-                background:cfg.chipBg, border:`1px solid ${cfg.chipBorder}`,
-                color:"rgba(255,255,255,0.65)", cursor:"pointer", transition:"all 0.2s ease",
+                padding:"14px 18px", borderRadius:12, fontSize:14,
+                fontFamily:"'Instrument Sans', sans-serif", textAlign:"left",
+                background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.07)",
+                color:"rgba(255,255,255,0.75)", cursor:"pointer",
+                transition:"all 0.2s cubic-bezier(0.16,1,0.3,1)",
+                lineHeight:1.4,
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = cfg.chipHover; e.currentTarget.style.color = "#ffffff"; e.currentTarget.style.borderColor = cfg.accentColor + "50"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = cfg.chipBg; e.currentTarget.style.color = "rgba(255,255,255,0.65)"; e.currentTarget.style.borderColor = cfg.chipBorder; }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#ffffff"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(255,255,255,0.75)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"; }}
             >
               {s}
             </motion.button>
           ))}
         </motion.div>
 
-        <motion.p initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.5 }}
+        <motion.p initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.55 }}
           style={{ marginTop:28, fontSize:12, color:"rgba(255,255,255,0.18)", fontFamily:"'Instrument Sans', sans-serif", letterSpacing:"0.5px" }}>
           or type anything below ↓
         </motion.p>
@@ -732,12 +677,14 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
                 // Branches response
                 if (msg.role === "assistant" && msg.id !== revealing) {
                   const branches = parseBranches(msg.content || "");
+                  const prevUser = messages.slice(0, messages.findIndex(m => m.id === msg.id)).reverse().find(m => m.role === "user");
                   if (branches) {
                     return (
                       <BranchCards
                         key={msg.id}
                         data={branches}
                         onSelect={handleBranchSelect}
+                        userMessage={prevUser?.content || ""}
                       />
                     );
                   }
@@ -746,12 +693,14 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
                 // Revealing (word by word)
                 if (msg.role === "assistant" && msg.id === revealing) {
                   const branches = parseBranches(msg.content || "");
+                  const prevUser2 = messages.slice(0, messages.findIndex(m => m.id === msg.id)).reverse().find(m => m.role === "user");
                   if (branches) {
                     return (
                       <BranchCards
                         key={msg.id}
                         data={branches}
                         onSelect={handleBranchSelect}
+                        userMessage={prevUser2?.content || ""}
                       />
                     );
                   }

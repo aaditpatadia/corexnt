@@ -292,14 +292,20 @@ MANDATORY PERSONALISATION RULES — non-negotiable:
     // ── BRANCHES mode: first turn of a session ────────────────────────────────
     const conversationTurn = req.body?.conversationTurn ?? (historyMessages.length === 0 ? 1 : 2);
     const branchesInstruction = conversationTurn === 1
-      ? `\n\nFIRST MESSAGE INSTRUCTION — this is turn 1 of a new session. Respond ONLY using the BRANCHES format below. Do not add any text outside it:
+      ? `\n\nFIRST MESSAGE INSTRUCTION — this is turn 1 of a new session. You MUST respond ONLY using the BRANCHES format below. Do not add any text outside it:
 
-BRANCH_A: [Title — max 6 words] | [2-sentence description of this creative direction]
-BRANCH_B: [Title — max 6 words] | [2-sentence description of this creative direction]
-BRANCH_C: [Title — max 6 words] | [2-sentence description of this creative direction]
-THINKING: [1 sentence explaining why these three directions were chosen]
+BRANCH_A_TITLE: [5 word max title]
+BRANCH_A_BODY: [2 sentences — the expected/safe creative direction]
 
-Rules: Each branch must be a genuinely different angle — not variations of the same idea. Direction A = the expected angle, Direction B = a lateral/sideways angle, Direction C = the provocative/contrarian angle. No markdown, no preamble, no extra text.`
+BRANCH_B_TITLE: [5 word max title]
+BRANCH_B_BODY: [2 sentences — the lateral/surprising direction]
+
+BRANCH_C_TITLE: [5 word max title]
+BRANCH_C_BODY: [2 sentences — the provocative/challenger direction]
+
+THINKING: [one sentence on why these three directions]
+
+Rules: Each branch must be a genuinely different angle — not variations of the same idea. Direction A = expected, B = lateral/sideways, C = provocative/contrarian. No markdown, no preamble, no extra text before or after.`
       : "";
 
     // ── Select and build system prompt ────────────────────────────────────────
