@@ -156,16 +156,17 @@ export default function ChatInput({ onSend, disabled, userType, embedded }) {
     <div
       style={embedded ? {
         position: "relative",
-        width: "min(680px, calc(100% - 48px))",
+        width: "100%",
+        maxWidth: 720,
         margin: "0 auto",
-        paddingBottom: 24,
-        paddingTop: 8,
+        padding: "10px 16px 18px",
+        boxSizing: "border-box",
       } : {
         position: "absolute",
         bottom: 40,
         left: "50%",
         transform: "translateX(-50%)",
-        width: "min(680px, calc(100% - 48px))",
+        width: "min(680px, calc(100% - 32px))",
         zIndex: 100,
       }}
       onDragOver={onDragOver}
@@ -319,13 +320,13 @@ export default function ChatInput({ onSend, disabled, userType, embedded }) {
       {/* Input wrapper */}
       <div
         style={{
-          background: "#222222",
-          border: `1px solid ${focused ? "rgba(255,255,255,0.2)" : dragging ? "rgba(156,252,175,0.3)" : "rgba(255,255,255,0.08)"}`,
-          borderRadius: 100,
+          background: "#1a1a1a",
+          border: `1px solid ${focused ? "rgba(255,255,255,0.22)" : dragging ? "rgba(156,252,175,0.3)" : "rgba(255,255,255,0.1)"}`,
+          borderRadius: 20,
           display: "flex",
           alignItems: "flex-end",
-          padding: "14px 16px 14px 20px",
-          gap: 12,
+          padding: "12px 14px 12px 18px",
+          gap: 10,
           transition: "border-color 0.2s",
         }}
       >

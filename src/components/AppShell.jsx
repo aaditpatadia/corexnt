@@ -8,6 +8,7 @@ import PersonalDashboard from "../pages/app/PersonalDashboard";
 import ProfileSetup      from "../pages/app/ProfileSetup";
 import PaymentPage       from "./PaymentPage";
 import CompetitorIntel   from "../pages/app/CompetitorIntel";
+import BriefBuilder      from "../pages/app/BriefBuilder";
 import ProjectsPage      from "../pages/app/ProjectsPage";
 import SettingsPage      from "../pages/SettingsPage";
 import { hasProfile }    from "../utils/userProfile";
@@ -73,7 +74,7 @@ function Sidebar({ navigate, location, onNewChat, onClose }) {
   const nav = [
     { icon: "+", label: "New chat",        path: "chat",             action: () => { onNewChat(); navigate("/app/chat"); onClose?.(); } },
     { icon: "📁", label: "Projects",       path: "projects",         action: () => { navigate("/app/projects"); onClose?.(); } },
-    { icon: "✦",  label: "Brief Builder",  path: "brief-builder",    action: () => { navigate("/app/chat"); onClose?.(); }, premium: true },
+    { icon: "✦",  label: "Brief Builder",  path: "brief-builder",    action: () => { navigate("/app/brief-builder"); onClose?.(); }, premium: false },
     { icon: "◎",  label: "Competitor Intel", path: "competitor-intel", action: () => { navigate("/app/competitor-intel"); onClose?.(); } },
   ];
 
@@ -98,6 +99,21 @@ function Sidebar({ navigate, location, onNewChat, onClose }) {
         >
           Corex
         </button>
+        {onClose && (
+          <button
+            onClick={onClose}
+            style={{
+              width: 28, height: 28, borderRadius: 8, border: "none",
+              background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)",
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 16, transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#ffffff"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {/* Nav items */}
@@ -506,6 +522,7 @@ export default function AppShell() {
             <Route path="chat"          element={<ChatDashboard userType={userType} userName={userName} onUpgrade={() => setCreditModalOpen(true)} />} />
             <Route path="projects"      element={<ProjectsPage />} />
             <Route path="competitor-intel" element={<CompetitorIntel />} />
+            <Route path="brief-builder"   element={<BriefBuilder />} />
             <Route path="payment"       element={<PaymentPage onBack={() => navigate("/app/dashboard")} userType={userType} />} />
             <Route path="*"             element={<Navigate to={defaultRoute} replace />} />
           </Routes>

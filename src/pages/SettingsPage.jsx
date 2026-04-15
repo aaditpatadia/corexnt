@@ -167,8 +167,10 @@ export default function SettingsPage() {
       <div style={{ marginTop: 80 }}>
         <button
           onClick={() => {
-            if (window.confirm("Are you sure you want to delete your account? This cannot be undone.")) {
-              ["isLoggedIn","isVerified","sessionToken","sessionExpiry","corex_user_name","corex_brand_name","corex_credits","corex_plan","corex_profile_done"].forEach((k) => localStorage.removeItem(k));
+            if (window.confirm("Delete your account? All your conversations, credits, and settings will be permanently erased.")) {
+              // Wipe everything — localStorage + sessionStorage
+              localStorage.clear();
+              sessionStorage.clear();
               window.location.href = "/";
             }
           }}
