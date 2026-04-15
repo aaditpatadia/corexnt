@@ -1,6 +1,20 @@
 // ─── Shared intelligence rules ────────────────────────────────────────────────
 const SHARED_RULES = `
 
+CONTEXT-FIRST RULE — MANDATORY:
+Before generating ANY creative output (hooks, captions, scripts, briefs, campaigns, copy), you MUST know:
+1. What product/brand/service is this for?
+2. Who is the target audience?
+If EITHER of these is unknown from the conversation, your FIRST response MUST use CLARIFY to ask. NEVER generate generic hooks/copy for an unknown product.
+Exception: if the user has a profile with brand name and niche, use that as context and proceed.
+
+OUTPUT QUALITY RULES — non-negotiable:
+- When generating hooks: each hook must be specific to the product/brand. Generic hooks ("unlock the secret", "you won't believe this") are BANNED.
+- When generating action steps: each step must have a WHO, WHAT, and WHEN. "Post more content" is not an action step.
+- Number-drop rule: every response about growth, budgets, or performance MUST include at least 3 real numbers.
+- Named brand rule: every response must name at least one real Indian brand or creator by name with real numbers.
+- Specificity penalty: if you write a sentence that could apply to ANY brand in ANY industry, delete it and replace with something specific.
+
 FORMATTING RULES — non-negotiable:
 Never use ** for bold. Never use ## or # for headings. Never use markdown. Plain prose only.
 Never say: "consider leveraging" / "may want to explore" / "it's important to" / "lifestyle influencers"
@@ -292,20 +306,26 @@ MANDATORY PERSONALISATION RULES — non-negotiable:
     // ── BRANCHES mode: first turn of a session ────────────────────────────────
     const conversationTurn = req.body?.conversationTurn ?? (historyMessages.length === 0 ? 1 : 2);
     const branchesInstruction = conversationTurn === 1
-      ? `\n\nFIRST MESSAGE INSTRUCTION — this is turn 1 of a new session. You MUST respond ONLY using the BRANCHES format below. Do not add any text outside it:
+      ? `\n\nFIRST MESSAGE INSTRUCTION — respond ONLY in BRANCHES format if you have enough context (product/brand name is known). If context is missing (no product/brand name known from the conversation or user profile), instead use CLARIFY to ask ONE question before branching.
 
-BRANCH_A_TITLE: [5 word max title]
-BRANCH_A_BODY: [2 sentences — the expected/safe creative direction]
+If you have context, respond ONLY with:
 
-BRANCH_B_TITLE: [5 word max title]
-BRANCH_B_BODY: [2 sentences — the lateral/surprising direction]
+BRANCH_A_TITLE: [5 word max — a specific creative direction]
+BRANCH_A_BODY: [2 sentences — concrete description of this direction, with specific tactics]
 
-BRANCH_C_TITLE: [5 word max title]
-BRANCH_C_BODY: [2 sentences — the provocative/challenger direction]
+BRANCH_B_TITLE: [5 word max — lateral/unexpected direction]
+BRANCH_B_BODY: [2 sentences — concrete, surprising]
+
+BRANCH_C_TITLE: [5 word max — provocative/challenger direction]
+BRANCH_C_BODY: [2 sentences — bold, contrarian, makes them think]
 
 THINKING: [one sentence on why these three directions]
 
-Rules: Each branch must be a genuinely different angle — not variations of the same idea. Direction A = expected, B = lateral/sideways, C = provocative/contrarian. No markdown, no preamble, no extra text before or after.`
+Rules: Each branch must be a genuinely different angle — not variations of the same idea. Direction A = expected, B = lateral/sideways, C = provocative/contrarian. No markdown, no preamble, no extra text before or after.
+
+If context is missing (no product/brand/creator name known), respond ONLY with:
+CLARIFY: ["Question about product/brand", "Question about audience/goal", "Question about context"]
+Then give your best assumption answer below the CLARIFY block.`
       : "";
 
     // ── Select and build system prompt ────────────────────────────────────────

@@ -4,13 +4,11 @@ import ChatInput    from "../../components/ChatInput";
 import ResponseCard from "../../components/ResponseCard";
 import { stripMarkdown } from "../../utils/parseResponse";
 import { getProfileContext } from "../../utils/userProfile";
+import { deductCredits, getCredits, CREDIT_COSTS } from "../../utils/credits";
 
-const FREE_LIMIT = 15;
 const ADMIN_EMAIL = "corexnt@gmail.com";
 
 /* ── Helpers ── */
-function getTodayKey() { return `corex_msgs_${new Date().toDateString()}`; }
-function getMsgsUsed() { return parseInt(localStorage.getItem(getTodayKey()) || "0", 10); }
 function isAdminEmail() { return (localStorage.getItem("userEmail") || "") === ADMIN_EMAIL; }
 
 function getGreeting(name) {
@@ -329,7 +327,7 @@ function LimitBanner({ onUpgrade }) {
       }}
     >
       <p style={{ fontSize: 14, color: "rgba(255,255,255,0.8)", fontFamily: "'Instrument Sans', sans-serif", marginBottom: 6 }}>
-        You've used all 15 messages for today.
+        You've run out of credits.
       </p>
       <button
         onClick={onUpgrade}
@@ -443,7 +441,7 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
   });
   const [loading,     setLoading]     = useState(false);
   const [revealing,   setRevealing]   = useState(null);
-  const [limitHit,    setLimitHit]    = useState(!isAdminEmail() && getMsgsUsed() >= FREE_LIMIT);
+  const [limitHit,    setLimitHit]    = useState(false);
   const [showLimit,   setShowLimit]   = useState(false);
   const [inputHidden, setInputHidden] = useState(false);
   const bottomRef    = useRef(null);
@@ -512,16 +510,8 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
     lastScrollY.current = current;
   }, []);
 
-  function trackUsage() {
-    const key  = getTodayKey();
-    const used = parseInt(localStorage.getItem(key) || "0", 10) + 1;
-    localStorage.setItem(key, used.toString());
-    if (!isAdminEmail() && used >= FREE_LIMIT) setLimitHit(true);
-  }
-
   const sendMessage = useCallback(async (text, files = []) => {
     if ((!text?.trim() && !files.length) || loading) return;
-    if (!isAdminEmail() && getMsgsUsed() >= FREE_LIMIT) { setLimitHit(true); return; }
 
     const isNewChat  = messages.length === 0;
     const histCount  = (() => { try { return JSON.parse(localStorage.getItem("corex_history")||"[]").length; } catch { return 0; } })();
@@ -532,6 +522,12 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
     const planTier = localStorage.getItem("corex_plan") || "free";
     if (!isAdminEmail() && planTier === "free" && userMsgCount >= 5) { setShowLimit(true); return; }
 
+    // Calculate credit cost and check balance
+    const hasImage = files.some(f => f.type?.startsWith("image/"));
+    const isComplex = (text?.length || 0) > 80;
+    const cost = hasImage ? CREDIT_COSTS.file_analysis : (isComplex ? CREDIT_COSTS.smart_message : CREDIT_COSTS.basic_message);
+    if (!isAdminEmail() && getCredits() < cost) { setShowLimit(true); return; }
+
     const displayFiles = files.map(({ name, type, preview }) => ({ name, type, preview }));
     const apiFiles     = files.map(({ name, type, b64 })     => ({ name, type, b64 }));
     const userMsg      = { id: Date.now(), role: "user", content: text, files: displayFiles };
@@ -539,7 +535,6 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
 
     setMessages(prev => [...prev, userMsg]);
     setLoading(true);
-    trackUsage();
 
     const fullHistory   = [...messages, userMsg];
     const contextWindow = fullHistory.slice(-15);
@@ -597,6 +592,9 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
       reply = `Connection error. Please try again.\n\nFOLLOWUPS: ["Try again", "New idea"]`;
     }
 
+    // Deduct credits after successful response
+    if (!isAdminEmail()) deductCredits(cost);
+
     const assistantMsg = { id: assistantId, role: "assistant", content: reply, streaming: false, searchUsed };
     setMessages(prev => {
       const updated = [...prev, assistantMsg];
@@ -620,9 +618,9 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
       style={{
         background: "#000000",
         height: "100%",
-        position: "relative",
         display: "flex",
         flexDirection: "column",
+        overflow: "hidden",
       }}
     >
       {showLimit && (
@@ -656,6 +654,7 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
         style={{
           flex: 1,
           overflowY: "auto",
+          minHeight: 0,
           position: "relative",
         }}
       >
@@ -666,10 +665,9 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
             style={{
               maxWidth: 720,
               margin: "0 auto",
-              padding: "24px 24px 0",
+              padding: "24px 24px 32px",
               display: "flex",
               flexDirection: "column",
-              paddingBottom: "max(180px, calc(180px + env(safe-area-inset-bottom)))",
             }}
           >
             <AnimatePresence>
@@ -731,21 +729,26 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
         )}
       </div>
 
-      {/* Fixed bottom input — auto-hides on scroll up */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          transform: inputHidden ? "translateY(110%)" : "translateY(0)",
-          transition: "transform 0.35s cubic-bezier(0.16,1,0.3,1)",
-          pointerEvents: inputHidden ? "none" : "auto",
-        }}
-        onMouseEnter={() => setInputHidden(false)}
-      >
-        <ChatInput onSend={sendMessage} disabled={loading || limitHit} userType={userType} embedded />
-      </div>
+      {/* Input as proper flex footer — never overlaps */}
+      <AnimatePresence>
+        {!inputHidden && (
+          <motion.div
+            key="chat-input-footer"
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            style={{
+              flexShrink: 0,
+              borderTop: "1px solid rgba(255,255,255,0.04)",
+              background: "#000000",
+            }}
+            onMouseEnter={() => setInputHidden(false)}
+          >
+            <ChatInput onSend={sendMessage} disabled={loading || limitHit} userType={userType} embedded />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Branch grid responsive styles */}
       <style>{`
