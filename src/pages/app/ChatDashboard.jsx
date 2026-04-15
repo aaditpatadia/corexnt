@@ -447,10 +447,8 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
   const [limitHit,    setLimitHit]    = useState(false);
   const [showLimit,   setShowLimit]   = useState(false);
   const [limitReason, setLimitReason] = useState("credits"); // "credits" | "projects" | "messages"
-  const [inputHidden, setInputHidden] = useState(false);
   const bottomRef    = useRef(null);
   const scrollRef    = useRef(null);
-  const lastScrollY  = useRef(0);
 
   useEffect(() => {
     if (!sessionStorage.getItem("corex_session_id"))
@@ -495,24 +493,8 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
 
   // Scroll to bottom on new messages
   useEffect(() => {
-    if (!inputHidden) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
-
-  // Auto-hide input on scroll up, show on scroll down
-  const handleScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const current = el.scrollTop;
-    const isNearBottom = el.scrollHeight - current - el.clientHeight < 80;
-    if (isNearBottom) {
-      setInputHidden(false);
-    } else if (current < lastScrollY.current - 10) {
-      setInputHidden(true);
-    } else if (current > lastScrollY.current + 10) {
-      setInputHidden(false);
-    }
-    lastScrollY.current = current;
-  }, []);
 
   const sendMessage = useCallback(async (text, files = []) => {
     if ((!text?.trim() && !files.length) || loading) return;
@@ -670,7 +652,6 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
       <div
         ref={scrollRef}
         className="scroll-area"
-        onScroll={handleScroll}
         style={{
           flex: 1,
           overflowY: "auto",
@@ -749,26 +730,16 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
         )}
       </div>
 
-      {/* Input as proper flex footer — never overlaps */}
-      <AnimatePresence>
-        {!inputHidden && (
-          <motion.div
-            key="chat-input-footer"
-            initial={{ y: 80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 80, opacity: 0 }}
-            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            style={{
-              flexShrink: 0,
-              borderTop: "1px solid rgba(255,255,255,0.04)",
-              background: "#000000",
-            }}
-            onMouseEnter={() => setInputHidden(false)}
-          >
-            <ChatInput onSend={sendMessage} disabled={loading || limitHit} userType={userType} embedded />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Input — always visible flex footer, never overlaps messages */}
+      <div
+        style={{
+          flexShrink: 0,
+          borderTop: "1px solid rgba(255,255,255,0.05)",
+          background: "#000000",
+        }}
+      >
+        <ChatInput onSend={sendMessage} disabled={loading || limitHit} userType={userType} embedded />
+      </div>
 
       {/* Branch grid responsive styles */}
       <style>{`
