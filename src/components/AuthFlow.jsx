@@ -207,6 +207,10 @@ function Signup({ onSuccess, onLoginClick, onNeedOtp }) {
     if (result.success) {
       localStorage.setItem("userType", "creator");
       createSession();
+      // Grant 50 free credits on first signup
+      if (!localStorage.getItem("corex_credits")) {
+        localStorage.setItem("corex_credits", "50");
+      }
       onSuccess();
     } else setGoogleErr(result.error || "Google sign in failed. Try again.");
   };
@@ -324,8 +328,14 @@ function Login({ onSuccess, onSignupClick, onNeedOtp }) {
     setGoogleErr(""); setLoading(true);
     const result = await signInWithGoogle();
     setLoading(false);
-    if (result.success) { createSession(); onSuccess(); }
-    else setGoogleErr(result.error || "Google sign in failed.");
+    if (result.success) {
+      createSession();
+      // Grant 50 free credits if not already set
+      if (!localStorage.getItem("corex_credits")) {
+        localStorage.setItem("corex_credits", "50");
+      }
+      onSuccess();
+    } else setGoogleErr(result.error || "Google sign in failed.");
   };
 
   const submit = async (e) => {
@@ -345,7 +355,12 @@ function Login({ onSuccess, onSignupClick, onNeedOtp }) {
         setLoading(false); onNeedOtp({ email:form.email, name }); return;
       }
       localStorage.setItem("isLoggedIn", "true");
-      createSession(); setLoading(false); onSuccess();
+      createSession();
+      // Grant 50 free credits if not already set
+      if (!localStorage.getItem("corex_credits")) {
+        localStorage.setItem("corex_credits", "50");
+      }
+      setLoading(false); onSuccess();
     } else { setLoading(false); setError("Incorrect email or password."); }
   };
 
@@ -430,6 +445,10 @@ export default function AuthFlow({ onSuccess }) {
       localStorage.setItem("userType",          pending.userType || "creator");
       localStorage.setItem("userPasswordHash",  pending.passwordHash || "");
       localStorage.removeItem("corex_pending_user");
+    }
+    // Grant 50 free credits on first signup
+    if (!localStorage.getItem("corex_credits")) {
+      localStorage.setItem("corex_credits", "50");
     }
     onSuccess();
   };

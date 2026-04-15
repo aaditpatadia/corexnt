@@ -216,7 +216,7 @@ export default function ChatInput({ onSend, disabled, userType, embedded }) {
           >
             {[
               { icon: "📄", label: "Upload Files", action: () => { fileRef.current?.click(); setMenuOpen(false); } },
-              { icon: "✦", label: "Creative Thinking Modes", hasArrow: true, action: () => { window.location.href = "/app/modes"; } },
+              { icon: "✦", label: "Creative Thinking Modes", hasArrow: true, action: () => { setMenuOpen(false); } },
               { icon: "🔗", label: "Connectors", hasArrow: true, action: () => setMenuOpen(false) },
             ].map(item => (
               <button
@@ -453,7 +453,7 @@ export default function ChatInput({ onSend, disabled, userType, embedded }) {
 
       {/* Hint */}
       <p style={{ marginTop: 8, fontSize: 11, color: "rgba(255,255,255,0.2)", textAlign: "center", fontFamily: "'Instrument Sans', sans-serif" }}>
-        ↵ send &nbsp;·&nbsp; ⇧↵ new line &nbsp;·&nbsp; Corex v7
+        ↵ send &nbsp;·&nbsp; ⇧↵ new line &nbsp;·&nbsp; drop images or PDFs
       </p>
     </div>
   );

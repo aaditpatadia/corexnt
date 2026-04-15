@@ -533,64 +533,70 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
         : <PlanGateBanner feature="Flowcharts" />
       )}
 
-      {/* Next moves / action steps */}
+      {/* Next moves / action steps — numbered cards */}
       {steps.length > 0 && (
-        <div style={{ marginTop:20, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:16, padding:"16px 18px" }}>
-          <p style={{ fontSize:11, fontWeight:700, letterSpacing:"2px", textTransform:"uppercase", color:"rgba(255,255,255,0.4)", fontFamily:"var(--font-body)", marginBottom:12 }}>
+        <div style={{ marginTop:20 }}>
+          <p style={{ fontSize:10, fontWeight:700, letterSpacing:"2px", textTransform:"uppercase", color:"rgba(255,255,255,0.3)", fontFamily:"var(--font-body)", marginBottom:12 }}>
             {nextMovesLabel}
           </p>
-          <div style={{ display:"flex", flexDirection:"column", gap:0 }}>
+          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
             {steps.map((s, i) => (
-              <div key={i} style={{ display:"flex", gap:12, marginBottom:10, alignItems:"flex-start" }}>
-                <div style={{
-                  width:22, height:22, borderRadius:"50%", flexShrink:0, marginTop:2,
-                  background:"rgba(156,252,175,0.1)", border:"1px solid rgba(156,252,175,0.25)",
+              <div key={i} style={{
+                display:"flex", alignItems:"flex-start", gap:12,
+                padding:"12px 14px", borderRadius:12,
+                background:"rgba(255,255,255,0.03)",
+                border:"1px solid rgba(255,255,255,0.06)",
+              }}>
+                <span style={{
+                  width:24, height:24, borderRadius:"50%", flexShrink:0,
+                  background:"linear-gradient(135deg, #226FF7, #9CFCAF)",
+                  color:"#000", fontSize:11, fontWeight:800,
                   display:"flex", alignItems:"center", justifyContent:"center",
-                  fontSize:11, fontWeight:700, color:"#9CFCAF", fontFamily:"var(--font-body)",
-                  letterSpacing:"-0.5px",
-                }}>
-                  {i + 1}
-                </div>
-                <span style={{ fontSize:14, color:"rgba(255,255,255,0.8)", lineHeight:1.6, fontFamily:"var(--font-body)", wordBreak:"break-word", overflowWrap:"break-word" }}>
+                  fontFamily:"var(--font-body)",
+                }}>{i + 1}</span>
+                <p style={{ fontSize:14, color:"rgba(255,255,255,0.8)", fontFamily:"var(--font-body)", lineHeight:1.55, margin:0, wordBreak:"break-word", overflowWrap:"break-word" }}>
                   {stripMarkdown(s)}
-                </span>
+                </p>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Real example */}
+      {/* Real example — styled callout */}
       {example && (
-        <div style={{ marginTop:20 }}>
-          <p style={{ fontSize:11, fontWeight:600, letterSpacing:"2px", textTransform:"uppercase", color:"rgba(255,255,255,0.3)", fontFamily:"var(--font-body)", marginBottom:10 }}>
+        <div style={{
+          marginTop:20, padding:"14px 16px",
+          borderRadius:12, background:"rgba(156,252,175,0.04)",
+          borderLeft:"3px solid rgba(156,252,175,0.4)",
+        }}>
+          <p style={{ fontSize:10, fontWeight:700, letterSpacing:"2px", textTransform:"uppercase", color:"rgba(156,252,175,0.6)", marginBottom:8, fontFamily:"var(--font-body)" }}>
             REAL EXAMPLE
           </p>
-          <p style={{
-            fontSize:15, color:"rgba(255,255,255,0.7)", lineHeight:1.7,
-            padding:"14px 16px", background:"rgba(255,255,255,0.04)",
-            borderLeft:"3px solid rgba(255,255,255,0.2)", borderRadius:"0 8px 8px 0",
-            fontFamily:"var(--font-body)",
-          }}>
+          <p style={{ fontSize:14, color:"rgba(255,255,255,0.7)", fontFamily:"var(--font-body)", lineHeight:1.6, margin:0 }}>
             {stripMarkdown(example)}
           </p>
         </div>
       )}
 
-      {/* Follow-up chips */}
+      {/* Follow-up chips — styled pills */}
       {(chips.length > 0 || (followups && followups.length > 0)) && (
-        <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginTop:16 }}>
+        <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginTop:20 }}>
           {[...chips, ...(followups || [])].map((chip, i) => (
-            <button key={i} onClick={()=>onChip?.(chip)}
+            <motion.button key={i} onClick={()=>onChip?.(chip)}
+              whileHover={{ y:-1, scale:1.02 }} whileTap={{ scale:0.97 }}
               style={{
-                padding:"7px 16px", borderRadius:20, fontSize:13, fontFamily:"var(--font-body)",
-                background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)",
-                color:"rgba(255,255,255,0.7)", cursor:"pointer", transition:"all 0.2s ease",
+                padding:"8px 16px", borderRadius:100, fontSize:13,
+                fontFamily:"var(--font-body)",
+                background:"rgba(255,255,255,0.04)",
+                border:"1px solid rgba(255,255,255,0.1)",
+                color:"rgba(255,255,255,0.65)", cursor:"pointer",
+                transition:"all 0.2s cubic-bezier(0.16,1,0.3,1)",
               }}
-              onMouseEnter={e=>{ e.currentTarget.style.background="rgba(255,255,255,0.12)"; e.currentTarget.style.borderColor="rgba(255,255,255,0.25)"; e.currentTarget.style.color="#ffffff"; }}
-              onMouseLeave={e=>{ e.currentTarget.style.background="rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor="rgba(255,255,255,0.1)"; e.currentTarget.style.color="rgba(255,255,255,0.7)"; }}>
+              onMouseEnter={e=>{ e.currentTarget.style.background="rgba(156,252,175,0.08)"; e.currentTarget.style.borderColor="rgba(156,252,175,0.3)"; e.currentTarget.style.color="#ffffff"; }}
+              onMouseLeave={e=>{ e.currentTarget.style.background="rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor="rgba(255,255,255,0.1)"; e.currentTarget.style.color="rgba(255,255,255,0.65)"; }}>
               {chip}
-            </button>
+            </motion.button>
           ))}
         </div>
       )}
