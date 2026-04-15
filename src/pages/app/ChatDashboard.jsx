@@ -163,14 +163,17 @@ function BranchCards({ data, onSelect, userMessage }) {
 /* ── Thinking animation ── */
 const THINKING_PHRASES = [
   "Analysing your idea…",
-  "Searching live data…",
+  "Pulling live market data…",
   "Building creative directions…",
-  "Mapping the space…",
-  "Checking market pulse…",
-  "Considering angles…",
+  "Scanning the competitive space…",
+  "Checking what's working right now…",
+  "Considering angles you haven't tried…",
   "Crafting a strategy…",
   "Looking at the full picture…",
   "Connecting the dots…",
+  "Benchmarking against real brands…",
+  "Digging into what the data says…",
+  "Finding the move nobody's making…",
 ];
 
 const IMAGE_THINKING_PHRASES = [
@@ -356,14 +359,14 @@ function WelcomeScreen({ userName, onQuickStart }) {
 
   const chips = brandName
     ? [
-        "Brief our next campaign",
+        `Brief ${brandName}'s next campaign`,
         `What's ${brandName}'s next move?`,
         "Find what our competitors are doing",
-        "Write 5 ad hooks right now",
+        "Plan a shoot — product or campaign",
       ]
     : [
         "Build a content strategy",
-        "Create a campaign brief",
+        "Plan a shoot — product or campaign",
         "Map my market positioning",
         "Write 5 ad hooks right now",
       ];
@@ -443,6 +446,7 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
   const [revealing,   setRevealing]   = useState(null);
   const [limitHit,    setLimitHit]    = useState(false);
   const [showLimit,   setShowLimit]   = useState(false);
+  const [limitReason, setLimitReason] = useState("credits"); // "credits" | "projects" | "messages"
   const [inputHidden, setInputHidden] = useState(false);
   const bottomRef    = useRef(null);
   const scrollRef    = useRef(null);
@@ -515,18 +519,18 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
 
     const isNewChat  = messages.length === 0;
     const histCount  = (() => { try { return JSON.parse(localStorage.getItem("corex_history")||"[]").length; } catch { return 0; } })();
-    if (!isAdminEmail() && isNewChat && histCount >= 5) { setShowLimit(true); return; }
+    if (!isAdminEmail() && isNewChat && histCount >= 5) { setLimitReason("projects"); setShowLimit(true); return; }
 
     // Per-project: free users limited to 5 user messages per conversation
     const userMsgCount = messages.filter(m => m.role === "user").length;
     const planTier = localStorage.getItem("corex_plan") || "free";
-    if (!isAdminEmail() && planTier === "free" && userMsgCount >= 5) { setShowLimit(true); return; }
+    if (!isAdminEmail() && planTier === "free" && userMsgCount >= 5) { setLimitReason("messages"); setShowLimit(true); return; }
 
     // Calculate credit cost and check balance
     const hasImage = files.some(f => f.type?.startsWith("image/"));
     const isComplex = (text?.length || 0) > 80;
     const cost = hasImage ? CREDIT_COSTS.file_analysis : (isComplex ? CREDIT_COSTS.smart_message : CREDIT_COSTS.basic_message);
-    if (!isAdminEmail() && getCredits() < cost) { setShowLimit(true); return; }
+    if (!isAdminEmail() && getCredits() < cost) { setLimitReason("credits"); setShowLimit(true); return; }
 
     const displayFiles = files.map(({ name, type, preview }) => ({ name, type, preview }));
     const apiFiles     = files.map(({ name, type, b64 })     => ({ name, type, b64 }));
@@ -628,16 +632,32 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
           style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.8)", backdropFilter:"blur(12px)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:100, padding:24 }}>
           <motion.div initial={{ scale:0.9, opacity:0 }} animate={{ scale:1, opacity:1 }} transition={{ delay:0.05 }}
             style={{ background:"#111111", border:"1px solid rgba(255,255,255,0.1)", borderRadius:28, padding:"40px 36px", maxWidth:400, width:"100%", textAlign:"center" }}>
-            <div style={{ fontSize:40, marginBottom:16 }}>🔒</div>
-            <h3 style={{ fontFamily:"'Instrument Serif', serif", fontStyle:"italic", fontSize:26, color:"#ffffff", marginBottom:8 }}>5 project limit reached</h3>
+            <div style={{ fontSize:40, marginBottom:16 }}>
+              {limitReason === "credits" ? "⚡" : "🔒"}
+            </div>
+            <h3 style={{ fontFamily:"'Instrument Serif', serif", fontStyle:"italic", fontSize:26, color:"#ffffff", marginBottom:8 }}>
+              {limitReason === "credits" && "You're out of credits"}
+              {limitReason === "projects" && "5 project limit reached"}
+              {limitReason === "messages" && "Session limit reached"}
+            </h3>
             <p style={{ fontSize:15, color:"rgba(255,255,255,0.5)", fontFamily:"'Instrument Sans', sans-serif", lineHeight:1.6, marginBottom:28 }}>
-              Free accounts can create 5 projects. Upgrade to unlock unlimited creative sessions.
+              {limitReason === "credits" && "Your free credits are used up. Top up to keep creating — packs start at ₹299."}
+              {limitReason === "projects" && "Free accounts can create 5 projects. Upgrade to unlock unlimited creative sessions."}
+              {limitReason === "messages" && "Free accounts get 5 messages per session. Upgrade for unlimited back-and-forth."}
             </p>
             <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-              <button onClick={onUpgrade}
-                style={{ padding:"14px 0", borderRadius:100, border:"none", cursor:"pointer", background:"linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)", color:"#000000", fontSize:15, fontWeight:700, fontFamily:"'Instrument Sans', sans-serif" }}>
-                Upgrade to Pro →
-              </button>
+              {limitReason === "credits" ? (
+                <button
+                  onClick={() => { setShowLimit(false); window.dispatchEvent(new CustomEvent("corex:openCredits")); }}
+                  style={{ padding:"14px 0", borderRadius:100, border:"none", cursor:"pointer", background:"linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)", color:"#000000", fontSize:15, fontWeight:700, fontFamily:"'Instrument Sans', sans-serif" }}>
+                  Top up credits →
+                </button>
+              ) : (
+                <button onClick={onUpgrade}
+                  style={{ padding:"14px 0", borderRadius:100, border:"none", cursor:"pointer", background:"linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)", color:"#000000", fontSize:15, fontWeight:700, fontFamily:"'Instrument Sans', sans-serif" }}>
+                  Upgrade to Pro →
+                </button>
+              )}
               <button onClick={() => setShowLimit(false)}
                 style={{ padding:"12px 0", borderRadius:100, border:"1px solid rgba(255,255,255,0.12)", background:"transparent", color:"rgba(255,255,255,0.5)", fontSize:14, fontFamily:"'Instrument Sans', sans-serif", cursor:"pointer" }}>
                 Go back
