@@ -81,7 +81,8 @@ function Sidebar({ navigate, location, onNewChat, onClose }) {
   return (
     <div
       style={{
-        width: 220,
+        width: onClose ? "100%" : 220,  /* fill mobile drawer container, fixed on desktop */
+        minWidth: onClose ? "100%" : 220,
         background: "#0D0D0D",
         height: "100%",
         display: "flex",
@@ -476,27 +477,33 @@ export default function AppShell() {
         <Sidebar {...sidebarProps} />
       </div>
 
-      {/* Mobile sidebar drawer */}
+      {/* Mobile sidebar — backdrop and drawer each get their own AnimatePresence
+           so exit animations fire properly (fragment children don't animate) */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200 }}
-            />
-            <motion.div
-              initial={{ x: -220 }}
-              animate={{ x: 0 }}
-              exit={{ x: -220 }}
-              transition={{ type: "spring", stiffness: 400, damping: 40 }}
-              style={{ position: "fixed", top: 0, left: 0, height: "100vh", zIndex: 201 }}
-            >
-              <Sidebar {...sidebarProps} onClose={() => setMobileMenuOpen(false)} />
-            </motion.div>
-          </>
+          <motion.div
+            key="mobile-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setMobileMenuOpen(false)}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 200, backdropFilter: "blur(4px)" }}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            key="mobile-sidebar"
+            initial={{ x: -240 }}
+            animate={{ x: 0 }}
+            exit={{ x: -240 }}
+            transition={{ type: "spring", stiffness: 380, damping: 38 }}
+            style={{ position: "fixed", top: 0, left: 0, height: "100vh", zIndex: 201, width: 240 }}
+          >
+            <Sidebar {...sidebarProps} onClose={() => setMobileMenuOpen(false)} />
+          </motion.div>
         )}
       </AnimatePresence>
 
