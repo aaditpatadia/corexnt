@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthFlow          from "./AuthFlow";
@@ -9,6 +9,8 @@ import ProfileSetup      from "../pages/app/ProfileSetup";
 import PaymentPage       from "./PaymentPage";
 import CompetitorIntel   from "../pages/app/CompetitorIntel";
 import BriefBuilder      from "../pages/app/BriefBuilder";
+import ShootPlanner     from "../pages/app/ShootPlanner";
+import CreatorEngine    from "../pages/app/CreatorEngine";
 import ProjectsPage      from "../pages/app/ProjectsPage";
 import SettingsPage      from "../pages/SettingsPage";
 import { hasProfile }    from "../utils/userProfile";
@@ -63,7 +65,7 @@ function NavItem({ icon, label, active, onClick, premium }) {
 }
 
 /* ─── Left Sidebar ─── */
-function Sidebar({ navigate, location, onNewChat, onClose }) {
+function Sidebar({ navigate, location, onNewChat, onClose, sidebarRef }) {
   const active = location.pathname.replace("/app/", "").split("/")[0] || "dashboard";
 
   const [sidebarCredits, setSidebarCredits] = useState(() => parseInt(localStorage.getItem('corex_credits') || '0'));
@@ -80,14 +82,17 @@ function Sidebar({ navigate, location, onNewChat, onClose }) {
   })();
 
   const nav = [
-    { icon: "🗨", label: "Chat",           path: "chat",            action: () => { onNewChat(); navigate("/app/chat"); onClose?.(); } },
-    { icon: "📁", label: "Projects",       path: "projects",        action: () => { navigate("/app/projects"); onClose?.(); } },
-    { icon: "✦",  label: "Brief Builder",  path: "brief-builder",   action: () => { navigate("/app/brief-builder"); onClose?.(); } },
+    { icon: "💬", label: "Chat",            path: "chat",             action: () => { onNewChat(); navigate("/app/chat"); onClose?.(); } },
+    { icon: "📁", label: "Projects",        path: "projects",         action: () => { navigate("/app/projects"); onClose?.(); } },
+    { icon: "✦",  label: "Brief Builder",   path: "brief-builder",    action: () => { navigate("/app/brief-builder"); onClose?.(); } },
+    { icon: "📷", label: "Shoot Planner",   path: "shoot-planner",    action: () => { navigate("/app/shoot-planner"); onClose?.(); } },
+    { icon: "🎬", label: "Creator Engine",  path: "creator-engine",   action: () => { navigate("/app/creator-engine"); onClose?.(); } },
     { icon: "◎",  label: "Competitor Intel", path: "competitor-intel", action: () => { navigate("/app/competitor-intel"); onClose?.(); } },
   ];
 
   return (
     <div
+      ref={sidebarRef}
       style={{
         width: onClose ? "100%" : 220,  /* fill mobile drawer container, fixed on desktop */
         minWidth: onClose ? "100%" : 220,
@@ -139,8 +144,8 @@ function Sidebar({ navigate, location, onNewChat, onClose }) {
         ))}
       </div>
 
-      {/* Divider */}
-      <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "16px 12px" }} />
+      {/* Divider below nav items */}
+      <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "8px 0" }} />
 
       {/* History */}
       <div style={{ padding: "0 8px", flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 2 }}>
@@ -217,7 +222,7 @@ function Sidebar({ navigate, location, onNewChat, onClose }) {
 }
 
 /* ─── Top Bar ─── */
-function TopBar({ userName, navigate, onNewChat, onCreditClick }) {
+function TopBar({ userName, navigate, onNewChat, onCreditClick, onToggleSidebar }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [credits, setCredits] = useState(getCredits);
   const initials = (userName || localStorage.getItem("corex_user_name") || "CX").slice(0, 2).toUpperCase();
@@ -259,8 +264,29 @@ function TopBar({ userName, navigate, onNewChat, onCreditClick }) {
         background: "#000000",
       }}
     >
-      {/* Left: wordmark */}
-      <span style={{ fontFamily: FONT, fontWeight: 600, fontSize: 16, color: "#ffffff" }}>Corex</span>
+      {/* Left: hamburger + wordmark */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <button
+          onClick={onToggleSidebar}
+          title="Toggle sidebar"
+          style={{
+            width: 32, height: 32, borderRadius: 8, border: "none",
+            background: "transparent", color: "rgba(255,255,255,0.4)",
+            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+            flexDirection: "column", gap: 4, padding: 8,
+            transition: "all 0.2s ease",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = "#ffffff"; e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; e.currentTarget.style.background = "transparent"; }}
+        >
+          <svg width="16" height="14" viewBox="0 0 16 14" fill="none">
+            <rect x="0" y="0" width="16" height="2" rx="1" fill="currentColor"/>
+            <rect x="0" y="6" width="12" height="2" rx="1" fill="currentColor"/>
+            <rect x="0" y="12" width="16" height="2" rx="1" fill="currentColor"/>
+          </svg>
+        </button>
+        <span style={{ fontFamily: FONT, fontWeight: 600, fontSize: 16, color: "#ffffff" }}>Corex</span>
+      </div>
 
       {/* Right: credit pill + settings + avatar */}
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -417,7 +443,9 @@ export default function AppShell() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(() => window.innerWidth >= 768);
   const [creditModalOpen, setCreditModalOpen] = useState(false);
+  const sidebarRef = useRef(null);
 
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
   const isVerified = localStorage.getItem("isVerified") === "true";
@@ -438,11 +466,32 @@ export default function AppShell() {
     return () => document.removeEventListener("corex:openCredits", handler);
   }, []);
 
-  // ESC key closes mobile menu
+  // ESC key closes mobile menu and desktop sidebar
   useEffect(() => {
-    const escHandler = (e) => { if (e.key === 'Escape') setMobileMenuOpen(false); };
+    const escHandler = (e) => {
+      if (e.key === 'Escape') {
+        setMobileMenuOpen(false);
+        setDesktopSidebarOpen(false);
+      }
+    };
     document.addEventListener('keydown', escHandler);
     return () => document.removeEventListener('keydown', escHandler);
+  }, []);
+
+  // Click-outside closes sidebar (both mobile and desktop)
+  useEffect(() => {
+    const handler = (e) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(e.target)) {
+        const isDesktop = window.innerWidth >= 768;
+        if (isDesktop) {
+          setDesktopSidebarOpen(false);
+        } else {
+          setMobileMenuOpen(false);
+        }
+      }
+    };
+    document.addEventListener('mousedown', handler, true);
+    return () => document.removeEventListener('mousedown', handler, true);
   }, []);
 
   const handleNewChat = useCallback(() => {
@@ -501,9 +550,21 @@ export default function AppShell() {
       }}
     >
       {/* Desktop sidebar */}
-      <div className="hidden md:flex" style={{ height: "100%" }}>
-        <Sidebar {...sidebarProps} />
-      </div>
+      <AnimatePresence>
+        {desktopSidebarOpen && (
+          <motion.div
+            key="desktop-sidebar"
+            initial={{ x: -220, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -220, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 38 }}
+            className="hidden md:flex"
+            style={{ height: "100%", flexShrink: 0, width: 220 }}
+          >
+            <Sidebar {...sidebarProps} sidebarRef={sidebarRef} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Mobile sidebar — backdrop and drawer each get their own AnimatePresence
            so exit animations fire properly (fragment children don't animate) */}
@@ -544,6 +605,13 @@ export default function AppShell() {
           navigate={navigate}
           onNewChat={handleNewChat}
           onCreditClick={() => setCreditModalOpen(true)}
+          onToggleSidebar={() => {
+            if (window.innerWidth >= 768) {
+              setDesktopSidebarOpen((prev) => !prev);
+            } else {
+              setMobileMenuOpen((prev) => !prev);
+            }
+          }}
         />
 
         {/* Page content */}
@@ -557,6 +625,8 @@ export default function AppShell() {
             <Route path="projects"      element={<ProjectsPage />} />
             <Route path="competitor-intel" element={<CompetitorIntel />} />
             <Route path="brief-builder"   element={<BriefBuilder />} />
+            <Route path="shoot-planner"   element={<ShootPlanner />} />
+            <Route path="creator-engine"  element={<CreatorEngine />} />
             <Route path="payment"       element={<PaymentPage onBack={() => navigate("/app/dashboard")} userType={userType} />} />
             <Route path="*"             element={<Navigate to={defaultRoute} replace />} />
           </Routes>

@@ -7,6 +7,8 @@ import BrandLanding   from "./pages/BrandLanding";
 import AppShell       from "./components/AppShell";
 import SharedChat     from "./pages/app/SharedChat";
 import AdminPage      from "./pages/AdminPage";
+import ShootPlanner   from "./pages/app/ShootPlanner";
+import CreatorEngine  from "./pages/app/CreatorEngine";
 import { getPlanTheme, getCurrentPlan, applyTheme, PLAN_THEMES } from "./utils/planTheme";
 
 /* ── Theme context ── */

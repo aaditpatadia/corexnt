@@ -137,12 +137,12 @@ export default function CreditModal({ open, onClose }) {
                       {pack.credits + pack.bonus} credits{pack.bonus > 0 ? ` (${pack.credits} + ${pack.bonus} bonus)` : ""}
                     </p>
                     <p style={{ fontSize: 11, fontFamily: FONT, color: "rgba(255,255,255,0.25)", margin: 0, fontStyle: "italic" }}>
-                      {pack.tagline}
+                      {pack.tag}
                     </p>
                   </div>
                   <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 16 }}>
                     <p style={{ fontSize: 20, fontFamily: "'Instrument Serif', serif", color: "#ffffff", margin: 0 }}>
-                      {currency === "INR" ? `₹${pack.price_inr}` : `$${pack.price_usd}`}
+                      {currency === "INR" ? `₹${pack.inr.toLocaleString('en-IN')}` : `$${pack.usd}`}
                     </p>
                   </div>
                 </motion.button>

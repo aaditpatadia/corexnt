@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { signInWithGoogle } from "../firebase";
 import { hasClaimedFree, markFreeClaimed } from '../utils/antiAbuse';
+import { trackSignup } from '../utils/trackUser';
 
 async function hashPassword(password) {
   const encoder = new TextEncoder();
@@ -214,6 +215,12 @@ function Signup({ onSuccess, onLoginClick, onNeedOtp }) {
         localStorage.setItem("corex_credits", firstTime ? "50" : "10");
         markFreeClaimed(localStorage.getItem("userEmail") || "unknown");
       }
+      trackSignup({
+        email: localStorage.getItem('userEmail') || '',
+        name: localStorage.getItem('corex_user_name') || localStorage.getItem('userName') || '',
+        brand: localStorage.getItem('corex_brand_name') || '',
+        credits: parseInt(localStorage.getItem('corex_credits') || '50'),
+      });
       onSuccess();
     } else setGoogleErr(result.error || "Google sign in failed. Try again.");
   };
@@ -235,7 +242,14 @@ function Signup({ onSuccess, onLoginClick, onNeedOtp }) {
         localStorage.setItem("isLoggedIn", "true"); localStorage.setItem("isVerified", "true");
         localStorage.setItem("userName", form.name); localStorage.setItem("userEmail", form.email);
         localStorage.setItem("userType", "creator"); localStorage.setItem("userPasswordHash", passwordHash);
-        createSession(); onSuccess(); return;
+        createSession();
+        trackSignup({
+          email: localStorage.getItem('userEmail') || '',
+          name: localStorage.getItem('corex_user_name') || localStorage.getItem('userName') || '',
+          brand: localStorage.getItem('corex_brand_name') || '',
+          credits: parseInt(localStorage.getItem('corex_credits') || '50'),
+        });
+        onSuccess(); return;
       }
       setError("Couldn't send verification email. Check your connection."); return;
     }
@@ -459,6 +473,12 @@ export default function AuthFlow({ onSuccess }) {
       localStorage.setItem("corex_credits", firstTime ? "50" : "10");
       markFreeClaimed(localStorage.getItem("userEmail") || pending?.email || "unknown");
     }
+    trackSignup({
+      email: localStorage.getItem('userEmail') || '',
+      name: localStorage.getItem('corex_user_name') || localStorage.getItem('userName') || '',
+      brand: localStorage.getItem('corex_brand_name') || '',
+      credits: parseInt(localStorage.getItem('corex_credits') || '50'),
+    });
     onSuccess();
   };
 
