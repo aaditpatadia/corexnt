@@ -1,5 +1,6 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey:     import.meta.env.VITE_FIREBASE_API_KEY,
@@ -10,6 +11,7 @@ const firebaseConfig = {
 // Guard: only initialize if API key is present (avoids crash when env vars missing in dev)
 let _auth = null;
 let _provider = null;
+let _db = null;
 
 if (firebaseConfig.apiKey) {
   try {
@@ -17,6 +19,7 @@ if (firebaseConfig.apiKey) {
     _auth = getAuth(app);
     _provider = new GoogleAuthProvider();
     _provider.setCustomParameters({ prompt: 'select_account' });
+    _db = getFirestore(app);
   } catch (e) {
     console.warn('[Firebase] Init failed:', e.message);
   }
@@ -24,6 +27,7 @@ if (firebaseConfig.apiKey) {
 
 export const auth           = _auth;
 export const googleProvider = _provider;
+export const db             = _db;
 
 export async function signInWithGoogle(userType) {
   if (!_auth || !_provider) {

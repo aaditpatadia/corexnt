@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { signInWithGoogle } from "../firebase";
+import { hasClaimedFree, markFreeClaimed } from '../utils/antiAbuse';
 
 async function hashPassword(password) {
   const encoder = new TextEncoder();
@@ -207,9 +208,11 @@ function Signup({ onSuccess, onLoginClick, onNeedOtp }) {
     if (result.success) {
       localStorage.setItem("userType", "creator");
       createSession();
-      // Grant 50 free credits on first signup
-      if (!localStorage.getItem("corex_credits")) {
-        localStorage.setItem("corex_credits", "50");
+      // Anti-abuse: first claim = 50, repeat device = 10
+      if (!localStorage.getItem("corex_credits") || parseInt(localStorage.getItem("corex_credits") || "0") === 0) {
+        const firstTime = !hasClaimedFree();
+        localStorage.setItem("corex_credits", firstTime ? "50" : "10");
+        markFreeClaimed(localStorage.getItem("userEmail") || "unknown");
       }
       onSuccess();
     } else setGoogleErr(result.error || "Google sign in failed. Try again.");
@@ -330,9 +333,11 @@ function Login({ onSuccess, onSignupClick, onNeedOtp }) {
     setLoading(false);
     if (result.success) {
       createSession();
-      // Grant 50 free credits if not already set
-      if (!localStorage.getItem("corex_credits")) {
-        localStorage.setItem("corex_credits", "50");
+      // Anti-abuse: first claim = 50, repeat device = 10
+      if (!localStorage.getItem("corex_credits") || parseInt(localStorage.getItem("corex_credits") || "0") === 0) {
+        const firstTime = !hasClaimedFree();
+        localStorage.setItem("corex_credits", firstTime ? "50" : "10");
+        markFreeClaimed(localStorage.getItem("userEmail") || "unknown");
       }
       onSuccess();
     } else setGoogleErr(result.error || "Google sign in failed.");
@@ -356,9 +361,11 @@ function Login({ onSuccess, onSignupClick, onNeedOtp }) {
       }
       localStorage.setItem("isLoggedIn", "true");
       createSession();
-      // Grant 50 free credits if not already set
-      if (!localStorage.getItem("corex_credits")) {
-        localStorage.setItem("corex_credits", "50");
+      // Anti-abuse: first claim = 50, repeat device = 10
+      if (!localStorage.getItem("corex_credits") || parseInt(localStorage.getItem("corex_credits") || "0") === 0) {
+        const firstTime = !hasClaimedFree();
+        localStorage.setItem("corex_credits", firstTime ? "50" : "10");
+        markFreeClaimed(localStorage.getItem("userEmail") || "unknown");
       }
       setLoading(false); onSuccess();
     } else { setLoading(false); setError("Incorrect email or password."); }
@@ -446,9 +453,11 @@ export default function AuthFlow({ onSuccess }) {
       localStorage.setItem("userPasswordHash",  pending.passwordHash || "");
       localStorage.removeItem("corex_pending_user");
     }
-    // Grant 50 free credits on first signup
-    if (!localStorage.getItem("corex_credits")) {
-      localStorage.setItem("corex_credits", "50");
+    // Anti-abuse credit grant
+    if (!localStorage.getItem("corex_credits") || parseInt(localStorage.getItem("corex_credits") || "0") === 0) {
+      const firstTime = !hasClaimedFree();
+      localStorage.setItem("corex_credits", firstTime ? "50" : "10");
+      markFreeClaimed(localStorage.getItem("userEmail") || pending?.email || "unknown");
     }
     onSuccess();
   };

@@ -5,6 +5,8 @@ import MainLanding    from "./pages/MainLanding";
 import CreatorLanding from "./pages/CreatorLanding";
 import BrandLanding   from "./pages/BrandLanding";
 import AppShell       from "./components/AppShell";
+import SharedChat     from "./pages/app/SharedChat";
+import AdminPage      from "./pages/AdminPage";
 import { getPlanTheme, getCurrentPlan, applyTheme, PLAN_THEMES } from "./utils/planTheme";
 
 /* ── Theme context ── */
@@ -89,6 +91,8 @@ export default function App() {
             <Route path="/creators" element={<Navigate to="/" replace />} />
             <Route path="/brands"   element={<Navigate to="/" replace />} />
             <Route path="/app/*"    element={<AppShell />} />
+            <Route path="/share/:shareId" element={<SharedChat />} />
+            <Route path="/admin"    element={<AdminPage />} />
             <Route path="*"         element={<Navigate to="/" replace />} />
           </Routes>
         </ToastProvider>
