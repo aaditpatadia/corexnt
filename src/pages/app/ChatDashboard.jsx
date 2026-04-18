@@ -748,6 +748,13 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
                       const last = [...prev].reverse().find(m => m.role === "user");
                       if (last) { setMessages(prev); setTimeout(() => sendMessage(last.content, []), 50); }
                     }}
+                    onSendMessage={(prompt, cost) => {
+                      const cur = getCredits();
+                      if (cur < cost) { setLimitReason("credits"); setShowLimit(true); return; }
+                      deduct(cost);
+                      setCredits(getCredits());
+                      sendMessage(prompt, []);
+                    }}
                   />
                 );
               })}

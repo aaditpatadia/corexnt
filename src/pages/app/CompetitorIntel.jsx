@@ -84,6 +84,28 @@ Then give real Action Steps and a Real Example.`;
       const d = await res.json();
       const full = d.reply || "No response generated. Please try again.";
       setResult({ id: Date.now(), role: "assistant", content: full, searchUsed: !!d.usedWebSearch });
+
+      // Save to corex_history
+      try {
+        const history = JSON.parse(localStorage.getItem('corex_history') || '[]');
+        const competitor = form.competitor || 'Competitor';
+        const yourBrand = form.yourBrand || localStorage.getItem('corex_brand_name') || 'Your Brand';
+        const historyItem = {
+          id: Date.now(),
+          title: `Intel: ${competitor} vs ${yourBrand}`,
+          messages: [
+            { role: 'user', content: JSON.stringify(form) },
+            { role: 'assistant', content: full }
+          ],
+          ts: Date.now(),
+          type: 'competitor-intel',
+        };
+        history.unshift(historyItem);
+        // Keep max 50 items
+        localStorage.setItem('corex_history', JSON.stringify(history.slice(0, 50)));
+      } catch (e) {
+        console.log('History save failed:', e);
+      }
     } catch (err) {
       const errMsg = err?.message?.includes("Rate limit")
         ? "Rate limit hit — wait a moment and try again."

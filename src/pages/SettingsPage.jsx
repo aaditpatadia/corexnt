@@ -163,6 +163,53 @@ export default function SettingsPage() {
         </button>
       </section>
 
+      {/* Divider */}
+      <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', marginBottom: 40, marginTop: 40 }} />
+
+      {/* Section 3 — Need Help? */}
+      <section style={{ marginBottom: 48 }}>
+        <h2 style={{ fontFamily: FONT, fontWeight: 600, fontSize: 13, color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 20 }}>
+          Need Help?
+        </h2>
+
+        <div style={{
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 12,
+          padding: 20,
+        }}>
+          <p style={{ fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', fontSize: 18, color: '#ffffff', margin: '0 0 8px 0' }}>
+            Talk to Aadit directly
+          </p>
+          <p style={{ fontFamily: FONT, fontSize: 14, color: 'rgba(255,255,255,0.45)', margin: '0 0 20px 0' }}>
+            Questions, feedback, or issues — WhatsApp is the fastest way to reach us.
+          </p>
+
+          <button
+            onClick={() => window.open('https://wa.me/917383620725?text=Hi%20Aadit%2C%20I%20need%20help%20with%20Corex', '_blank')}
+            style={{
+              background: 'linear-gradient(135deg, #25D366, #128C7E)',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: 100,
+              padding: '10px 24px',
+              fontSize: 14,
+              fontFamily: FONT,
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'block',
+              marginBottom: 12,
+            }}
+          >
+            💬 WhatsApp us
+          </button>
+
+          <p style={{ fontFamily: FONT, fontSize: 12, color: 'rgba(255,255,255,0.25)', textAlign: 'center', margin: 0 }}>
+            or email corexnt@gmail.com
+          </p>
+        </div>
+      </section>
+
       {/* Delete account — tiny link at bottom */}
       <div style={{ marginTop: 80 }}>
         <button

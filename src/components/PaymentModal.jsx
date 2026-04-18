@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
+import { trackPayment } from "../utils/trackUser";
 
 const FONT = "'Instrument Sans', sans-serif";
 
@@ -14,6 +15,7 @@ export default function PaymentModal({ pack, open, onClose }) {
   const [success, setSuccess] = useState(false);
   const [bankOpen, setBankOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedAccount, setCopiedAccount] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -21,7 +23,7 @@ export default function PaymentModal({ pack, open, onClose }) {
   }, [pack]);
 
   useEffect(() => {
-    if (!open) { setSuccess(false); setError(""); setTxnId(""); setBankOpen(false); setCopied(false); }
+    if (!open) { setSuccess(false); setError(""); setTxnId(""); setBankOpen(false); setCopied(false); setCopiedAccount(false); }
   }, [open]);
 
   useEffect(() => {
@@ -59,14 +61,34 @@ export default function PaymentModal({ pack, open, onClose }) {
     // Save to Firebase
     await setDoc(doc(db, "pending_payments", txnId.trim()), payload).catch(() => {});
 
+    // Track payment (fire-and-forget)
+    trackPayment({
+      email: email,
+      name: name.trim(),
+      pack: pack?.name || '',
+      amount: Number(amount),
+      txnId: txnId.trim(),
+    });
+
     setSubmitting(false);
     setSuccess(true);
   }
 
+  const upiId = import.meta.env.VITE_UPI_ID || '7383620725';
+
   function handleCopyUPI() {
-    navigator.clipboard.writeText("7383620725").then(() => {
+    navigator.clipboard.writeText(upiId).then(() => {
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
+
+  const bankAccount = import.meta.env.VITE_BANK_ACCOUNT || 'Contact support';
+
+  function handleCopyAccount() {
+    navigator.clipboard.writeText(bankAccount).then(() => {
+      setCopiedAccount(true);
+      setTimeout(() => setCopiedAccount(false), 1500);
     });
   }
 
@@ -174,7 +196,7 @@ export default function PaymentModal({ pack, open, onClose }) {
                   }}
                 >
                   <code style={{ flex: 1, fontSize: 16, fontFamily: "monospace", color: "#ffffff", letterSpacing: "0.5px" }}>
-                    7383620725
+                    {upiId}
                   </code>
                   <button
                     onClick={handleCopyUPI}
@@ -198,17 +220,16 @@ export default function PaymentModal({ pack, open, onClose }) {
                   PhonePe / GPay / any UPI app
                 </p>
 
-                {/* QR code if env var set */}
-                {import.meta.env.VITE_PAYMENT_QR && (
-                  <div style={{ textAlign: "center", marginBottom: 20 }}>
-                    <img
-                      src={import.meta.env.VITE_PAYMENT_QR}
-                      alt="Payment QR"
-                      style={{ width: 180, height: 180, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)" }}
-                    />
-                    <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", margin: "8px 0 0" }}>Scan to pay</p>
-                  </div>
-                )}
+                {/* QR code */}
+                <div style={{ textAlign: "center", marginBottom: 20 }}>
+                  <img
+                    src={import.meta.env.VITE_PAYMENT_QR}
+                    alt="PhonePe QR"
+                    style={{ width: '200px', height: '200px', borderRadius: '12px', display: 'block', margin: '0 auto' }}
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                  <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", margin: "8px 0 0" }}>Scan to pay</p>
+                </div>
 
                 {/* Bank details — collapsible */}
                 <button
@@ -239,10 +260,29 @@ export default function PaymentModal({ pack, open, onClose }) {
                       style={{ overflow: "hidden", marginBottom: 20 }}
                     >
                       <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "14px 16px" }}>
+                        {/* Account row with copy button */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontFamily: FONT }}>Account</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ fontSize: 12, color: "#ffffff", fontFamily: "monospace", letterSpacing: "0.3px" }}>{bankAccount}</span>
+                            <button
+                              onClick={handleCopyAccount}
+                              style={{
+                                fontSize: 11, fontFamily: FONT, fontWeight: 600,
+                                padding: "3px 8px", borderRadius: 5,
+                                border: "1px solid rgba(255,255,255,0.1)",
+                                background: "transparent",
+                                color: copiedAccount ? "#9CFCAF" : "rgba(255,255,255,0.4)",
+                                cursor: "pointer", transition: "all 0.15s ease",
+                              }}
+                            >
+                              {copiedAccount ? "Copied!" : "Copy"}
+                            </button>
+                          </div>
+                        </div>
                         {[
-                          ["Account", import.meta.env.VITE_BANK_ACCOUNT || "443003001008266"],
-                          ["IFSC", import.meta.env.VITE_BANK_IFSC || "IBKL0JIVAN1"],
-                          ["Name", import.meta.env.VITE_BANK_NAME || "AADIT SIDDHARTH PATADIA"],
+                          ["IFSC", import.meta.env.VITE_BANK_IFSC || "Contact support"],
+                          ["Name", import.meta.env.VITE_BANK_NAME || "Corex"],
                         ].map(([label, value]) => (
                           <div key={label} style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                             <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontFamily: FONT }}>{label}</span>

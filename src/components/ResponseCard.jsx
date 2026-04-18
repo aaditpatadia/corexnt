@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bar, Line } from "react-chartjs-2";
 import {
@@ -11,6 +11,48 @@ import { generateResponsePDF } from "../utils/generatePDF";
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip, Filler, Legend);
 
 const BAR_COLORS = ["#4f9cf9","#f97316","#22c55e","#a855f7","#f43f5e","#eab308"];
+
+/* ── Markdown table parser ── */
+function renderMarkdownTable(text) {
+  const lines = text.split('\n');
+  let result = '';
+  let inTable = false;
+  let tableHTML = '';
+  let isFirstDataRow = true;
+
+  lines.forEach(line => {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+      if (!inTable) {
+        inTable = true;
+        tableHTML = '<div class="intel-table-wrap"><table class="intel-table">';
+        isFirstDataRow = true;
+      }
+      if (trimmed.replace(/\|/g, '').replace(/-/g, '').replace(/:/g, '').trim() === '') {
+        // separator row — skip
+        isFirstDataRow = false;
+        return;
+      }
+      const cells = trimmed.split('|').filter(c => c.trim() !== '');
+      const tag = isFirstDataRow ? 'th' : 'td';
+      tableHTML += '<tr>' + cells.map(c => `<${tag}>${c.trim()}</${tag}>`).join('') + '</tr>';
+      if (isFirstDataRow) isFirstDataRow = false;
+    } else {
+      if (inTable) {
+        tableHTML += '</table></div>';
+        result += tableHTML;
+        tableHTML = '';
+        inTable = false;
+        isFirstDataRow = true;
+      }
+      result += line + '\n';
+    }
+  });
+  if (inTable) {
+    result += tableHTML + '</table></div>';
+  }
+  return result;
+}
 
 /* ── Save to reports ── */
 function saveReport(content, title) {
@@ -396,7 +438,7 @@ function PlanGateBanner({ feature }) {
 }
 
 /* ── COREX response ── */
-export default function ResponseCard({ message, onChip, onRegenerate, userType = "creator" }) {
+export default function ResponseCard({ message, onChip, onRegenerate, onSendMessage, onShare, userType = "creator" }) {
   const { role, searchUsed } = message;
 
   const [copied,     setCopied]     = useState(false);
@@ -404,6 +446,23 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
   const [hovered,    setHovered]    = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const chartRef = useRef(null);
+
+  // Action buttons state
+  const [whyOpen,    setWhyOpen]    = useState(false);
+  const [whyLoading, setWhyLoading] = useState(false);
+  const [makeItOpen, setMakeItOpen] = useState(false);
+  const makeItRef = useRef(null);
+
+  useEffect(() => {
+    if (!makeItOpen) return;
+    const handler = (e) => {
+      if (makeItRef.current && !makeItRef.current.contains(e.target)) {
+        setMakeItOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [makeItOpen]);
 
   if (role === "user") return <UserBubble message={message}/>;
 
@@ -461,13 +520,30 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
       )}
 
       {/* Body paragraphs */}
-      {bodyText && (
-        <div style={{ fontSize:15, lineHeight:1.8, color:"rgba(255,255,255,0.85)", fontFamily:"var(--font-body)" }}>
-          {bodyText.split(/\n\n+/).map((para, i) => (
-            para.trim() && <p key={i} style={{ marginBottom:14 }}>{para.trim()}</p>
-          ))}
-        </div>
-      )}
+      {bodyText && (()=>{
+        const processed = renderMarkdownTable(bodyText);
+        const hasTable = processed.includes('<table');
+        if (hasTable) {
+          return (
+            <div
+              style={{ fontSize:15, lineHeight:1.8, color:"rgba(255,255,255,0.85)", fontFamily:"var(--font-body)" }}
+              dangerouslySetInnerHTML={{ __html: processed.split(/\n\n+/).map(para => {
+                const t = para.trim();
+                if (!t) return '';
+                if (t.startsWith('<div class="intel-table-wrap">')) return t;
+                return `<p style="margin-bottom:14px">${t}</p>`;
+              }).join('') }}
+            />
+          );
+        }
+        return (
+          <div style={{ fontSize:15, lineHeight:1.8, color:"rgba(255,255,255,0.85)", fontFamily:"var(--font-body)" }}>
+            {bodyText.split(/\n\n+/).map((para, i) => (
+              para.trim() && <p key={i} style={{ marginBottom:14 }}>{para.trim()}</p>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Chart */}
       {showChart && (()=>{
@@ -601,7 +677,7 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
         </div>
       )}
 
-      {/* Copy / Redo / Save / PDF */}
+      {/* Copy / Redo / Save / PDF — hover action bar */}
       <AnimatePresence>
         {hovered && !message.streaming && (
           <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
@@ -647,9 +723,141 @@ export default function ResponseCard({ message, onChip, onRegenerate, userType =
               onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.3)"}>
               {pdfLoading ? "Generating…" : "Download PDF"}
             </button>
+            {onShare && (
+              <button
+                onClick={onShare}
+                style={{ fontSize:13, fontFamily:"var(--font-body)", color:"rgba(255,255,255,0.3)", background:"transparent", border:"none", cursor:"pointer", transition:"color 0.15s", display:"flex", alignItems:"center", gap:5, padding:0 }}
+                onMouseEnter={e=>e.currentTarget.style.color="rgba(255,255,255,0.8)"}
+                onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.3)"}>
+                ↗ Share
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── Four action buttons (assistant only, always visible) ── */}
+      {!message.streaming && (
+        <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginTop:16 }}>
+
+          {/* Button 1: Improve this */}
+          <ActionBtn
+            label="✦ Improve this"
+            onClick={() => onSendMessage?.(
+              "Improve and expand on your last response. Make it more specific, add real data, and give sharper recommendations.",
+              4
+            )}
+          />
+
+          {/* Button 2: Why this works (toggle) */}
+          <div style={{ display:"flex", flexDirection:"column" }}>
+            <ActionBtn
+              label="◎ Why this works"
+              active={whyOpen}
+              onClick={() => {
+                if (!whyOpen) {
+                  setWhyOpen(true);
+                  setWhyLoading(true);
+                  onSendMessage?.(
+                    "Explain the strategic reasoning behind your last response. Why does this approach work for this specific situation? What's the insight that makes this different from generic advice?",
+                    2
+                  );
+                  setTimeout(() => setWhyLoading(false), 800);
+                } else {
+                  setWhyOpen(false);
+                }
+              }}
+            />
+            {whyOpen && (
+              <div style={{
+                background: 'rgba(156,252,175,0.04)',
+                borderLeft: '2px solid #9CFCAF',
+                padding: '14px 18px',
+                borderRadius: '0 8px 8px 0',
+                marginTop: '8px',
+              }}>
+                <div style={{ fontSize:10, letterSpacing:'2px', color:'#9CFCAF', marginBottom:8 }}>COREX REASONING</div>
+                <div style={{ fontSize:13, color:'rgba(255,255,255,0.7)' }}>
+                  {whyLoading ? 'Generating...' : 'See the next message in chat for the full strategic reasoning.'}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Button 3: Another direction */}
+          <ActionBtn
+            label="↺ Another direction"
+            onClick={() => onSendMessage?.(
+              "Give me a completely different strategic direction for the same brief. Not a variation — a genuinely different angle I haven't considered yet.",
+              4
+            )}
+          />
+
+          {/* Button 4: Make it [mode] — dropdown */}
+          <div ref={makeItRef} style={{ position:"relative" }}>
+            <ActionBtn
+              label="⚡ Make it..."
+              active={makeItOpen}
+              onClick={() => setMakeItOpen(p => !p)}
+            />
+            {makeItOpen && (
+              <div style={{
+                position:"absolute", bottom:"110%", right:0,
+                background:"#111",
+                border:"1px solid rgba(255,255,255,0.1)",
+                borderRadius:"12px",
+                padding:"4px",
+                minWidth:"160px",
+                zIndex:100,
+              }}>
+                {[
+                  { label:"More viral",     prompt:"Now make this more viral. Think shareability, emotion, hooks that spread." },
+                  { label:"More premium",   prompt:"Now make this more premium. Elevate the positioning, language, and strategy to luxury/aspirational level." },
+                  { label:"More emotional", prompt:"Now make this more emotionally resonant. Connect it to identity, aspiration, and human truth." },
+                  { label:"More practical", prompt:"Make this more practical and executable. Break it into specific steps I can do this week." },
+                ].map(({ label, prompt }) => (
+                  <div
+                    key={label}
+                    onClick={() => { onSendMessage?.(prompt, 4); setMakeItOpen(false); }}
+                    style={{ padding:"8px 12px", fontSize:13, color:"rgba(255,255,255,0.7)", borderRadius:8, cursor:"pointer" }}
+                    onMouseEnter={e => e.currentTarget.style.background="rgba(255,255,255,0.08)"}
+                    onMouseLeave={e => e.currentTarget.style.background="transparent"}
+                  >
+                    {label}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+        </div>
+      )}
     </motion.div>
+  );
+}
+
+/* ── Shared action button ── */
+function ActionBtn({ label, onClick, active }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        background: active || hov ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
+        border: `1px solid ${active || hov ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)'}`,
+        borderRadius: '100px',
+        padding: '7px 14px',
+        fontSize: '12px',
+        fontFamily: "'Instrument Sans', sans-serif",
+        color: active || hov ? '#ffffff' : 'rgba(255,255,255,0.6)',
+        cursor: 'pointer',
+        transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
+        transform: hov ? 'translateY(-1px)' : 'translateY(0)',
+      }}
+    >
+      {label}
+    </button>
   );
 }

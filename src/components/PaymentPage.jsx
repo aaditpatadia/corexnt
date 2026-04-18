@@ -154,7 +154,7 @@ export default function PaymentPage() {
 
                   {/* Price */}
                   <p style={{ fontFamily: "'Instrument Serif', serif", fontSize: 32, color: "#ffffff", margin: "8px 0 4px", fontWeight: 400 }}>
-                    {currency === "INR" ? `₹${pack.inr}` : `$${pack.usd}`}
+                    {currency === "INR" ? `₹${pack.inr.toLocaleString('en-IN')}` : `$${pack.usd}`}
                   </p>
 
                   {/* Tagline */}
