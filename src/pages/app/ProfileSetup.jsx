@@ -4,34 +4,40 @@ import { useNavigate } from "react-router-dom";
 
 const FONT = "'Instrument Sans', sans-serif";
 
+const fieldStyle = {
+  width: "100%",
+  padding: "14px 16px",
+  borderRadius: 12,
+  border: "1.5px solid rgba(255,255,255,0.1)",
+  background: "rgba(255,255,255,0.05)",
+  color: "#ffffff",
+  fontSize: 15,
+  fontFamily: "'Instrument Sans', sans-serif",
+  outline: "none",
+  transition: "border-color 0.2s",
+  boxSizing: "border-box",
+};
+
 export default function ProfileSetup() {
   const navigate = useNavigate();
-  const [name, setName] = useState(localStorage.getItem("corex_user_name") || "");
-  const [brand, setBrand] = useState(localStorage.getItem("corex_brand_name") || "");
-  const [saving, setSaving] = useState(false);
+  const [name,      setName]      = useState(localStorage.getItem("corex_user_name") || "");
+  const [brand,     setBrand]     = useState(localStorage.getItem("corex_brand_name") || "");
+  const [challenge, setChallenge] = useState(localStorage.getItem("corex_first_challenge") || "");
+  const [saving,    setSaving]    = useState(false);
 
   function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
     const n = name.trim();
     const b = brand.trim();
-    localStorage.setItem("corex_user_name", n);
-    localStorage.setItem("corex_brand_name", b);
+    const c = challenge.trim();
+    localStorage.setItem("corex_user_name",      n);
+    localStorage.setItem("corex_brand_name",     b);
+    localStorage.setItem("corex_first_challenge", c);
     if (n) localStorage.setItem("userName", n);
-    if (!localStorage.getItem("corex_credits")) {
-      localStorage.setItem("corex_credits", "50");
-    }
-    localStorage.setItem("corex_plan", localStorage.getItem("corex_plan") || "free");
+    localStorage.setItem("corex_plan",         localStorage.getItem("corex_plan") || "free");
     localStorage.setItem("corex_profile_done", "true");
     setTimeout(() => navigate("/app/dashboard", { replace: true }), 300);
-  }
-
-  function handleSkip() {
-    localStorage.setItem("corex_profile_done", "true");
-    if (!localStorage.getItem("corex_credits")) {
-      localStorage.setItem("corex_credits", "50");
-    }
-    navigate("/app/dashboard", { replace: true });
   }
 
   return (
@@ -53,102 +59,77 @@ export default function ProfileSetup() {
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         style={{ width: "100%", maxWidth: 440 }}
       >
-        {/* Logo mark */}
-        <div
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: "50%",
-            background: "linear-gradient(#000,#000) padding-box, linear-gradient(135deg,#226FF7,#6BC3CE,#9CFCAF,#FFEA71) border-box",
-            border: "2px solid transparent",
-            marginBottom: 32,
-          }}
-        />
-
-        <p style={{ fontSize: 13, fontFamily: FONT, color: "rgba(255,255,255,0.35)", marginBottom: 8 }}>
-          One quick thing —
-        </p>
         <h1
           style={{
             fontFamily: "'Instrument Serif', serif",
             fontStyle: "italic",
             fontWeight: 400,
-            fontSize: "clamp(24px, 4vw, 32px)",
+            fontSize: 28,
             color: "#ffffff",
-            lineHeight: 1.25,
+            textAlign: "center",
+            marginBottom: 8,
+          }}
+        >
+          Let's set up your space
+        </h1>
+
+        <p
+          style={{
+            fontSize: 14,
+            color: "rgba(255,255,255,0.4)",
+            textAlign: "center",
+            fontFamily: FONT,
             marginBottom: 32,
           }}
         >
-          What should we call you and your brand?
-        </h1>
+          Takes 30 seconds.
+        </p>
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div>
-            <label style={{ display: "block", fontSize: 11, fontFamily: FONT, fontWeight: 600, color: "rgba(255,255,255,0.4)", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>
-              Your name
-            </label>
-            <input
-              autoFocus
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Aadit, Priya, Rohan"
-              style={{
-                width: "100%",
-                padding: "13px 16px",
-                borderRadius: 12,
-                fontSize: 15,
-                fontFamily: FONT,
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                color: "#ffffff",
-                caretColor: "#9CFCAF",
-                outline: "none",
-                boxSizing: "border-box",
-                transition: "border-color 0.2s ease",
-              }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(156,252,175,0.4)")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
-            />
-          </div>
+          {/* Your name */}
+          <input
+            autoFocus
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Your name"
+            style={fieldStyle}
+            onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(156,252,175,0.4)")}
+            onBlur={(e)  => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)")}
+          />
 
-          <div>
-            <label style={{ display: "block", fontSize: 11, fontFamily: FONT, fontWeight: 600, color: "rgba(255,255,255,0.4)", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>
-              Your brand or project name
-            </label>
-            <input
-              type="text"
-              value={brand}
-              onChange={(e) => setBrand(e.target.value)}
-              placeholder="e.g. Lumē Skincare, NineteenTwentys, @yourhandle"
-              style={{
-                width: "100%",
-                padding: "13px 16px",
-                borderRadius: 12,
-                fontSize: 15,
-                fontFamily: FONT,
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                color: "#ffffff",
-                caretColor: "#9CFCAF",
-                outline: "none",
-                boxSizing: "border-box",
-                transition: "border-color 0.2s ease",
-              }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(156,252,175,0.4)")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
-            />
-          </div>
+          {/* Brand or project */}
+          <input
+            type="text"
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+            placeholder="e.g. Lumē, NineteenTwentys, @yourhandle"
+            style={fieldStyle}
+            onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(156,252,175,0.4)")}
+            onBlur={(e)  => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)")}
+          />
+
+          {/* Biggest creative challenge */}
+          <input
+            type="text"
+            value={challenge}
+            onChange={(e) => setChallenge(e.target.value)}
+            placeholder="e.g. our content isn't converting, can't figure out our brand voice..."
+            style={fieldStyle}
+            onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(156,252,175,0.4)")}
+            onBlur={(e)  => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)")}
+          />
 
           <motion.button
             type="submit"
             disabled={saving}
-            whileHover={{ translateY: -1 }}
+            whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
             style={{
+              width: "100%",
               marginTop: 8,
-              padding: "14px 20px",
-              borderRadius: 12,
+              padding: "15px 0",
+              borderRadius: 100,
               fontSize: 15,
               fontFamily: FONT,
               fontWeight: 700,
@@ -164,25 +145,17 @@ export default function ProfileSetup() {
           </motion.button>
         </form>
 
-        <button
-          onClick={handleSkip}
+        <p
           style={{
-            marginTop: 20,
-            display: "block",
-            width: "100%",
+            marginTop: 16,
+            fontSize: 12,
+            color: "rgba(255,255,255,0.3)",
             textAlign: "center",
-            fontSize: 13,
             fontFamily: FONT,
-            color: "rgba(255,255,255,0.25)",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.5)")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}
         >
-          Skip for now →
-        </button>
+          50 free credits · No card needed · Cancel anytime
+        </p>
       </motion.div>
     </div>
   );

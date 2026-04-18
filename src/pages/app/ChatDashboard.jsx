@@ -4,7 +4,8 @@ import ChatInput    from "../../components/ChatInput";
 import ResponseCard from "../../components/ResponseCard";
 import { stripMarkdown } from "../../utils/parseResponse";
 import { getProfileContext } from "../../utils/userProfile";
-import { deductCredits, getCredits, CREDIT_COSTS } from "../../utils/credits";
+import { deduct, getCredits, COSTS, translate } from "../../utils/credits";
+const deductCredits = deduct; // backward compat alias
 
 const ADMIN_EMAIL = "corexnt@gmail.com";
 
@@ -447,6 +448,8 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
   const [limitHit,    setLimitHit]    = useState(false);
   const [showLimit,   setShowLimit]   = useState(false);
   const [limitReason, setLimitReason] = useState("credits"); // "credits" | "projects" | "messages"
+  const [credits,     setCredits]     = useState(getCredits);
+  const [shareToast,  setShareToast]  = useState(false);
   const bottomRef    = useRef(null);
   const scrollRef    = useRef(null);
 
@@ -455,6 +458,14 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
       sessionStorage.setItem("corex_session_id", Date.now().toString());
     if (!localStorage.getItem("corex_joined"))
       localStorage.setItem("corex_joined", new Date().toISOString());
+  }, []);
+
+  // Credits refresh — every 5s and on window focus
+  useEffect(() => {
+    const refresh = () => setCredits(getCredits());
+    const interval = setInterval(refresh, 5000);
+    window.addEventListener('focus', refresh);
+    return () => { clearInterval(interval); window.removeEventListener('focus', refresh); };
   }, []);
 
   // Prefill from other pages
@@ -510,9 +521,14 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
 
     // Calculate credit cost and check balance
     const hasImage = files.some(f => f.type?.startsWith("image/"));
-    const isComplex = (text?.length || 0) > 80;
-    const cost = hasImage ? CREDIT_COSTS.file_analysis : (isComplex ? CREDIT_COSTS.smart_message : CREDIT_COSTS.basic_message);
-    if (!isAdminEmail() && getCredits() < cost) { setLimitReason("credits"); setShowLimit(true); return; }
+    const textLower = (text || "").toLowerCase();
+    const isBriefRequest = /brief|campaign|strategy|positioning|audit/.test(textLower);
+    const isComplex = (text?.length || 0) > 50;
+    const cost = hasImage ? COSTS.file
+      : isBriefRequest ? COSTS.brief
+      : isComplex ? COSTS.smart
+      : COSTS.basic;
+    if (!isAdminEmail() && !deduct(cost)) { setLimitReason("credits"); setShowLimit(true); return; }
 
     const displayFiles = files.map(({ name, type, preview }) => ({ name, type, preview }));
     const apiFiles     = files.map(({ name, type, b64 })     => ({ name, type, b64 }));
@@ -578,8 +594,8 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
       reply = `Connection error. Please try again.\n\nFOLLOWUPS: ["Try again", "New idea"]`;
     }
 
-    // Deduct credits after successful response
-    if (!isAdminEmail()) deductCredits(cost);
+    // Credits already deducted by deduct(cost) above; refresh display
+    setCredits(getCredits());
 
     const assistantMsg = { id: assistantId, role: "assistant", content: reply, streaming: false, searchUsed };
     setMessages(prev => {
@@ -593,6 +609,19 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
     setLoading(false);
     setTimeout(() => setRevealing(null), 8000);
   }, [messages, loading, userType]);
+
+  // Share handler — saves conversation snapshot to localStorage and copies link
+  const handleShare = useCallback((message) => {
+    const shareId = 'share_' + Date.now();
+    const brandName = localStorage.getItem('corex_brand_name') || '';
+    const sharedChats = JSON.parse(localStorage.getItem('corex_shared_chats') || '{}');
+    sharedChats[shareId] = { messages, brandName, ts: Date.now() };
+    localStorage.setItem('corex_shared_chats', JSON.stringify(sharedChats));
+    const link = `${window.location.origin}/share/${shareId}`;
+    navigator.clipboard.writeText(link).catch(() => {});
+    setShareToast(true);
+    setTimeout(() => setShareToast(false), 2500);
+  }, [messages]);
 
   // Handler when user picks a branch
   const handleBranchSelect = useCallback((branchTitle) => {
@@ -713,6 +742,7 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
                     message={msg}
                     userType={userType}
                     onChip={chip => sendMessage(chip, [])}
+                    onShare={() => handleShare(msg)}
                     onRegenerate={() => {
                       const prev = messages.slice(0, messages.findIndex(m => m.id === msg.id));
                       const last = [...prev].reverse().find(m => m.role === "user");
@@ -739,7 +769,35 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
         }}
       >
         <ChatInput onSend={sendMessage} disabled={loading || limitHit} userType={userType} embedded />
+        <div style={{
+          textAlign: "center",
+          fontSize: 11,
+          color: credits < 10 ? "rgba(255,234,113,0.8)" : "rgba(255,255,255,0.3)",
+          fontFamily: "'Instrument Sans', sans-serif",
+          paddingBottom: 8,
+          animation: credits < 10 ? "pulse 2s ease-in-out infinite" : "none",
+        }}>
+          {translate(credits)} · {credits} credits remaining
+        </div>
       </div>
+
+      {/* Share toast */}
+      <AnimatePresence>
+        {shareToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            style={{
+              position: "fixed", bottom: 100, left: "50%", transform: "translateX(-50%)",
+              background: "#111", border: "1px solid rgba(156,252,175,0.3)",
+              borderRadius: 12, padding: "10px 18px",
+              fontSize: 13, color: "#9CFCAF", fontFamily: "'Instrument Sans', sans-serif",
+              zIndex: 1100, whiteSpace: "nowrap",
+            }}
+          >
+            Link copied!
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Branch grid responsive styles */}
       <style>{`

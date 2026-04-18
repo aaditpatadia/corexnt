@@ -66,15 +66,23 @@ function NavItem({ icon, label, active, onClick, premium }) {
 function Sidebar({ navigate, location, onNewChat, onClose }) {
   const active = location.pathname.replace("/app/", "").split("/")[0] || "dashboard";
 
+  const [sidebarCredits, setSidebarCredits] = useState(() => parseInt(localStorage.getItem('corex_credits') || '0'));
+  useEffect(() => {
+    const refresh = () => setSidebarCredits(parseInt(localStorage.getItem('corex_credits') || '0'));
+    const interval = setInterval(refresh, 3000);
+    window.addEventListener('focus', refresh);
+    return () => { clearInterval(interval); window.removeEventListener('focus', refresh); };
+  }, []);
+
   const history = (() => {
     try { return JSON.parse(localStorage.getItem("corex_history") || "[]").slice(0, 8); }
     catch { return []; }
   })();
 
   const nav = [
-    { icon: "+", label: "New chat",        path: "chat",             action: () => { onNewChat(); navigate("/app/chat"); onClose?.(); } },
-    { icon: "📁", label: "Projects",       path: "projects",         action: () => { navigate("/app/projects"); onClose?.(); } },
-    { icon: "✦",  label: "Brief Builder",  path: "brief-builder",    action: () => { navigate("/app/brief-builder"); onClose?.(); }, premium: false },
+    { icon: "🗨", label: "Chat",           path: "chat",            action: () => { onNewChat(); navigate("/app/chat"); onClose?.(); } },
+    { icon: "📁", label: "Projects",       path: "projects",        action: () => { navigate("/app/projects"); onClose?.(); } },
+    { icon: "✦",  label: "Brief Builder",  path: "brief-builder",   action: () => { navigate("/app/brief-builder"); onClose?.(); } },
     { icon: "◎",  label: "Competitor Intel", path: "competitor-intel", action: () => { navigate("/app/competitor-intel"); onClose?.(); } },
   ];
 
@@ -185,16 +193,36 @@ function Sidebar({ navigate, location, onNewChat, onClose }) {
           )}
         </div>
       </div>
+
+      {/* Bottom credit pill */}
+      <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <button
+          onClick={() => { document.dispatchEvent(new CustomEvent("corex:openCredits")); onClose?.(); }}
+          style={{
+            display: "flex", alignItems: "center", gap: 6,
+            width: "100%", padding: "8px 12px", borderRadius: 10,
+            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)",
+            color: "rgba(255,255,255,0.6)", fontSize: 13,
+            fontFamily: "'Instrument Sans', sans-serif", cursor: "pointer",
+            transition: "all 0.2s ease",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#fff"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; }}
+        >
+          ⚡ {sidebarCredits} credits
+        </button>
+      </div>
     </div>
   );
 }
 
 /* ─── Top Bar ─── */
-function TopBar({ userName, navigate, onNewChat, onCreditClick, onMobileMenuOpen }) {
+function TopBar({ userName, navigate, onNewChat, onCreditClick }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [credits, setCredits] = useState(getCredits);
   const initials = (userName || localStorage.getItem("corex_user_name") || "CX").slice(0, 2).toUpperCase();
-  const isLow = credits < 30;
+  const isEmpty = credits === 0;
+  const isLow   = !isEmpty && credits < 30;
 
   // Refresh credits on focus
   useEffect(() => {
@@ -209,6 +237,12 @@ function TopBar({ userName, navigate, onNewChat, onCreditClick, onMobileMenuOpen
     sessionStorage.clear();
     navigate("/");
   };
+
+  // Credit pill derived styles
+  const pillBorder = isEmpty ? "rgba(255,100,100,0.5)" : isLow ? "rgba(255,234,113,0.5)" : "rgba(255,255,255,0.07)";
+  const pillColor  = isEmpty ? "#ff6b6b"               : isLow ? "#FFEA71"               : "rgba(255,255,255,0.7)";
+  const pillBg     = isEmpty || isLow ? "transparent"  : "rgba(255,255,255,0.06)";
+  const pillLabel  = isEmpty ? "⚡ Top up" : isLow ? `⚡ ${credits} left` : `⚡ ${credits} credits`;
 
   return (
     <div
@@ -225,25 +259,12 @@ function TopBar({ userName, navigate, onNewChat, onCreditClick, onMobileMenuOpen
         background: "#000000",
       }}
     >
-      {/* Left: mobile menu + wordmark */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <button
-          onClick={onMobileMenuOpen}
-          className="flex md:hidden"
-          style={{
-            width: 32, height: 32, borderRadius: 8, border: "none",
-            background: "rgba(255,255,255,0.06)", color: "#ffffff",
-            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16,
-          }}
-        >
-          ☰
-        </button>
-        <span style={{ fontFamily: FONT, fontWeight: 600, fontSize: 16, color: "#ffffff" }}>Corex</span>
-      </div>
+      {/* Left: wordmark */}
+      <span style={{ fontFamily: FONT, fontWeight: 600, fontSize: 16, color: "#ffffff" }}>Corex</span>
 
       {/* Right: credit pill + settings + avatar */}
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        {/* Credit pill */}
+        {/* Credit pill — 3 states */}
         <button
           onClick={onCreditClick}
           style={{
@@ -252,19 +273,19 @@ function TopBar({ userName, navigate, onNewChat, onCreditClick, onMobileMenuOpen
             gap: 5,
             padding: "6px 14px",
             borderRadius: 100,
-            background: "rgba(255,255,255,0.06)",
-            border: `1px solid ${isLow ? "rgba(255,234,113,0.4)" : "rgba(255,255,255,0.07)"}`,
+            background: pillBg,
+            border: `1px solid ${pillBorder}`,
             cursor: "pointer",
             fontFamily: FONT,
             fontSize: 13,
-            color: isLow ? "#FFEA71" : "rgba(255,255,255,0.7)",
+            color: pillColor,
             transition: "all 0.2s ease",
             whiteSpace: "nowrap",
           }}
           onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.color = "#ffffff"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = isLow ? "rgba(255,234,113,0.4)" : "rgba(255,255,255,0.07)"; e.currentTarget.style.color = isLow ? "#FFEA71" : "rgba(255,255,255,0.7)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = pillBorder; e.currentTarget.style.color = pillColor; }}
         >
-          ⚡ {isLow ? `${credits} left` : `${credits} credits`}
+          {pillLabel}
         </button>
 
         {/* Settings */}
@@ -410,11 +431,18 @@ export default function AppShell() {
     }
   }, [location.pathname]);
 
-  // Listen for credit modal trigger from dropdown
+  // Listen for credit modal trigger from dropdown / sidebar
   useEffect(() => {
     const handler = () => setCreditModalOpen(true);
     document.addEventListener("corex:openCredits", handler);
     return () => document.removeEventListener("corex:openCredits", handler);
+  }, []);
+
+  // ESC key closes mobile menu
+  useEffect(() => {
+    const escHandler = (e) => { if (e.key === 'Escape') setMobileMenuOpen(false); };
+    document.addEventListener('keydown', escHandler);
+    return () => document.removeEventListener('keydown', escHandler);
   }, []);
 
   const handleNewChat = useCallback(() => {
@@ -516,7 +544,6 @@ export default function AppShell() {
           navigate={navigate}
           onNewChat={handleNewChat}
           onCreditClick={() => setCreditModalOpen(true)}
-          onMobileMenuOpen={() => setMobileMenuOpen((p) => !p)}
         />
 
         {/* Page content */}
