@@ -84,7 +84,7 @@ function Section({ title, children }) {
 }
 
 /* ── Credit Manager ── */
-function CreditManager({ onToast }) {
+function CreditManager({ onToast, compact }) {
   const [email, setEmail] = useState('');
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
@@ -110,10 +110,27 @@ function CreditManager({ onToast }) {
   }
 
   const inp = (extra) => ({
-    padding: '12px 14px', borderRadius: 10, background: '#0a0a0a',
+    padding: '10px 12px', borderRadius: 10, background: '#0a0a0a',
     border: '1px solid rgba(255,255,255,0.1)', color: '#fff',
-    fontFamily: FONT, fontSize: 14, outline: 'none', ...extra,
+    fontFamily: FONT, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box', ...extra,
   });
+
+  const form = (
+    <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <input value={email} onChange={e => setEmail(e.target.value)} placeholder="user@email.com" type="email" style={inp({})} />
+      <input value={amount} onChange={e => setAmount(e.target.value)} placeholder="Credits to add" type="number" min="1" style={inp({})} />
+      <button type="submit" disabled={loading} style={{
+        padding: '10px', borderRadius: 10,
+        background: loading ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg,#226FF7,#9CFCAF)',
+        border: 'none', color: loading ? 'rgba(255,255,255,0.4)' : '#000',
+        fontWeight: 700, fontSize: 13, cursor: loading ? 'default' : 'pointer', fontFamily: FONT,
+      }}>
+        {loading ? 'Adding…' : 'Add Credits'}
+      </button>
+    </form>
+  );
+
+  if (compact) return form;
 
   return (
     <Section title="Credit Manager">
@@ -349,7 +366,7 @@ function Stats() {
 }
 
 /* ── Upgrade User ── */
-function UpgradeUser({ onToast }) {
+function UpgradeUser({ onToast, compact }) {
   const [targetEmail, setTargetEmail] = useState('');
   const [targetPlan, setTargetPlan] = useState('spark');
   const [upgrading, setUpgrading] = useState(false);
@@ -368,19 +385,55 @@ function UpgradeUser({ onToast }) {
         updatedBy: 'admin',
         email: targetEmail.toLowerCase().trim(),
       });
-      setUpgradeMsg(`✓ ${targetEmail} upgraded to ${targetPlan}`);
+      setUpgradeMsg(`✓ ${targetEmail} → ${targetPlan}`);
       onToast(`${targetEmail} → ${targetPlan}`);
+      setTargetEmail('');
     } catch (err) {
       setUpgradeMsg(`Error: ${err.message}`);
     }
     setUpgrading(false);
   }
 
+  const inpStyle = { width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, fontSize: 13, fontFamily: FONT, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', outline: 'none' };
+
+  if (compact) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <input
+          value={targetEmail}
+          onChange={e => setTargetEmail(e.target.value)}
+          placeholder="user@email.com"
+          style={inpStyle}
+        />
+        <select
+          value={targetPlan}
+          onChange={e => setTargetPlan(e.target.value)}
+          style={{ ...inpStyle, background: '#1a0a2e', border: '1px solid #5b21b6', cursor: 'pointer' }}
+        >
+          <option value="free">Free</option>
+          <option value="spark">SPARK</option>
+          <option value="studio">Studio</option>
+          <option value="nineteen_twentys">Nineteen Twentys</option>
+          <option value="canvas_enterprise">Canvas Enterprise</option>
+        </select>
+        <button
+          onClick={handleUpgradeUser}
+          disabled={upgrading || !targetEmail.trim()}
+          style={{ padding: '10px', borderRadius: 10, fontSize: 13, fontFamily: FONT, fontWeight: 600, background: upgrading ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg, #a78bfa, #226FF7)', color: upgrading ? 'rgba(255,255,255,0.3)' : '#fff', border: 'none', cursor: upgrading ? 'not-allowed' : 'pointer' }}
+        >
+          {upgrading ? 'Upgrading…' : 'Upgrade →'}
+        </button>
+        {upgradeMsg && (
+          <p style={{ fontSize: 12, color: upgradeMsg.startsWith('✓') ? '#9CFCAF' : '#f87171', fontFamily: FONT, margin: 0 }}>
+            {upgradeMsg}
+          </p>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div style={{ marginTop: 24, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 24 }}>
-      <p style={{ fontSize: 13, fontWeight: 700, color: '#a78bfa', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 16, fontFamily: FONT }}>
-        Upgrade User
-      </p>
+    <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 24 }}>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <input
           value={targetEmail}
@@ -451,15 +504,44 @@ export default function AdminPage() {
         </button>
       </div>
 
-      {/* Content */}
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '32px 24px 64px' }}>
-        <Stats />
-        <CreditManager onToast={setToast} />
-        <Section title="Upgrade User">
-          <UpgradeUser onToast={setToast} />
-        </Section>
-        <PendingPayments onToast={setToast} />
-        <UserList />
+      {/* Content — two-column layout */}
+      <div style={{ display: 'flex', gap: 0, maxWidth: 1280, margin: '0 auto', minHeight: 'calc(100vh - 64px)' }}>
+
+        {/* Left sidebar — quick actions */}
+        <div style={{
+          width: 300,
+          minWidth: 260,
+          flexShrink: 0,
+          background: '#080808',
+          borderRight: '1px solid rgba(255,255,255,0.07)',
+          padding: '28px 20px',
+          overflowY: 'auto',
+        }}>
+          <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', fontFamily: FONT, marginBottom: 20 }}>Quick Actions</p>
+
+          {/* Upgrade User — prominent in sidebar */}
+          <div style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: 14, padding: 18, marginBottom: 20 }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#a78bfa', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 14, fontFamily: FONT }}>
+              ⬆ Upgrade User
+            </p>
+            <UpgradeUser onToast={setToast} compact />
+          </div>
+
+          {/* Add Credits — quick sidebar form */}
+          <div style={{ background: 'rgba(34,111,247,0.08)', border: '1px solid rgba(34,111,247,0.2)', borderRadius: 14, padding: 18 }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#6BC3CE', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 14, fontFamily: FONT }}>
+              ⚡ Add Credits
+            </p>
+            <CreditManager onToast={setToast} compact />
+          </div>
+        </div>
+
+        {/* Main content */}
+        <div style={{ flex: 1, padding: '32px 28px 64px', overflowY: 'auto' }}>
+          <Stats />
+          <PendingPayments onToast={setToast} />
+          <UserList />
+        </div>
       </div>
 
       {toast && <Toast msg={toast} onDone={() => setToast(null)} />}

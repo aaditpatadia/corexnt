@@ -333,7 +333,7 @@ export function generateResponsePDF({ title, body, actionSteps = [], realExample
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
     doc.setTextColor(...GREEN);
-    doc.text("Powered by COREX — Indian Marketing Intelligence Engine", M + CW / 2, y + 9, { align: "center" });
+    doc.text("Powered by COREX — Creative Intelligence Engine", M + CW / 2, y + 9, { align: "center" });
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(...GREY);

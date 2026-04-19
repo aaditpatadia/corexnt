@@ -525,7 +525,7 @@ Generate the FULL brief now — do not ask for more information. Include:
   // ── Result view ───────────────────────────────────────────────────────────────
   if (step === 3) {
     return (
-      <div style={{ background: BG, minHeight: "100vh", padding: "0 0 80px" }}>
+      <div style={{ background: BG, minHeight: "100vh", padding: "0 0 80px", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         <div style={{ maxWidth: 560, margin: "0 auto", padding: "40px 20px" }}>
 
           {/* Header */}
@@ -685,7 +685,7 @@ Generate the FULL brief now — do not ask for more information. Include:
 
   // ── Wizard steps 0–2 ──────────────────────────────────────────────────────────
   return (
-    <div style={{ background: BG, minHeight: "100vh", padding: "0 0 80px" }}>
+    <div style={{ background: BG, minHeight: "100vh", padding: "0 0 80px", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
       <div style={{ maxWidth: 560, margin: "0 auto", padding: "40px 20px" }}>
 
         {/* Page header */}

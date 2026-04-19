@@ -79,32 +79,6 @@ export default function PaymentModal({ pack, open, onClose }) {
     // Save to Firebase
     await setDoc(doc(db, "pending_payments", txnId.trim()), payload).catch(() => {});
 
-    // Send email notification to admin
-    try {
-      const emailjs = (await import("@emailjs/browser")).default;
-      const serviceId  = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-      const publicKey  = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-      if (serviceId && templateId && publicKey) {
-        await emailjs.send(serviceId, templateId, {
-          to_email: "corexnt@gmail.com",
-          subject: `New Payment — ${pack.name} — ₹${amount}`,
-          from_name: name.trim(),
-          message: [
-            `PAYMENT RECEIVED`,
-            `Name: ${name.trim()}`,
-            `Email: ${email}`,
-            `WhatsApp: ${whatsapp.trim()}`,
-            `Pack: ${pack.name}`,
-            `Credits: ${totalCredits}`,
-            `Amount: ₹${amount}`,
-            `UPI Txn ID: ${txnId.trim()}`,
-            `Time: ${new Date().toLocaleString("en-IN")}`,
-          ].join("\n"),
-        }, publicKey);
-      }
-    } catch { /* silent — do not fail payment flow */ }
-
     // Track payment (fire-and-forget)
     trackPayment({
       email: email,
@@ -195,18 +169,41 @@ export default function PaymentModal({ pack, open, onClose }) {
                     7383620725
                   </a>
                 </p>
-                <button
-                  onClick={onClose}
+                <a
+                  href={`https://wa.me/917383620725?text=${encodeURIComponent("Hey I paid for COREX")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   style={{
+                    display: "inline-block",
                     padding: "11px 32px",
                     borderRadius: 100,
                     fontSize: 14,
                     fontFamily: FONT,
                     fontWeight: 600,
-                    background: "linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)",
-                    color: "#000000",
-                    border: "none",
+                    background: "linear-gradient(135deg, #25D366, #128C7E)",
+                    color: "#ffffff",
+                    textDecoration: "none",
                     cursor: "pointer",
+                  }}
+                >
+                  Continue on WhatsApp →
+                </a>
+                <button
+                  onClick={onClose}
+                  style={{
+                    marginTop: 12,
+                    padding: "8px 24px",
+                    borderRadius: 100,
+                    fontSize: 13,
+                    fontFamily: FONT,
+                    fontWeight: 500,
+                    background: "transparent",
+                    color: "rgba(255,255,255,0.35)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    cursor: "pointer",
+                    display: "block",
+                    width: "fit-content",
+                    margin: "12px auto 0",
                   }}
                 >
                   Close
