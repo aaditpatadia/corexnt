@@ -11,10 +11,14 @@ import CompetitorIntel   from "../pages/app/CompetitorIntel";
 import BriefBuilder      from "../pages/app/BriefBuilder";
 import ShootPlanner     from "../pages/app/ShootPlanner";
 import CreatorEngine    from "../pages/app/CreatorEngine";
+import ReelScript      from "../pages/app/creator/ReelScript";
+import GrowthAudit     from "../pages/app/creator/GrowthAudit";
+import BrandDealPricer from "../pages/app/creator/BrandDealPricer";
+import PitchEmail      from "../pages/app/creator/PitchEmail";
 import ProjectsPage      from "../pages/app/ProjectsPage";
 import SettingsPage      from "../pages/SettingsPage";
 import { hasProfile }    from "../utils/userProfile";
-import { getCredits, translateCredits } from "../utils/credits";
+import { getCredits, translateCredits, loadCreditsFromFirestore, syncCreditsToFirestore } from "../utils/credits";
 import { isAdmin }       from "../utils/modelConfig";
 import { getPlanTheme, applyTheme, PLAN_THEMES } from "../utils/planTheme";
 
@@ -76,13 +80,13 @@ function Sidebar({ navigate, location, onNewChat, onClose, sidebarRef }) {
     return () => { clearInterval(interval); window.removeEventListener('focus', refresh); };
   }, []);
 
-  const history = (() => {
+  const [history, setHistory] = useState(() => {
     try { return JSON.parse(localStorage.getItem("corex_history") || "[]").slice(0, 8); }
     catch { return []; }
-  })();
+  });
 
   const nav = [
-    { icon: "💬", label: "Chat",            path: "chat",             action: () => { onNewChat(); navigate("/app/chat"); onClose?.(); } },
+    { icon: "💬", label: "Chat",            path: "chat",             action: () => { navigate("/app/chat"); onClose?.(); setTimeout(() => { if (window.__corex_newChat) window.__corex_newChat(); }, 100); } },
     { icon: "📁", label: "Projects",        path: "projects",         action: () => { navigate("/app/projects"); onClose?.(); } },
     { icon: "✦",  label: "Brief Builder",   path: "brief-builder",    action: () => { navigate("/app/brief-builder"); onClose?.(); } },
     { icon: "📷", label: "Shoot Planner",   path: "shoot-planner",    action: () => { navigate("/app/shoot-planner"); onClose?.(); } },
@@ -132,6 +136,39 @@ function Sidebar({ navigate, location, onNewChat, onClose, sidebarRef }) {
 
       {/* Nav items */}
       <div style={{ padding: "0 8px", display: "flex", flexDirection: "column", gap: 2 }}>
+        {/* New Chat button */}
+        <motion.button
+          whileHover={{ translateY: -1 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => {
+            navigate('/app/chat');
+            onClose?.();
+            setTimeout(() => {
+              if (window.__corex_newChat) window.__corex_newChat();
+            }, 100);
+          }}
+          style={{
+            width: '100%',
+            padding: '10px 14px',
+            borderRadius: 10,
+            fontSize: 13,
+            fontFamily: "'Instrument Sans', sans-serif",
+            fontWeight: 600,
+            background: 'linear-gradient(135deg, rgba(34,111,247,0.15), rgba(156,252,175,0.15))',
+            border: '1px solid rgba(156,252,175,0.2)',
+            color: '#9CFCAF',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            marginBottom: 16,
+            transition: 'all 0.2s',
+          }}
+        >
+          <span style={{ fontSize: 16 }}>✦</span>
+          New Chat
+        </motion.button>
+
         {nav.map((item) => (
           <NavItem
             key={item.path}
@@ -159,41 +196,83 @@ function Sidebar({ navigate, location, onNewChat, onClose, sidebarRef }) {
             </p>
           ) : (
             history.map((h, i) => (
-              <motion.button
+              <div
                 key={h.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: i * 0.05 }}
-                onClick={() => {
-                  if (typeof window.__corex_loadConversation === "function") {
-                    window.__corex_loadConversation(h);
-                  }
-                  navigate("/app/chat");
-                  onClose?.();
+                style={{ position: "relative", borderRadius: 8 }}
+                onMouseEnter={(e) => {
+                  const btn = e.currentTarget.querySelector('.del-btn');
+                  if (btn) btn.style.opacity = '1';
                 }}
-                style={{
-                  display: "block",
-                  width: "100%",
-                  padding: "8px 10px",
-                  borderRadius: 8,
-                  border: "none",
-                  cursor: "pointer",
-                  background: "transparent",
-                  color: "rgba(255,255,255,0.5)",
-                  fontSize: 12,
-                  fontFamily: FONT,
-                  textAlign: "left",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  maxWidth: "100%",
-                  transition: "all 0.15s ease",
+                onMouseLeave={(e) => {
+                  const btn = e.currentTarget.querySelector('.del-btn');
+                  if (btn) btn.style.opacity = '0';
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "#ffffff"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
               >
-                {(h.title || "Untitled").slice(0, 28)}
-              </motion.button>
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.05 }}
+                  onClick={() => {
+                    if (typeof window.__corex_loadConversation === "function") {
+                      window.__corex_loadConversation(h);
+                    }
+                    navigate("/app/chat");
+                    onClose?.();
+                  }}
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    padding: "8px 32px 8px 10px",
+                    borderRadius: 8,
+                    border: "none",
+                    cursor: "pointer",
+                    background: "transparent",
+                    color: "rgba(255,255,255,0.5)",
+                    fontSize: 12,
+                    fontFamily: FONT,
+                    textAlign: "left",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    maxWidth: "100%",
+                    transition: "all 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "#ffffff"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
+                >
+                  {(h.title || "Untitled").slice(0, 28)}
+                </motion.button>
+
+                {/* Delete button */}
+                <button
+                  className="del-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const updated = history.filter(item => item.id !== h.id);
+                    setHistory(updated);
+                    localStorage.setItem('corex_history', JSON.stringify(updated));
+                  }}
+                  style={{
+                    position: "absolute",
+                    right: 6,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    opacity: 0,
+                    transition: "opacity 0.15s",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "rgba(255,255,255,0.4)",
+                    fontSize: 14,
+                    padding: "2px 6px",
+                    borderRadius: 4,
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "#f87171"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
+                >
+                  ×
+                </button>
+              </div>
             ))
           )}
         </div>
@@ -459,6 +538,13 @@ export default function AppShell() {
     }
   }, [location.pathname]);
 
+  // Load credits from Firestore on mount + periodic sync every 30s
+  useEffect(() => {
+    loadCreditsFromFirestore();
+    const syncInterval = setInterval(syncCreditsToFirestore, 30000);
+    return () => clearInterval(syncInterval);
+  }, []);
+
   // Listen for credit modal trigger from dropdown / sidebar
   useEffect(() => {
     const handler = () => setCreditModalOpen(true);
@@ -626,7 +712,11 @@ export default function AppShell() {
             <Route path="competitor-intel" element={<CompetitorIntel />} />
             <Route path="brief-builder"   element={<BriefBuilder />} />
             <Route path="shoot-planner"   element={<ShootPlanner />} />
-            <Route path="creator-engine"  element={<CreatorEngine />} />
+            <Route path="creator-engine"         element={<CreatorEngine />} />
+            <Route path="creator-engine/reel"   element={<ReelScript />} />
+            <Route path="creator-engine/audit"  element={<GrowthAudit />} />
+            <Route path="creator-engine/pricer" element={<BrandDealPricer />} />
+            <Route path="creator-engine/pitch"  element={<PitchEmail />} />
             <Route path="payment"       element={<PaymentPage onBack={() => navigate("/app/dashboard")} userType={userType} />} />
             <Route path="*"             element={<Navigate to={defaultRoute} replace />} />
           </Routes>

@@ -45,26 +45,50 @@ export default function CompetitorIntel() {
     setLoading(true);
     setResult(null);
 
-    const prompt = `Competitor intelligence report: ${form.yourBrand} vs ${form.competitor} in ${form.industry}.
+    const prompt = `You are COREX, conducting a deep competitive intelligence report.
 
-Specific question: ${form.question}
+Analyze: ${form.competitor} vs ${form.yourBrand || 'our brand'}
+Industry: ${form.industry}
+Question: ${form.question}
 
-Search for "${form.competitor} marketing strategy India 2025 2026" and "${form.competitor} Instagram ads campaign recent" before answering — use real, current intel, not training data.
+Provide a COMPREHENSIVE competitive analysis. Structure your response EXACTLY as follows:
 
-Structure your response as follows:
+INTELLIGENCE REPORT: ${form.competitor}
 
-Give a sharp intelligence headline, then answer the specific question with real data from web search.
+EXECUTIVE SUMMARY:
+[3 sentences. The single most important insight. What does ${form.yourBrand || 'you'} need to know RIGHT NOW?]
 
-Include an HTML comparison table in your response with these exact dimensions:
-<table class="comp-table"><thead><tr><th>Dimension</th><th>${form.yourBrand}</th><th>${form.competitor}</th><th>Edge</th></tr></thead><tbody>
-<tr><td>Content volume</td><td>[your brand estimate]</td><td>[competitor intel from search]</td><td>[who wins]</td></tr>
-<tr><td>Engagement approach</td><td>[describe]</td><td>[describe]</td><td>[edge]</td></tr>
-<tr><td>Pricing signals</td><td>[describe]</td><td>[describe]</td><td>[edge]</td></tr>
-<tr><td>Audience overlap</td><td>[describe]</td><td>[describe]</td><td>[edge]</td></tr>
-<tr><td>Weak point to exploit</td><td>[describe]</td><td>[describe from intel]</td><td>[edge]</td></tr>
-</tbody></table>
+COMPETITOR STRENGTHS (What they're crushing):
+[4 specific, real strengths with evidence. No generic statements.]
 
-Then give real Action Steps and a Real Example.`;
+COMPETITOR WEAKNESSES (Where they're exposed):
+[4 specific vulnerabilities. These are YOUR opportunities.]
+
+YOUR COMPETITIVE ADVANTAGES:
+[4 ways ${form.yourBrand || 'you'} can win against ${form.competitor}]
+
+BATTLE PLAN:
+[Exactly 3 moves to win market share from ${form.competitor} this quarter. Each with specific tactics, timeline, and expected outcome.]
+
+POSITIONING STATEMENT:
+[One sentence that positions ${form.yourBrand || 'you'} against ${form.competitor}. Bold. Memorable. True.]
+
+MINDMAP_DATA: {
+  "center": "vs ${form.competitor}",
+  "branches": [
+    {"title": "Their Strengths", "items": ["strength1", "strength2", "strength3"]},
+    {"title": "Their Weaknesses", "items": ["weakness1", "weakness2", "weakness3"]},
+    {"title": "Your Wins", "items": ["win1", "win2", "win3"]},
+    {"title": "Battle Plan", "items": ["move1", "move2", "move3"]}
+  ]
+}
+
+Action Steps:
+1. [Specific immediate action against ${form.competitor}]
+2. [Specific positioning move]
+3. [Specific content/campaign tactic]
+
+Use real data. Search the web for current information about ${form.competitor}. Name real campaigns, real numbers, real market data.`;
 
     try {
       const res = await fetch("/api/chat", {
@@ -85,6 +109,13 @@ Then give real Action Steps and a Real Example.`;
       const full = d.reply || "No response generated. Please try again.";
       setResult({ id: Date.now(), role: "assistant", content: full, searchUsed: !!d.usedWebSearch });
 
+      // Build human-readable user message for history
+      const userMessage = [
+        `Competitor analysis: ${form.competitor || ''} vs ${form.yourBrand || ''}`,
+        form.industry ? `Industry: ${form.industry}` : '',
+        form.question ? `Question: ${form.question}` : '',
+      ].filter(Boolean).join('\n');
+
       // Save to corex_history
       try {
         const history = JSON.parse(localStorage.getItem('corex_history') || '[]');
@@ -94,7 +125,7 @@ Then give real Action Steps and a Real Example.`;
           id: Date.now(),
           title: `Intel: ${competitor} vs ${yourBrand}`,
           messages: [
-            { role: 'user', content: JSON.stringify(form) },
+            { role: 'user', content: userMessage },
             { role: 'assistant', content: full }
           ],
           ts: Date.now(),
@@ -132,12 +163,12 @@ Then give real Action Steps and a Real Example.`;
 
         <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} className="mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-4"
-            style={{ background:"rgba(156,252,175,0.08)", border:"1px solid rgba(156,252,175,0.2)", color:"#9CFCAF", fontFamily:"'Instrument Sans', sans-serif" }}>
-            🔍 Competitor Intel
+            style={{ background:"rgba(156,252,175,0.08)", border:"1px solid rgba(156,252,175,0.2)", color:"#9CFCAF", fontFamily:"'Instrument Sans', sans-serif", letterSpacing:"1px", textTransform:"uppercase" }}>
+            ◎ Competitor Intel
           </div>
-          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily:"'Instrument Serif', serif", fontStyle:"italic", color:"#ffffff" }}>Spy on your competitors</h1>
+          <h1 className="mb-2" style={{ fontFamily:"'Instrument Serif', serif", fontStyle:"italic", color:"#ffffff", fontSize:36, fontWeight:700, lineHeight:1.2 }}>Know your competition.</h1>
           <p className="text-sm" style={{ color:"rgba(255,255,255,0.45)", fontFamily:"'Instrument Sans', sans-serif" }}>
-            Live intel pulled from the web — not just training data. Ask a specific question.
+            Real intelligence. Real strategy. Real advantage.
           </p>
         </motion.div>
 
@@ -218,12 +249,28 @@ Then give real Action Steps and a Real Example.`;
         <AnimatePresence>
           {result && (
             <motion.div initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }}>
-              <ResponseCard message={result} animate={false} onChip={t => {}} onRegenerate={analyse}/>
+              <div style={{
+                background:"rgba(255,255,255,0.03)",
+                border:"1px solid rgba(255,255,255,0.08)",
+                borderRadius:16,
+                padding:28,
+                marginBottom:12,
+              }}>
+                <div style={{
+                  fontSize:10, fontWeight:700, letterSpacing:"2px",
+                  textTransform:"uppercase", color:"#9CFCAF",
+                  fontFamily:"'Instrument Sans', sans-serif",
+                  marginBottom:16,
+                }}>
+                  Intelligence Report
+                </div>
+                <ResponseCard message={result} animate={false} onChip={t => {}} onRegenerate={analyse}/>
+              </div>
               <motion.button
                 initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.3 }}
                 onClick={downloadPDF}
                 style={{
-                  marginTop:12, padding:"10px 20px", borderRadius:100,
+                  marginTop:4, padding:"10px 20px", borderRadius:100,
                   border:"1.5px solid rgba(156,252,175,0.3)", background:"rgba(156,252,175,0.05)",
                   color:"#9CFCAF", fontFamily:"'Instrument Sans', sans-serif",
                   fontSize:14, fontWeight:600, cursor:"pointer",

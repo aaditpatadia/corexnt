@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CREDIT_PACKS, getCredits, translateCredits } from "../utils/credits";
+import { CREDIT_PACKS, getCredits, translateCredits, applyCoupon } from "../utils/credits";
 
 const FONT = "'Instrument Sans', sans-serif";
 
-export default function CreditModal({ open, onClose }) {
+export default function CreditModal({ open, onClose, onSelectPack }) {
   const [credits, setCredits] = useState(getCredits);
   const [currency, setCurrency] = useState("INR");
-  const [toast, setToast] = useState(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponMsg, setCouponMsg] = useState("");
 
   useEffect(() => {
     if (open) setCredits(getCredits());
@@ -21,14 +22,19 @@ export default function CreditModal({ open, onClose }) {
   }, [open, onClose]);
 
   function handlePackClick(pack) {
-    const email = localStorage.getItem("userEmail") || "";
-    const waitlist = JSON.parse(localStorage.getItem("corex_waitlist") || "[]");
-    if (!waitlist.includes(email) && email) {
-      waitlist.push(email);
-      localStorage.setItem("corex_waitlist", JSON.stringify(waitlist));
+    onClose();
+    if (onSelectPack) onSelectPack(pack);
+  }
+
+  function handleApplyCoupon() {
+    const result = applyCoupon(couponCode.trim().toUpperCase());
+    if (result.success || result.ok) {
+      setCouponMsg(`✓ ${result.message || result.msg}`);
+      setCouponCode("");
+      setCredits(getCredits());
+    } else {
+      setCouponMsg(result.message || result.msg || "Invalid code.");
     }
-    setToast("Razorpay integration coming soon — you're on the waitlist!");
-    setTimeout(() => setToast(null), 3000);
   }
 
   if (!open) return null;
@@ -149,6 +155,42 @@ export default function CreditModal({ open, onClose }) {
               ))}
             </div>
 
+            {/* Coupon Code section */}
+            <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <label style={{ fontSize: 11, fontFamily: FONT, fontWeight: 600, color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>
+                Coupon Code
+              </label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  value={couponCode}
+                  onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                  placeholder="e.g. CNT1920"
+                  style={{
+                    flex: 1, padding: '10px 14px', borderRadius: 8, fontSize: 14,
+                    fontFamily: FONT, background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.08)', color: '#ffffff',
+                    outline: 'none', caretColor: '#9CFCAF',
+                  }}
+                />
+                <button
+                  onClick={handleApplyCoupon}
+                  style={{
+                    padding: '10px 18px', borderRadius: 8, fontSize: 13, fontFamily: FONT,
+                    fontWeight: 600, background: 'rgba(156,252,175,0.1)',
+                    border: '1px solid rgba(156,252,175,0.2)', color: '#9CFCAF',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Apply
+                </button>
+              </div>
+              {couponMsg && (
+                <p style={{ fontFamily: FONT, fontSize: 13, color: couponMsg.includes('✓') ? '#9CFCAF' : '#f87171', marginTop: 8 }}>
+                  {couponMsg}
+                </p>
+              )}
+            </div>
+
             <button
               onClick={onClose}
               style={{
@@ -167,34 +209,6 @@ export default function CreditModal({ open, onClose }) {
               Close
             </button>
           </motion.div>
-
-          {/* Toast */}
-          <AnimatePresence>
-            {toast && (
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-                style={{
-                  position: "fixed",
-                  bottom: 32,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  background: "#111111",
-                  border: "1px solid rgba(156,252,175,0.3)",
-                  borderRadius: 12,
-                  padding: "12px 20px",
-                  fontSize: 13,
-                  fontFamily: FONT,
-                  color: "#9CFCAF",
-                  zIndex: 1100,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {toast}
-              </motion.div>
-            )}
-          </AnimatePresence>
         </motion.div>
       )}
     </AnimatePresence>

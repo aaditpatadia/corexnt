@@ -222,13 +222,15 @@ export default function PaymentModal({ pack, open, onClose }) {
 
                 {/* QR code */}
                 <div style={{ textAlign: "center", marginBottom: 20 }}>
+                  <p style={{ fontSize: 12, fontFamily: FONT, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginBottom: 8, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                    Scan to pay
+                  </p>
                   <img
                     src={import.meta.env.VITE_PAYMENT_QR}
                     alt="PhonePe QR"
-                    style={{ width: '200px', height: '200px', borderRadius: '12px', display: 'block', margin: '0 auto' }}
+                    style={{ width: '260px', height: '260px', borderRadius: '12px', display: 'block', margin: '0 auto 16px' }}
                     onError={(e) => { e.target.style.display = 'none'; }}
                   />
-                  <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", margin: "8px 0 0" }}>Scan to pay</p>
                 </div>
 
                 {/* Bank details — collapsible */}
