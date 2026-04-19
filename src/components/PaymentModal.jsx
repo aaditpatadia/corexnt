@@ -149,38 +149,7 @@ export default function PaymentModal({ pack, open, onClose }) {
               fontFamily: FONT,
             }}
           >
-            {success ? (
-              /* Success screen */
-              <div style={{ textAlign: "center", padding: "12px 0" }}>
-                <p style={{ fontSize: 40, margin: "0 0 16px" }}>✓</p>
-                <p style={{ fontSize: 18, fontWeight: 700, color: "#ffffff", margin: "0 0 10px" }}>
-                  Payment received!
-                </p>
-                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", margin: "0 0 6px" }}>
-                  To avail your credits after payment, please contact here:
-                </p>
-                <p style={{ fontSize: 22, fontWeight: 700, color: "#9CFCAF", margin: "0 0 28px", letterSpacing: "0.5px" }}>
-                  +91 7383620725
-                </p>
-                <button
-                  onClick={onClose}
-                  style={{
-                    padding: "12px 48px",
-                    borderRadius: 100,
-                    fontSize: 15,
-                    fontFamily: FONT,
-                    fontWeight: 600,
-                    background: "linear-gradient(135deg, #226FF7, #9CFCAF)",
-                    color: "#000000",
-                    border: "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  Done
-                </button>
-              </div>
-            ) : (
-              <>
+            <>
                 {/* Header */}
                 <p style={{ fontSize: 18, fontWeight: 700, color: "#ffffff", margin: "0 0 4px" }}>
                   Pay{" "}
@@ -309,138 +278,36 @@ export default function PaymentModal({ pack, open, onClose }) {
                   )}
                 </AnimatePresence>
 
-                <div style={{ height: 1, background: "rgba(255,255,255,0.07)", marginBottom: 20 }} />
+                <div style={{ height: 1, background: "rgba(255,255,255,0.07)", marginBottom: 24 }} />
 
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", margin: "0 0 16px" }}>
-                  After payment, confirm here:
+                {/* Contact info */}
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", margin: "0 0 8px", textAlign: "center" }}>
+                  To avail credits after payment please contact here
+                </p>
+                <p style={{ fontSize: 24, fontWeight: 700, color: "#9CFCAF", margin: "0 0 24px", textAlign: "center", letterSpacing: "0.5px" }}>
+                  +91 7383620725
                 </p>
 
-                <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {/* Name */}
-                  <input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Your name"
-                    style={inputStyle}
-                    onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(156,252,175,0.4)")}
-                    onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
-                  />
-
-                  {/* Email — read only */}
-                  <input
-                    value={email}
-                    readOnly
-                    style={{ ...inputStyle, color: "rgba(255,255,255,0.3)", cursor: "default" }}
-                  />
-
-                  {/* Amount */}
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="Amount paid (₹)"
-                    style={inputStyle}
-                    onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(156,252,175,0.4)")}
-                    onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
-                  />
-
-                  {/* UPI Transaction ID */}
-                  <input
-                    value={txnId}
-                    onChange={(e) => setTxnId(e.target.value)}
-                    placeholder="UPI Transaction ID *"
-                    required
-                    style={inputStyle}
-                    onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(156,252,175,0.4)")}
-                    onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
-                  />
-
-                  {/* WhatsApp number */}
-                  <input
-                    value={whatsapp}
-                    onChange={(e) => setWhatsapp(e.target.value)}
-                    placeholder="WhatsApp number (required) *"
-                    required
-                    type="tel"
-                    style={inputStyle}
-                    onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(156,252,175,0.4)")}
-                    onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
-                  />
-
-                  {/* Screenshot upload */}
-                  <div>
-                    <label
-                      htmlFor="payment-screenshot"
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        padding: "10px 14px",
-                        borderRadius: 10,
-                        fontSize: 14,
-                        fontFamily: "'Instrument Sans', sans-serif",
-                        background: screenshot ? "rgba(156,252,175,0.06)" : "rgba(255,255,255,0.05)",
-                        border: screenshot ? "1px solid rgba(156,252,175,0.3)" : "1px solid rgba(255,255,255,0.08)",
-                        color: screenshot ? "#9CFCAF" : "rgba(255,255,255,0.45)",
-                        cursor: "pointer",
-                        transition: "all 0.2s",
-                      }}
-                    >
-                      <span style={{ fontSize: 16 }}>{screenshot ? "✓" : "📎"}</span>
-                      <span>{screenshot ? `Screenshot attached: ${screenshotName}` : "Attach payment screenshot (required) *"}</span>
-                      <input
-                        id="payment-screenshot"
-                        type="file"
-                        accept="image/*"
-                        required
-                        style={{ display: "none" }}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          setScreenshotName(file.name);
-                          const reader = new FileReader();
-                          reader.onload = (ev) => setScreenshot(ev.target?.result || null);
-                          reader.readAsDataURL(file);
-                        }}
-                      />
-                    </label>
-                    {!screenshot && (
-                      <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", margin: "4px 0 0 4px", fontFamily: "'Instrument Sans', sans-serif" }}>
-                        Upload a screenshot of your payment confirmation
-                      </p>
-                    )}
-                  </div>
-
-                  {error && (
-                    <p style={{ fontSize: 13, color: "#f87171", margin: 0 }}>{error}</p>
-                  )}
-
-                  <motion.button
-                    type="submit"
-                    whileHover={{ translateY: -1 }}
-                    whileTap={{ scale: 0.98 }}
-                    disabled={submitting}
-                    style={{
-                      width: "100%",
-                      padding: "13px 0",
-                      borderRadius: 100,
-                      fontSize: 15,
-                      fontFamily: FONT,
-                      fontWeight: 600,
-                      background: submitting
-                        ? "rgba(255,255,255,0.05)"
-                        : "linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)",
-                      color: submitting ? "rgba(255,255,255,0.3)" : "#000000",
-                      border: "none",
-                      cursor: submitting ? "not-allowed" : "pointer",
-                      marginTop: 4,
-                    }}
-                  >
-                    {submitting ? "Sending…" : "Confirm payment →"}
-                  </motion.button>
-                </form>
-              </>
-            )}
+                <motion.button
+                  whileHover={{ translateY: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={onClose}
+                  style={{
+                    width: "100%",
+                    padding: "13px 0",
+                    borderRadius: 100,
+                    fontSize: 15,
+                    fontFamily: FONT,
+                    fontWeight: 600,
+                    background: "linear-gradient(135deg, #226FF7, #9CFCAF)",
+                    color: "#000000",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  Done
+                </motion.button>
+            </>
           </motion.div>
         </motion.div>
       )}
