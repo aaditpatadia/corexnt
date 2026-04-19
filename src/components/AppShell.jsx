@@ -15,6 +15,7 @@ import ReelScript      from "../pages/app/creator/ReelScript";
 import GrowthAudit     from "../pages/app/creator/GrowthAudit";
 import BrandDealPricer from "../pages/app/creator/BrandDealPricer";
 import PitchEmail      from "../pages/app/creator/PitchEmail";
+import PaymentModal    from "./PaymentModal";
 import ProjectsPage      from "../pages/app/ProjectsPage";
 import SettingsPage      from "../pages/SettingsPage";
 import { hasProfile }    from "../utils/userProfile";
@@ -524,6 +525,8 @@ export default function AppShell() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(() => window.innerWidth >= 768);
   const [creditModalOpen, setCreditModalOpen] = useState(false);
+  const [selectedPack, setSelectedPack] = useState(null);
+  const [payModalOpen, setPayModalOpen] = useState(false);
   const sidebarRef = useRef(null);
 
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
@@ -724,7 +727,17 @@ export default function AppShell() {
       </div>
 
       {/* Credit modal */}
-      <CreditModal open={creditModalOpen} onClose={() => setCreditModalOpen(false)} />
+      <CreditModal
+        open={creditModalOpen}
+        onClose={() => setCreditModalOpen(false)}
+        onSelectPack={(pack) => { setSelectedPack(pack); setPayModalOpen(true); }}
+      />
+      {/* Payment modal */}
+      <PaymentModal
+        open={payModalOpen}
+        pack={selectedPack}
+        onClose={() => { setPayModalOpen(false); setSelectedPack(null); }}
+      />
     </div>
   );
 }

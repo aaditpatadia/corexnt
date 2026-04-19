@@ -753,26 +753,21 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
 
       {/* ── Four action buttons (assistant only, always visible) ── */}
       {!message.streaming && (
-        <div style={{
-          marginTop: 20,
-          paddingTop: 16,
-          borderTop: '1px solid rgba(255,255,255,0.06)',
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 8,
-        }}>
+        <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
 
-          {/* Button 1: Improve this */}
-          <ActionBtn
-            label="✦ Improve this"
-            onClick={() => onSendMessage?.(
-              "Improve and expand on your last response. Make it more specific, add real data, and give sharper recommendations.",
-              4
-            )}
-          />
+          {/* Button row — all 4 inline, no expanding inside */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
 
-          {/* Button 2: Why this works (toggle) */}
-          <div style={{ display:"flex", flexDirection:"column", flexShrink:0 }}>
+            {/* Button 1: Improve this */}
+            <ActionBtn
+              label="✦ Improve this"
+              onClick={() => onSendMessage?.(
+                "Improve and expand on your last response. Make it more specific, add real data, and give sharper recommendations.",
+                4
+              )}
+            />
+
+            {/* Button 2: Why this works (toggle) */}
             <ActionBtn
               label="◎ Why this works"
               active={whyOpen}
@@ -791,70 +786,71 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
                 }
               }}
             />
-            {whyOpen && (
-              <div style={{
-                background: 'rgba(156,252,175,0.04)',
-                borderLeft: '2px solid #9CFCAF',
-                padding: '14px 18px',
-                borderRadius: '0 8px 8px 0',
-                marginTop: 12,
-                overflow: 'hidden',
-                maxWidth: '100%',
-                boxSizing: 'border-box',
-              }}>
-                <div style={{ fontSize:10, letterSpacing:'2px', color:'#9CFCAF', marginBottom:8 }}>COREX REASONING</div>
-                <div style={{ fontSize:13, color:'rgba(255,255,255,0.7)', wordBreak:'break-word' }}>
-                  {whyLoading ? 'Generating...' : 'See the next message in chat for the full strategic reasoning.'}
-                </div>
-              </div>
-            )}
-          </div>
 
-          {/* Button 3: Another direction */}
-          <ActionBtn
-            label="↺ Another direction"
-            onClick={() => onSendMessage?.(
-              "Give me a completely different strategic direction for the same brief. Not a variation — a genuinely different angle I haven't considered yet.",
-              4
-            )}
-          />
-
-          {/* Button 4: Make it [mode] — dropdown */}
-          <div ref={makeItRef} style={{ position:"relative", flexShrink:0 }}>
+            {/* Button 3: Another direction */}
             <ActionBtn
-              label="⚡ Make it..."
-              active={makeItOpen}
-              onClick={() => setMakeItOpen(p => !p)}
+              label="↺ Another direction"
+              onClick={() => onSendMessage?.(
+                "Give me a completely different strategic direction for the same brief. Not a variation — a genuinely different angle I haven't considered yet.",
+                4
+              )}
             />
-            {makeItOpen && (
-              <div style={{
-                position:"absolute", bottom:"110%", right:0,
-                background:"#111",
-                border:"1px solid rgba(255,255,255,0.1)",
-                borderRadius:"12px",
-                padding:"4px",
-                minWidth:"160px",
-                zIndex:200,
-              }}>
-                {[
-                  { label:"More viral",     prompt:"Now make this more viral. Think shareability, emotion, hooks that spread." },
-                  { label:"More premium",   prompt:"Now make this more premium. Elevate the positioning, language, and strategy to luxury/aspirational level." },
-                  { label:"More emotional", prompt:"Now make this more emotionally resonant. Connect it to identity, aspiration, and human truth." },
-                  { label:"More practical", prompt:"Make this more practical and executable. Break it into specific steps I can do this week." },
-                ].map(({ label, prompt }) => (
-                  <div
-                    key={label}
-                    onClick={() => { onSendMessage?.(prompt, 4); setMakeItOpen(false); }}
-                    style={{ padding:"8px 12px", fontSize:13, color:"rgba(255,255,255,0.7)", borderRadius:8, cursor:"pointer" }}
-                    onMouseEnter={e => e.currentTarget.style.background="rgba(255,255,255,0.08)"}
-                    onMouseLeave={e => e.currentTarget.style.background="transparent"}
-                  >
-                    {label}
-                  </div>
-                ))}
-              </div>
-            )}
+
+            {/* Button 4: Make it [mode] — dropdown */}
+            <div ref={makeItRef} style={{ position: "relative" }}>
+              <ActionBtn
+                label="⚡ Make it..."
+                active={makeItOpen}
+                onClick={() => setMakeItOpen(p => !p)}
+              />
+              {makeItOpen && (
+                <div style={{
+                  position: "absolute", bottom: "110%", left: 0,
+                  background: "#111",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: "12px",
+                  padding: "4px",
+                  minWidth: "160px",
+                  zIndex: 200,
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                }}>
+                  {[
+                    { label: "More viral",     prompt: "Now make this more viral. Think shareability, emotion, hooks that spread." },
+                    { label: "More premium",   prompt: "Now make this more premium. Elevate the positioning, language, and strategy to luxury/aspirational level." },
+                    { label: "More emotional", prompt: "Now make this more emotionally resonant. Connect it to identity, aspiration, and human truth." },
+                    { label: "More practical", prompt: "Make this more practical and executable. Break it into specific steps I can do this week." },
+                  ].map(({ label, prompt }) => (
+                    <div
+                      key={label}
+                      onClick={() => { onSendMessage?.(prompt, 4); setMakeItOpen(false); }}
+                      style={{ padding: "8px 12px", fontSize: 13, color: "rgba(255,255,255,0.7)", borderRadius: 8, cursor: "pointer" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.08)"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    >
+                      {label}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
           </div>
+
+          {/* Why this works panel — BELOW the button row, never inside it */}
+          {whyOpen && (
+            <div style={{
+              marginTop: 12,
+              background: 'rgba(156,252,175,0.04)',
+              borderLeft: '2px solid #9CFCAF',
+              padding: '14px 18px',
+              borderRadius: '0 8px 8px 0',
+            }}>
+              <div style={{ fontSize: 10, letterSpacing: '2px', color: '#9CFCAF', marginBottom: 8, fontFamily: "'Instrument Sans', sans-serif", fontWeight: 700 }}>COREX REASONING</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', wordBreak: 'break-word', fontFamily: "'Instrument Sans', sans-serif", lineHeight: 1.6 }}>
+                {whyLoading ? 'Thinking...' : 'Reasoning sent to chat — scroll up for the full strategic breakdown.'}
+              </div>
+            </div>
+          )}
 
         </div>
       )}

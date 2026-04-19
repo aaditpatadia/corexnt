@@ -70,29 +70,18 @@ YOUR MOVE:
           brandName: localStorage.getItem("corex_brand_name") || "",
         }),
       });
-      if (!res.ok) throw new Error("API error");
-      const reader = res.body?.getReader();
-      const decoder = new TextDecoder();
-      let fullText = "";
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          for (const line of decoder.decode(value, { stream: true }).split("\n")) {
-            if (!line.startsWith("data: ")) continue;
-            const d = line.slice(6).trim();
-            if (d === "[DONE]") break;
-            try { const j = JSON.parse(d); if (j.delta) { fullText += j.delta; setResult(fullText); } else if (j.reply) { fullText = j.reply; setResult(j.reply); } } catch { }
-          }
-        }
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "API error");
+      const fullText = data.reply || "";
+      if (!fullText) throw new Error("No response generated");
+      setResult(fullText);
       try {
         const history = JSON.parse(localStorage.getItem("corex_history") || "[]");
         history.unshift({ id: Date.now(), title: `Pitch: ${brand}`, messages: [{ role: "user", content: prompt }, { role: "assistant", content: fullText }], ts: Date.now(), type: "creator-engine" });
         localStorage.setItem("corex_history", JSON.stringify(history.slice(0, 50)));
       } catch { }
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (err) {
+      setError(err.message === "Failed to fetch" ? "Connection error — check your internet and try again." : (err.message || "Something went wrong. Please try again."));
       localStorage.setItem("corex_credits", String(parseInt(localStorage.getItem("corex_credits") || "0") + 3));
     }
     setLoading(false);
