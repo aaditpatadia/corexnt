@@ -838,7 +838,7 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
                 </p>
                 <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", margin: 0 }}>
                   {remaining > 0
-                    ? `Continue in ${formatCountdown(remaining)} · or upgrade for longer sessions`
+                    ? `Resets in ${formatCountdown(remaining)} · ${formatCountdown(getPlanLimit(plan).cooldown * 1000)} total cooldown · upgrade for longer sessions`
                     : "Session reset — you can continue chatting"}
                 </p>
               </div>

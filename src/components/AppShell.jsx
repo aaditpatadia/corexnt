@@ -97,6 +97,7 @@ function Sidebar({ navigate, location, onNewChat, onClose, sidebarRef }) {
     { icon: "📷", label: "Shoot Planner",   path: "shoot-planner",    action: () => { navigate("/app/shoot-planner"); onClose?.(); } },
     { icon: "🎬", label: "Creator Engine",  path: "creator-engine",   action: () => { navigate("/app/creator-engine"); onClose?.(); } },
     { icon: "◎",  label: "Competitor Intel", path: "competitor-intel", action: () => { navigate("/app/competitor-intel"); onClose?.(); } },
+    { icon: "✏️",  label: "Designer Studio",  path: "designer-studio",  action: () => { navigate("/app/designer-studio"); onClose?.(); } },
   ];
 
   return (
@@ -753,6 +754,10 @@ export default function AppShell() {
             <Route path="creator-engine/audit"  element={<GrowthAudit />} />
             <Route path="creator-engine/pricer" element={<BrandDealPricer />} />
             <Route path="creator-engine/pitch"  element={<PitchEmail />} />
+            <Route path="designer-studio"               element={<DesignerStudio />} />
+            <Route path="designer-studio/assignment"    element={<AssignmentSolver />} />
+            <Route path="designer-studio/critique"      element={<DesignCritique />} />
+            <Route path="designer-studio/pricing"       element={<PricingCalculator />} />
             <Route path="payment"       element={<PaymentPage onBack={() => navigate("/app/dashboard")} userType={userType} />} />
             <Route path="*"             element={<Navigate to={defaultRoute} replace />} />
           </Routes>
