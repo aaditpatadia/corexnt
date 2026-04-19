@@ -164,7 +164,7 @@ export default function CreditModal({ open, onClose, onSelectPack }) {
                 <input
                   value={couponCode}
                   onChange={e => setCouponCode(e.target.value.toUpperCase())}
-                  placeholder="e.g. CNT1920"
+                  placeholder="Enter coupon code"
                   style={{
                     flex: 1, padding: '10px 14px', borderRadius: 8, fontSize: 14,
                     fontFamily: FONT, background: 'rgba(255,255,255,0.05)',

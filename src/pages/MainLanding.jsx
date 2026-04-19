@@ -150,39 +150,6 @@ function Hero() {
           style={{ width:1, height:32, background:"linear-gradient(to bottom, rgba(255,255,255,0.3), transparent)" }}/>
       </motion.div>
 
-      {/* Floating hero image cards */}
-      <div
-        className="hero-card"
-        style={{
-          position: "absolute", left: "4%", top: "28%", width: 280, zIndex: 2,
-          borderRadius: 16, overflow: "hidden",
-          boxShadow: "0 24px 48px rgba(0,0,0,0.4)",
-          animation: "fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.2s both",
-        }}
-      >
-        <img
-          src="/images/hero1.png"
-          alt=""
-          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-          onError={(e) => { if (e.currentTarget.parentElement) e.currentTarget.parentElement.style.display = "none"; }}
-        />
-      </div>
-      <div
-        className="hero-card"
-        style={{
-          position: "absolute", right: "4%", bottom: "18%", width: 300, zIndex: 2,
-          borderRadius: 16, overflow: "hidden",
-          boxShadow: "0 24px 48px rgba(0,0,0,0.4)",
-          animation: "fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.5s both",
-        }}
-      >
-        <img
-          src="/images/hero2.png"
-          alt=""
-          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-          onError={(e) => { if (e.currentTarget.parentElement) e.currentTarget.parentElement.style.display = "none"; }}
-        />
-      </div>
     </section>
   );
 }

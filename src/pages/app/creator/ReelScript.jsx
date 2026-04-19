@@ -105,30 +105,11 @@ export default function ReelScript() {
         }),
       });
 
-      if (!response.ok) throw new Error("API error");
-
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let fullText = "";
-
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const chunk = decoder.decode(value, { stream: true });
-          for (const line of chunk.split("\n")) {
-            if (line.startsWith("data: ")) {
-              const data = line.slice(6).trim();
-              if (data === "[DONE]") break;
-              try {
-                const json = JSON.parse(data);
-                if (json.delta) { fullText += json.delta; setResult(fullText); }
-                else if (json.reply) { fullText = json.reply; setResult(json.reply); }
-              } catch { /* skip */ }
-            }
-          }
-        }
-      }
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "API error");
+      const fullText = data.reply || "";
+      if (!fullText) throw new Error("No response generated");
+      setResult(fullText);
 
       // Save to history
       try {
@@ -146,12 +127,9 @@ export default function ReelScript() {
         localStorage.setItem("corex_history", JSON.stringify(history.slice(0, 50)));
       } catch { /* silent */ }
 
-    } catch {
-      setError("Something went wrong. Please try again.");
-      localStorage.setItem(
-        "corex_credits",
-        String(parseInt(localStorage.getItem("corex_credits") || "0") + CREDITS_COST)
-      );
+    } catch (err) {
+      setError(err.message === "Failed to fetch" ? "Connection error — check your internet and try again." : (err.message || "Something went wrong. Please try again."));
+      localStorage.setItem("corex_credits", String(parseInt(localStorage.getItem("corex_credits") || "0") + CREDITS_COST));
     }
 
     setLoading(false);
