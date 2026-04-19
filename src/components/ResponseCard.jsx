@@ -12,6 +12,15 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointEleme
 
 const BAR_COLORS = ["#4f9cf9","#f97316","#22c55e","#a855f7","#f43f5e","#eab308"];
 
+/* ── Link parser ── */
+function renderWithLinks(text) {
+  const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`[\]]+)/g;
+  return text.replace(urlRegex, (url) => {
+    const clean = url.replace(/[.,;:!?)]+$/, '');
+    return `<a href="${clean}" target="_blank" rel="noopener noreferrer" style="color:#6BC3CE;text-decoration:underline;text-underline-offset:3px;">${clean}</a>`;
+  });
+}
+
 /* ── Markdown table parser ── */
 function renderMarkdownTable(text) {
   const lines = text.split('\n');
@@ -527,21 +536,27 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
           return (
             <div
               style={{ fontSize:15, lineHeight:1.8, color:"rgba(255,255,255,0.85)", fontFamily:"var(--font-body)" }}
-              dangerouslySetInnerHTML={{ __html: processed.split(/\n\n+/).map(para => {
+              dangerouslySetInnerHTML={{ __html: renderWithLinks(processed.split(/\n\n+/).map(para => {
                 const t = para.trim();
                 if (!t) return '';
                 if (t.startsWith('<div class="intel-table-wrap">')) return t;
                 return `<p style="margin-bottom:14px">${t}</p>`;
-              }).join('') }}
+              }).join('')) }}
             />
           );
         }
+        // No table — use dangerouslySetInnerHTML so links render as anchors
+        const html = renderWithLinks(
+          bodyText.split(/\n\n+/).map(para => {
+            const t = para.trim();
+            return t ? `<p style="margin-bottom:14px">${t}</p>` : '';
+          }).join('')
+        );
         return (
-          <div style={{ fontSize:15, lineHeight:1.8, color:"rgba(255,255,255,0.85)", fontFamily:"var(--font-body)" }}>
-            {bodyText.split(/\n\n+/).map((para, i) => (
-              para.trim() && <p key={i} style={{ marginBottom:14 }}>{para.trim()}</p>
-            ))}
-          </div>
+          <div
+            style={{ fontSize:15, lineHeight:1.8, color:"rgba(255,255,255,0.85)", fontFamily:"var(--font-body)" }}
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
         );
       })()}
 
@@ -738,7 +753,14 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
 
       {/* ── Four action buttons (assistant only, always visible) ── */}
       {!message.streaming && (
-        <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginTop:16 }}>
+        <div style={{
+          marginTop: 20,
+          paddingTop: 16,
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 8,
+        }}>
 
           {/* Button 1: Improve this */}
           <ActionBtn
@@ -750,10 +772,11 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
           />
 
           {/* Button 2: Why this works (toggle) */}
-          <div style={{ display:"flex", flexDirection:"column" }}>
+          <div style={{ display:"flex", flexDirection:"column", flexShrink:0 }}>
             <ActionBtn
               label="◎ Why this works"
               active={whyOpen}
+              whyActive={whyOpen}
               onClick={() => {
                 if (!whyOpen) {
                   setWhyOpen(true);
@@ -774,10 +797,13 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
                 borderLeft: '2px solid #9CFCAF',
                 padding: '14px 18px',
                 borderRadius: '0 8px 8px 0',
-                marginTop: '8px',
+                marginTop: 12,
+                overflow: 'hidden',
+                maxWidth: '100%',
+                boxSizing: 'border-box',
               }}>
                 <div style={{ fontSize:10, letterSpacing:'2px', color:'#9CFCAF', marginBottom:8 }}>COREX REASONING</div>
-                <div style={{ fontSize:13, color:'rgba(255,255,255,0.7)' }}>
+                <div style={{ fontSize:13, color:'rgba(255,255,255,0.7)', wordBreak:'break-word' }}>
                   {whyLoading ? 'Generating...' : 'See the next message in chat for the full strategic reasoning.'}
                 </div>
               </div>
@@ -794,7 +820,7 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
           />
 
           {/* Button 4: Make it [mode] — dropdown */}
-          <div ref={makeItRef} style={{ position:"relative" }}>
+          <div ref={makeItRef} style={{ position:"relative", flexShrink:0 }}>
             <ActionBtn
               label="⚡ Make it..."
               active={makeItOpen}
@@ -808,7 +834,7 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
                 borderRadius:"12px",
                 padding:"4px",
                 minWidth:"160px",
-                zIndex:100,
+                zIndex:200,
               }}>
                 {[
                   { label:"More viral",     prompt:"Now make this more viral. Think shareability, emotion, hooks that spread." },
@@ -837,24 +863,30 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
 }
 
 /* ── Shared action button ── */
-function ActionBtn({ label, onClick, active }) {
+function ActionBtn({ label, onClick, active, whyActive }) {
   const [hov, setHov] = useState(false);
+  const isWhyActive = whyActive && active;
   return (
     <button
       onClick={onClick}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        background: active || hov ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
-        border: `1px solid ${active || hov ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)'}`,
+        background: isWhyActive
+          ? 'rgba(156,252,175,0.1)'
+          : (active || hov ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)'),
+        border: `1px solid ${isWhyActive
+          ? 'rgba(156,252,175,0.3)'
+          : (active || hov ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)')}`,
         borderRadius: '100px',
         padding: '7px 14px',
         fontSize: '12px',
         fontFamily: "'Instrument Sans', sans-serif",
-        color: active || hov ? '#ffffff' : 'rgba(255,255,255,0.6)',
+        color: isWhyActive ? '#9CFCAF' : (active || hov ? '#ffffff' : 'rgba(255,255,255,0.6)'),
         cursor: 'pointer',
         transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
         transform: hov ? 'translateY(-1px)' : 'translateY(0)',
+        flexShrink: 0,
       }}
     >
       {label}

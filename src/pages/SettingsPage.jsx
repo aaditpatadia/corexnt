@@ -77,15 +77,33 @@ export default function SettingsPage() {
       style={{
         flex: 1,
         overflowY: "auto",
-        padding: "40px 32px",
-        maxWidth: 560,
+        padding: "40px 24px",
+        maxWidth: 600,
         margin: "0 auto",
         width: "100%",
+        boxSizing: "border-box",
       }}
     >
-      <h1 style={{ fontFamily: FONT, fontWeight: 700, fontSize: 22, color: "#ffffff", marginBottom: 36 }}>
+      <h1 style={{ fontFamily: FONT, fontWeight: 700, fontSize: 22, color: "#ffffff", marginBottom: 24 }}>
         Settings
       </h1>
+
+      {/* Avatar / profile card */}
+      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 36, padding: "20px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16 }}>
+        <div style={{
+          width: 52, height: 52, borderRadius: "50%",
+          background: "linear-gradient(135deg, #226FF7, #9CFCAF)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 20, fontWeight: 700, color: "#000", fontFamily: FONT,
+          flexShrink: 0,
+        }}>
+          {(name || email || "U")[0].toUpperCase()}
+        </div>
+        <div>
+          <div style={{ fontFamily: FONT, fontWeight: 700, fontSize: 16, color: "#ffffff" }}>{name || "Your Name"}</div>
+          <div style={{ fontFamily: FONT, fontSize: 13, color: "rgba(255,255,255,0.4)" }}>{email}</div>
+        </div>
+      </div>
 
       {/* Section 1 — Your Identity */}
       <section style={{ marginBottom: 48 }}>
@@ -137,30 +155,32 @@ export default function SettingsPage() {
           Your Plan
         </h2>
 
-        <p style={{ fontFamily: "'Instrument Serif', serif", fontStyle: "italic", fontSize: 28, color: "#ffffff", marginBottom: 6 }}>
-          {planName}
-        </p>
-        <p style={{ fontFamily: FONT, fontSize: 14, color: "rgba(255,255,255,0.45)", marginBottom: 24 }}>
-          ⚡ {credits} credits remaining · {translateCredits(credits)}
-        </p>
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "20px 20px" }}>
+          <p style={{ fontFamily: "'Instrument Serif', serif", fontStyle: "italic", fontSize: 28, color: "#ffffff", marginBottom: 6 }}>
+            {planName}
+          </p>
+          <p style={{ fontFamily: FONT, fontSize: 14, color: "rgba(255,255,255,0.45)", marginBottom: 20 }}>
+            ⚡ {credits} credits remaining · {translateCredits(credits)}
+          </p>
 
-        <button
-          onClick={() => document.dispatchEvent(new CustomEvent("corex:openCredits"))}
-          style={{
-            fontSize: 14,
-            fontFamily: FONT,
-            fontWeight: 600,
-            color: "#9CFCAF",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: 0,
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.75")}
-          onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-        >
-          Top up credits →
-        </button>
+          <button
+            onClick={() => document.dispatchEvent(new CustomEvent("corex:openCredits"))}
+            style={{
+              fontSize: 14,
+              fontFamily: FONT,
+              fontWeight: 600,
+              color: "#9CFCAF",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.75")}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+          >
+            Top up credits →
+          </button>
+        </div>
       </section>
 
       {/* Divider */}

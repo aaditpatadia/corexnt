@@ -4,6 +4,7 @@ export const trackSignup = async (userData) => {
   try {
     await fetch(webhookUrl, {
       method: 'POST',
+      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         event: 'signup',
@@ -26,6 +27,7 @@ export const trackPayment = async (paymentData) => {
   try {
     await fetch(webhookUrl, {
       method: 'POST',
+      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         event: 'payment_submitted',

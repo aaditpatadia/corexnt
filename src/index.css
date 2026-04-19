@@ -753,6 +753,14 @@ body, #root, .corex-app {
   .payment-1920s-card { transform: none !important; }
 }
 
+/* ─────────────────────────────────────────────
+   Landing nav — hide desktop links on mobile
+─────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .desktop-nav-links { display: none !important; }
+  .hero-section-inner { padding-top: 160px !important; }
+}
+
 /* ═══ V11 ANIMATION SYSTEM ═══ */
 :root {
   --bg: #000000;

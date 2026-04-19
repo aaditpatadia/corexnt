@@ -106,6 +106,7 @@ function Hero() {
       <div style={{ position:"absolute", top:"30%", left:"50%", transform:"translateX(-50%)", width:600, height:400, background:"radial-gradient(ellipse, rgba(107,195,206,0.06) 0%, transparent 70%)", pointerEvents:"none" }}/>
 
       <motion.div initial={{ opacity:0, y:40 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.8, ease:[0.16,1,0.3,1] }}
+        className="hero-section-inner"
         style={{ display:"flex", flexDirection:"column", alignItems:"center", zIndex:10, position:"relative" }}>
 
         <motion.div initial={{ opacity:0, scale:0.9 }} animate={{ opacity:1, scale:1 }} transition={{ duration:0.5, delay:0.1 }}
@@ -160,7 +161,7 @@ function Hero() {
         }}
       >
         <img
-          src="/images/hero1.jpg"
+          src="/images/hero1.png"
           alt=""
           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           onError={(e) => { if (e.currentTarget.parentElement) e.currentTarget.parentElement.style.display = "none"; }}
@@ -176,7 +177,7 @@ function Hero() {
         }}
       >
         <img
-          src="/images/hero2.jpg"
+          src="/images/hero2.png"
           alt=""
           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           onError={(e) => { if (e.currentTarget.parentElement) e.currentTarget.parentElement.style.display = "none"; }}

@@ -217,8 +217,6 @@ export default function ChatInput({ onSend, disabled, userType, embedded }) {
           >
             {[
               { icon: "📄", label: "Upload Files", action: () => { fileRef.current?.click(); setMenuOpen(false); } },
-              { icon: "✦", label: "Creative Thinking Modes", hasArrow: true, action: () => { setMenuOpen(false); } },
-              { icon: "🔗", label: "Connectors", hasArrow: true, action: () => setMenuOpen(false) },
             ].map(item => (
               <button
                 key={item.label}
