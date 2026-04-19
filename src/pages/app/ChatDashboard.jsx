@@ -5,6 +5,9 @@ import ResponseCard from "../../components/ResponseCard";
 import { stripMarkdown } from "../../utils/parseResponse";
 import { getProfileContext } from "../../utils/userProfile";
 import { deduct, getCredits, COSTS, translate } from "../../utils/credits";
+import { isSessionLimited, getCooldownRemaining, incrementSessionCount, resetSession, formatCountdown, getPlanLimit } from "../../utils/sessionLimits";
+import { db } from "../../firebase";
+import { doc, setDoc } from "firebase/firestore";
 const deductCredits = deduct; // backward compat alias
 
 const ADMIN_EMAIL = "corexnt@gmail.com";
@@ -450,6 +453,7 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
   const [limitReason, setLimitReason] = useState("credits"); // "credits" | "projects" | "messages"
   const [credits,     setCredits]     = useState(getCredits);
   const [shareToast,  setShareToast]  = useState(false);
+  const [cooldownMs,  setCooldownMs]  = useState(0);
   const bottomRef    = useRef(null);
   const scrollRef    = useRef(null);
 
@@ -466,6 +470,18 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
     const interval = setInterval(refresh, 5000);
     window.addEventListener('focus', refresh);
     return () => { clearInterval(interval); window.removeEventListener('focus', refresh); };
+  }, []);
+
+  // Session limit countdown — ticks every second
+  useEffect(() => {
+    const tick = () => {
+      const plan = localStorage.getItem("corex_plan") || "free";
+      const remaining = getCooldownRemaining(plan);
+      setCooldownMs(remaining);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
   }, []);
 
   // Prefill from other pages
@@ -514,9 +530,15 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
     const histCount  = (() => { try { return JSON.parse(localStorage.getItem("corex_history")||"[]").length; } catch { return 0; } })();
     if (!isAdminEmail() && isNewChat && histCount >= 5) { setLimitReason("projects"); setShowLimit(true); return; }
 
+    // Per-session message limit based on plan
+    const planTier = localStorage.getItem("corex_plan") || "free";
+    if (!isAdminEmail() && isSessionLimited(planTier)) {
+      // Already blocked — banner is shown below input; do nothing
+      return;
+    }
+
     // Per-project: free users limited to 5 user messages per conversation
     const userMsgCount = messages.filter(m => m.role === "user").length;
-    const planTier = localStorage.getItem("corex_plan") || "free";
     if (!isAdminEmail() && planTier === "free" && userMsgCount >= 5) { setLimitReason("messages"); setShowLimit(true); return; }
 
     // Calculate credit cost and check balance
@@ -529,6 +551,9 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
       : isComplex ? COSTS.smart
       : COSTS.basic;
     if (!isAdminEmail() && !deduct(cost)) { setLimitReason("credits"); setShowLimit(true); return; }
+
+    // Increment session message counter (only reached when message is actually sent)
+    if (!isAdminEmail()) incrementSessionCount();
 
     const displayFiles = files.map(({ name, type, preview }) => ({ name, type, preview }));
     const apiFiles     = files.map(({ name, type, b64 })     => ({ name, type, b64 }));
@@ -610,14 +635,25 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
     setTimeout(() => setRevealing(null), 8000);
   }, [messages, loading, userType]);
 
-  // Share handler — saves conversation snapshot to localStorage and copies link
-  const handleShare = useCallback((message) => {
-    const shareId = 'share_' + Date.now();
-    const brandName = localStorage.getItem('corex_brand_name') || '';
-    const sharedChats = JSON.parse(localStorage.getItem('corex_shared_chats') || '{}');
-    sharedChats[shareId] = { messages, brandName, ts: Date.now() };
-    localStorage.setItem('corex_shared_chats', JSON.stringify(sharedChats));
-    const link = `${window.location.origin}/share/${shareId}`;
+  // Share handler — saves conversation snapshot to Firestore + localStorage and copies link
+  const handleShare = useCallback(async (message) => {
+    const shareId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const shareData = {
+      messages: messages.map(m => ({ role: m.role, content: m.content || "" })).filter(m => m.content),
+      title: messages.find(m => m.role === "user")?.content?.slice(0, 60) || "Shared conversation",
+      ts: Date.now(),
+      shareId,
+    };
+
+    // Save to Firestore (primary)
+    if (db) {
+      await setDoc(doc(db, "shared_chats", shareId), shareData).catch(() => {});
+    }
+
+    // Also save to localStorage as backup
+    localStorage.setItem(`corex_shared_${shareId}`, JSON.stringify(shareData));
+
+    const link = `${window.location.origin}/shared/${shareId}`;
     navigator.clipboard.writeText(link).catch(() => {});
     setShareToast(true);
     setTimeout(() => setShareToast(false), 2500);
@@ -775,7 +811,62 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
           background: "#000000",
         }}
       >
-        <ChatInput onSend={sendMessage} disabled={loading || limitHit} userType={userType} embedded />
+        {/* Session limit banner — shown above input when user hits their plan's session cap */}
+        {(() => {
+          const plan = localStorage.getItem("corex_plan") || "free";
+          const limited = isSessionLimited(plan);
+          if (!limited) return null;
+          const remaining = getCooldownRemaining(plan);
+          const { messages: planMessages } = getPlanLimit(plan);
+          return (
+            <div style={{
+              background: "rgba(255,234,113,0.06)",
+              border: "1px solid rgba(255,234,113,0.2)",
+              borderRadius: 14,
+              padding: "16px 20px",
+              margin: "0 16px 12px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 12,
+              fontFamily: "'Instrument Sans', sans-serif",
+            }}>
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 600, color: "#FFEA71", margin: "0 0 4px" }}>
+                  ⚡ {planMessages} message session complete
+                </p>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", margin: 0 }}>
+                  {remaining > 0
+                    ? `Continue in ${formatCountdown(remaining)} · or upgrade for longer sessions`
+                    : "Session reset — you can continue chatting"}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  // NOTE: AppShell exposes window.__corex_openCredits to open the credit modal.
+                  // We dispatch a custom event that AppShell listens for.
+                  window.dispatchEvent(new CustomEvent("corex:openCredits"));
+                }}
+                style={{
+                  padding: "9px 18px",
+                  borderRadius: 100,
+                  fontSize: 13,
+                  fontFamily: "'Instrument Sans', sans-serif",
+                  fontWeight: 600,
+                  background: "linear-gradient(135deg, #226FF7, #FFEA71)",
+                  color: "#000",
+                  border: "none",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Upgrade to SPARK →
+              </button>
+            </div>
+          );
+        })()}
+        <ChatInput onSend={sendMessage} disabled={loading || limitHit || isSessionLimited(localStorage.getItem("corex_plan") || "free")} userType={userType} embedded />
         <div style={{
           textAlign: "center",
           fontSize: 11,

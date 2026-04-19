@@ -160,6 +160,34 @@
 }
 
 /* ─────────────────────────────────────────────
+   Safari scrollbar fix + webkit scrollbar theme
+─────────────────────────────────────────────── */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+.page-enter {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Custom scrollbar — webkit (Safari, Chrome) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.12);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.22);
+}
+
+/* ─────────────────────────────────────────────
    Global overflow & word-break safety
 ─────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; max-width: 100%; }

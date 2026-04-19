@@ -8,6 +8,20 @@ import {
 import { parseResponse, shouldShowChart, stripMarkdown } from "../utils/parseResponse";
 import { generateResponsePDF } from "../utils/generatePDF";
 
+/* ── Strip markdown / decoration from AI output ── */
+function cleanAIText(text) {
+  if (!text) return "";
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, "$1")   // bold
+    .replace(/\*([^*]+)\*/g, "$1")         // italic
+    .replace(/^#{1,4}\s+/gm, "")           // headings
+    .replace(/^---+$/gm, "")               // horizontal rules
+    .replace(/^\s*[-–—]\s+/gm, "• ")      // convert leading dashes to bullet dots
+    .replace(/\*\*/g, "")                  // any remaining **
+    .replace(/\n{3,}/g, "\n\n")            // collapse multiple blank lines
+    .trim();
+}
+
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip, Filler, Legend);
 
 const BAR_COLORS = ["#4f9cf9","#f97316","#22c55e","#a855f7","#f43f5e","#eab308"];
@@ -477,7 +491,7 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
 
   const { title, cleanBody, steps, example, graphData, mindmapData, flowchartData, chips, followups, clarifyOptions } = parseResponse(message.content);
   const showChart = shouldShowChart(graphData);
-  const bodyText  = stripMarkdown(cleanBody || "");
+  const bodyText  = cleanAIText(stripMarkdown(cleanBody || ""));
 
   const plan = typeof window !== "undefined" ? (localStorage.getItem("corex_plan") || "free") : "free";
   const isPremiumPlan = plan === "nineteen_twentys" || plan === "canvas_enterprise";
@@ -645,8 +659,8 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
                   display:"flex", alignItems:"center", justifyContent:"center",
                   fontFamily:"var(--font-body)",
                 }}>{i + 1}</span>
-                <p style={{ fontSize:14, color:"rgba(255,255,255,0.8)", fontFamily:"var(--font-body)", lineHeight:1.55, margin:0, wordBreak:"break-word", overflowWrap:"break-word" }}>
-                  {stripMarkdown(s)}
+                <p style={{ fontSize:15, color:"rgba(255,255,255,0.8)", fontFamily:"var(--font-body)", lineHeight:1.55, margin:0, wordBreak:"break-word", overflowWrap:"break-word" }}>
+                  {cleanAIText(stripMarkdown(s))}
                 </p>
               </div>
             ))}
@@ -664,8 +678,8 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
           <p style={{ fontSize:10, fontWeight:700, letterSpacing:"2px", textTransform:"uppercase", color:"rgba(156,252,175,0.6)", marginBottom:8, fontFamily:"var(--font-body)" }}>
             REAL EXAMPLE
           </p>
-          <p style={{ fontSize:14, color:"rgba(255,255,255,0.7)", fontFamily:"var(--font-body)", lineHeight:1.6, margin:0 }}>
-            {stripMarkdown(example)}
+          <p style={{ fontSize:15, color:"rgba(255,255,255,0.7)", fontFamily:"var(--font-body)", lineHeight:1.6, margin:0 }}>
+            {cleanAIText(stripMarkdown(example))}
           </p>
         </div>
       )}
@@ -846,7 +860,7 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
               borderRadius: '0 8px 8px 0',
             }}>
               <div style={{ fontSize: 10, letterSpacing: '2px', color: '#9CFCAF', marginBottom: 8, fontFamily: "'Instrument Sans', sans-serif", fontWeight: 700 }}>COREX REASONING</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', wordBreak: 'break-word', fontFamily: "'Instrument Sans', sans-serif", lineHeight: 1.6 }}>
+              <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', wordBreak: 'break-word', fontFamily: "'Instrument Sans', sans-serif", lineHeight: 1.6 }}>
                 {whyLoading ? 'Thinking...' : 'Reasoning sent to chat — scroll up for the full strategic breakdown.'}
               </div>
             </div>

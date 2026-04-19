@@ -93,7 +93,8 @@ export default function App() {
             <Route path="/creators" element={<Navigate to="/" replace />} />
             <Route path="/brands"   element={<Navigate to="/" replace />} />
             <Route path="/app/*"    element={<AppShell />} />
-            <Route path="/share/:shareId" element={<SharedChat />} />
+            <Route path="/share/:shareId"   element={<SharedChat />} />
+            <Route path="/shared/:shareId" element={<SharedChat />} />
             <Route path="/admin"    element={<AdminPage />} />
             <Route path="*"         element={<Navigate to="/" replace />} />
           </Routes>
