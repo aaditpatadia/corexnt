@@ -154,59 +154,29 @@ export default function PaymentModal({ pack, open, onClose }) {
               <div style={{ textAlign: "center", padding: "12px 0" }}>
                 <p style={{ fontSize: 40, margin: "0 0 16px" }}>✓</p>
                 <p style={{ fontSize: 18, fontWeight: 700, color: "#ffffff", margin: "0 0 10px" }}>
-                  Received! We'll add your {totalCredits} credits within 1 hour.
+                  Payment received!
                 </p>
-                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", margin: "0 0 28px" }}>
-                  We'll add your {totalCredits} credits within 1 hour and confirm on WhatsApp{" "}
-                  <span style={{ color: "#9CFCAF" }}>{whatsapp}</span>
-                  {". "}Questions? WhatsApp{" "}
-                  <a
-                    href="https://wa.me/917383620725"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: "#9CFCAF", textDecoration: "none" }}
-                  >
-                    7383620725
-                  </a>
+                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", margin: "0 0 6px" }}>
+                  To avail your credits after payment, please contact here:
                 </p>
-                <a
-                  href={`https://wa.me/917383620725?text=${encodeURIComponent("Hey I paid for COREX")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: "inline-block",
-                    padding: "11px 32px",
-                    borderRadius: 100,
-                    fontSize: 14,
-                    fontFamily: FONT,
-                    fontWeight: 600,
-                    background: "linear-gradient(135deg, #25D366, #128C7E)",
-                    color: "#ffffff",
-                    textDecoration: "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  Continue on WhatsApp →
-                </a>
+                <p style={{ fontSize: 22, fontWeight: 700, color: "#9CFCAF", margin: "0 0 28px", letterSpacing: "0.5px" }}>
+                  +91 7383620725
+                </p>
                 <button
                   onClick={onClose}
                   style={{
-                    marginTop: 12,
-                    padding: "8px 24px",
+                    padding: "12px 48px",
                     borderRadius: 100,
-                    fontSize: 13,
+                    fontSize: 15,
                     fontFamily: FONT,
-                    fontWeight: 500,
-                    background: "transparent",
-                    color: "rgba(255,255,255,0.35)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    fontWeight: 600,
+                    background: "linear-gradient(135deg, #226FF7, #9CFCAF)",
+                    color: "#000000",
+                    border: "none",
                     cursor: "pointer",
-                    display: "block",
-                    width: "fit-content",
-                    margin: "12px auto 0",
                   }}
                 >
-                  Close
+                  Done
                 </button>
               </div>
             ) : (

@@ -752,15 +752,6 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
               onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.3)"}>
               {pdfLoading ? "Generating…" : "Download PDF"}
             </button>
-            {onShare && (
-              <button
-                onClick={onShare}
-                style={{ fontSize:13, fontFamily:"var(--font-body)", color:"rgba(156,252,175,0.7)", background:"transparent", border:"none", cursor:"pointer", transition:"color 0.15s", display:"flex", alignItems:"center", gap:5, padding:0 }}
-                onMouseEnter={e=>e.currentTarget.style.color="#9CFCAF"}
-                onMouseLeave={e=>e.currentTarget.style.color="rgba(156,252,175,0.7)"}>
-                ↗ Share
-              </button>
-            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -809,14 +800,6 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
                 4
               )}
             />
-
-            {/* Share button — always visible */}
-            {onShare && (
-              <ActionBtn
-                label="↗ Share"
-                onClick={onShare}
-              />
-            )}
 
             {/* Button 4: Make it [mode] — dropdown */}
             <div ref={makeItRef} style={{ position: "relative" }}>
