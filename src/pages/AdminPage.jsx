@@ -348,6 +348,89 @@ function Stats() {
   );
 }
 
+/* ── Upgrade User ── */
+function UpgradeUser({ onToast }) {
+  const [targetEmail, setTargetEmail] = useState('');
+  const [targetPlan, setTargetPlan] = useState('spark');
+  const [upgrading, setUpgrading] = useState(false);
+  const [upgradeMsg, setUpgradeMsg] = useState('');
+
+  async function handleUpgradeUser() {
+    if (!targetEmail.trim()) return;
+    setUpgrading(true);
+    setUpgradeMsg('');
+    try {
+      const { doc, setDoc } = await import('firebase/firestore');
+      const { db } = await import('../firebase');
+      await setDoc(doc(db, 'user_plans', targetEmail.toLowerCase().trim()), {
+        plan: targetPlan,
+        updatedAt: Date.now(),
+        updatedBy: 'admin',
+        email: targetEmail.toLowerCase().trim(),
+      });
+      setUpgradeMsg(`✓ ${targetEmail} upgraded to ${targetPlan}`);
+      onToast(`${targetEmail} → ${targetPlan}`);
+    } catch (err) {
+      setUpgradeMsg(`Error: ${err.message}`);
+    }
+    setUpgrading(false);
+  }
+
+  return (
+    <div style={{ marginTop: 24, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 24 }}>
+      <p style={{ fontSize: 13, fontWeight: 700, color: '#a78bfa', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 16, fontFamily: FONT }}>
+        Upgrade User
+      </p>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+        <input
+          value={targetEmail}
+          onChange={e => setTargetEmail(e.target.value)}
+          placeholder="user@email.com"
+          style={{ flex: 1, minWidth: 200, padding: '10px 14px', borderRadius: 10, fontSize: 14, fontFamily: FONT, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', outline: 'none' }}
+        />
+        <select
+          value={targetPlan}
+          onChange={e => setTargetPlan(e.target.value)}
+          style={{ padding: '10px 14px', borderRadius: 10, fontSize: 14, fontFamily: FONT, background: '#1a0a2e', border: '1px solid #5b21b6', color: '#fff', cursor: 'pointer' }}
+        >
+          <option value="free">Free</option>
+          <option value="spark">SPARK</option>
+          <option value="studio">Studio</option>
+          <option value="nineteen_twentys">Nineteen Twentys</option>
+          <option value="canvas_enterprise">Canvas Enterprise</option>
+        </select>
+        <button
+          onClick={handleUpgradeUser}
+          disabled={upgrading || !targetEmail.trim()}
+          style={{ padding: '10px 20px', borderRadius: 10, fontSize: 14, fontFamily: FONT, fontWeight: 600, background: upgrading ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg, #226FF7, #9CFCAF)', color: upgrading ? 'rgba(255,255,255,0.3)' : '#000', border: 'none', cursor: upgrading ? 'not-allowed' : 'pointer' }}
+        >
+          {upgrading ? 'Upgrading…' : 'Upgrade →'}
+        </button>
+      </div>
+      {upgradeMsg && (
+        <p style={{ marginTop: 12, fontSize: 13, color: upgradeMsg.startsWith('✓') ? '#9CFCAF' : '#f87171', fontFamily: FONT }}>
+          {upgradeMsg}
+        </p>
+      )}
+      <div style={{ marginTop: 16 }}>
+        <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontFamily: FONT, marginBottom: 8 }}>PLAN LIMITS</p>
+        {[
+          { plan: 'free',              label: 'Free',              limits: '5 msg/session • 19:20 cooldown • 2 uploads' },
+          { plan: 'spark',             label: 'SPARK',             limits: '19 msg/session • 19:20 cooldown • 5 uploads • 5 regens' },
+          { plan: 'studio',            label: 'Studio',            limits: '50 msg/session • 10min cooldown • 10 uploads • Deep analysis' },
+          { plan: 'nineteen_twentys',  label: 'Nineteen Twentys',  limits: 'Unlimited • Long workflows • Full campaign systems' },
+          { plan: 'canvas_enterprise', label: 'Canvas Enterprise', limits: 'Unlimited • All features' },
+        ].map(({ plan, label, limits }) => (
+          <div key={plan} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#a78bfa', fontFamily: FONT, minWidth: 120 }}>{label}</span>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: FONT }}>{limits}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ── Main ── */
 export default function AdminPage() {
   const [authed, setAuthed] = useState(() => sessionStorage.getItem('corex_admin_auth') === 'true');
@@ -372,6 +455,9 @@ export default function AdminPage() {
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '32px 24px 64px' }}>
         <Stats />
         <CreditManager onToast={setToast} />
+        <Section title="Upgrade User">
+          <UpgradeUser onToast={setToast} />
+        </Section>
         <PendingPayments onToast={setToast} />
         <UserList />
       </div>

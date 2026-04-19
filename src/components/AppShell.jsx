@@ -15,6 +15,10 @@ import ReelScript      from "../pages/app/creator/ReelScript";
 import GrowthAudit     from "../pages/app/creator/GrowthAudit";
 import BrandDealPricer from "../pages/app/creator/BrandDealPricer";
 import PitchEmail      from "../pages/app/creator/PitchEmail";
+import DesignerStudio      from "../pages/app/DesignerStudio";
+import AssignmentSolver    from "../pages/app/designer/AssignmentSolver";
+import DesignCritique      from "../pages/app/designer/DesignCritique";
+import PricingCalculator   from "../pages/app/designer/PricingCalculator";
 import PaymentModal    from "./PaymentModal";
 import ProjectsPage      from "../pages/app/ProjectsPage";
 import SettingsPage      from "../pages/SettingsPage";
@@ -548,11 +552,40 @@ export default function AppShell() {
     return () => clearInterval(syncInterval);
   }, []);
 
-  // Listen for credit modal trigger from dropdown / sidebar
+  // Listen for plan changes in Firestore — admin can upgrade user and it reflects immediately
+  useEffect(() => {
+    const email = localStorage.getItem("userEmail");
+    if (!email) return;
+    let unsubscribe;
+    (async () => {
+      try {
+        const { doc, onSnapshot } = await import("firebase/firestore");
+        const { db } = await import("../firebase");
+        if (!db) return;
+        unsubscribe = onSnapshot(doc(db, "user_plans", email.toLowerCase()), (snap) => {
+          if (snap.exists()) {
+            const plan = snap.data().plan;
+            if (plan) {
+              localStorage.setItem("corex_plan", plan);
+              window.dispatchEvent(new CustomEvent("corex:planUpdated", { detail: { plan } }));
+            }
+          }
+        });
+      } catch { /* silent — Firebase may not be available */ }
+    })();
+    return () => { if (unsubscribe) unsubscribe(); };
+  }, []);
+
+  // Listen for credit modal trigger from dropdown / sidebar / session limit banner
   useEffect(() => {
     const handler = () => setCreditModalOpen(true);
     document.addEventListener("corex:openCredits", handler);
-    return () => document.removeEventListener("corex:openCredits", handler);
+    // Also listen on window — the session limit banner dispatches on window
+    window.addEventListener("corex:openCredits", handler);
+    return () => {
+      document.removeEventListener("corex:openCredits", handler);
+      window.removeEventListener("corex:openCredits", handler);
+    };
   }, []);
 
   // ESC key closes mobile menu and desktop sidebar

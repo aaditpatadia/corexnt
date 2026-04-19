@@ -1,9 +1,45 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import jsPDF from "jspdf";
 
 const FONT = "'Instrument Sans', sans-serif";
 const SERIF = "'Instrument Serif', serif";
+
+function cleanResult(text) {
+  return (text || "")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/^#{1,4}\s+/gm, "")
+    .replace(/^---+$/gm, "")
+    .trim();
+}
+
+function downloadAsPDF(text, title) {
+  const doc = new jsPDF();
+  const margin = 20;
+  const maxWidth = 170;
+  const lineHeight = 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(16);
+  doc.text(title, margin, margin);
+
+  doc.setFontSize(11);
+  let y = margin + 12;
+
+  const lines = doc.splitTextToSize(text, maxWidth);
+  lines.forEach((line) => {
+    if (y > 270) {
+      doc.addPage();
+      y = margin;
+    }
+    doc.text(line, margin, y);
+    y += lineHeight;
+  });
+
+  doc.save(`${title.replace(/\s+/g, "_")}.pdf`);
+}
 
 export default function PitchEmail() {
   const navigate = useNavigate();
@@ -74,7 +110,7 @@ YOUR MOVE:
       if (!res.ok) throw new Error(data.error || "API error");
       const fullText = data.reply || "";
       if (!fullText) throw new Error("No response generated");
-      setResult(fullText);
+      setResult(cleanResult(fullText));
       try {
         const history = JSON.parse(localStorage.getItem("corex_history") || "[]");
         history.unshift({ id: Date.now(), title: `Pitch: ${brand}`, messages: [{ role: "user", content: prompt }, { role: "assistant", content: fullText }], ts: Date.now(), type: "creator-engine" });
@@ -116,10 +152,47 @@ YOUR MOVE:
         </form>
       ) : (
         <div>
-          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 28, marginBottom: 20, fontFamily: FONT, fontSize: 14, color: "rgba(255,255,255,0.85)", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{result}</div>
+          {/* Editable output */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <span style={{ fontSize: 11, fontFamily: FONT, fontWeight: 600, color: "rgba(255,255,255,0.4)", letterSpacing: "1px", textTransform: "uppercase" }}>
+                ✏️ Editable — make it yours
+              </span>
+            </div>
+            <textarea
+              value={result}
+              onChange={(e) => setResult(e.target.value)}
+              style={{
+                width: "100%",
+                minHeight: 420,
+                padding: "20px 22px",
+                borderRadius: 16,
+                fontSize: 15,
+                fontFamily: FONT,
+                lineHeight: 1.8,
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                color: "rgba(255,255,255,0.9)",
+                resize: "vertical",
+                outline: "none",
+                caretColor: "#9CFCAF",
+                boxSizing: "border-box",
+                whiteSpace: "pre-wrap",
+                overflowY: "auto",
+              }}
+            />
+          </div>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <motion.button whileHover={{ translateY: -1 }} whileTap={{ scale: 0.98 }} onClick={() => setResult("")} style={{ padding: "10px 20px", borderRadius: 100, fontSize: 13, fontFamily: FONT, fontWeight: 600, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#ffffff", cursor: "pointer" }}>↺ Write another pitch</motion.button>
             <motion.button whileHover={{ translateY: -1 }} whileTap={{ scale: 0.98 }} onClick={() => { navigator.clipboard.writeText(result).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 1500); }} style={{ padding: "10px 20px", borderRadius: 100, fontSize: 13, fontFamily: FONT, fontWeight: 600, background: copied ? "rgba(156,252,175,0.1)" : "rgba(255,255,255,0.06)", border: copied ? "1px solid rgba(156,252,175,0.3)" : "1px solid rgba(255,255,255,0.1)", color: copied ? "#9CFCAF" : "#ffffff", cursor: "pointer", transition: "all 0.2s" }}>{copied ? "Copied ✓" : "📋 Copy pitch"}</motion.button>
+            <motion.button
+              whileHover={{ translateY: -1 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => downloadAsPDF(result, "Pitch Email")}
+              style={{ padding: "10px 20px", borderRadius: 100, fontSize: 13, fontFamily: FONT, fontWeight: 600, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#ffffff", cursor: "pointer" }}
+            >
+              ↓ Download PDF
+            </motion.button>
           </div>
         </div>
       )}

@@ -11,6 +11,9 @@ export default function PaymentModal({ pack, open, onClose }) {
   const email = localStorage.getItem("userEmail") || "";
   const [amount, setAmount] = useState("");
   const [txnId, setTxnId] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [screenshot, setScreenshot] = useState(null); // base64 string
+  const [screenshotName, setScreenshotName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [bankOpen, setBankOpen] = useState(false);
@@ -23,7 +26,17 @@ export default function PaymentModal({ pack, open, onClose }) {
   }, [pack]);
 
   useEffect(() => {
-    if (!open) { setSuccess(false); setError(""); setTxnId(""); setBankOpen(false); setCopied(false); setCopiedAccount(false); }
+    if (!open) {
+      setSuccess(false);
+      setError("");
+      setTxnId("");
+      setBankOpen(false);
+      setCopied(false);
+      setCopiedAccount(false);
+      setWhatsapp("");
+      setScreenshot(null);
+      setScreenshotName("");
+    }
   }, [open]);
 
   useEffect(() => {
@@ -41,13 +54,18 @@ export default function PaymentModal({ pack, open, onClose }) {
     e.preventDefault();
     setError("");
     if (!txnId.trim()) { setError("UPI Transaction ID is required."); return; }
+    if (!whatsapp.trim()) { setError("WhatsApp number is required."); return; }
+    if (!screenshot) { setError("Payment screenshot is required."); return; }
     setSubmitting(true);
 
     const payload = {
       name: name.trim(),
       email,
+      whatsapp: whatsapp.trim(),
       amount: Number(amount),
       txnId: txnId.trim(),
+      screenshot, // base64 string
+      screenshotName,
       pack: pack.id,
       ts: Date.now(),
       status: "pending",
@@ -60,6 +78,32 @@ export default function PaymentModal({ pack, open, onClose }) {
 
     // Save to Firebase
     await setDoc(doc(db, "pending_payments", txnId.trim()), payload).catch(() => {});
+
+    // Send email notification to admin
+    try {
+      const emailjs = (await import("@emailjs/browser")).default;
+      const serviceId  = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+      const publicKey  = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+      if (serviceId && templateId && publicKey) {
+        await emailjs.send(serviceId, templateId, {
+          to_email: "corexnt@gmail.com",
+          subject: `New Payment — ${pack.name} — ₹${amount}`,
+          from_name: name.trim(),
+          message: [
+            `PAYMENT RECEIVED`,
+            `Name: ${name.trim()}`,
+            `Email: ${email}`,
+            `WhatsApp: ${whatsapp.trim()}`,
+            `Pack: ${pack.name}`,
+            `Credits: ${totalCredits}`,
+            `Amount: ₹${amount}`,
+            `UPI Txn ID: ${txnId.trim()}`,
+            `Time: ${new Date().toLocaleString("en-IN")}`,
+          ].join("\n"),
+        }, publicKey);
+      }
+    } catch { /* silent — do not fail payment flow */ }
 
     // Track payment (fire-and-forget)
     trackPayment({
@@ -139,7 +183,9 @@ export default function PaymentModal({ pack, open, onClose }) {
                   Received! We'll add your {totalCredits} credits within 1 hour.
                 </p>
                 <p style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", margin: "0 0 28px" }}>
-                  Questions? WhatsApp{" "}
+                  We'll add your {totalCredits} credits within 1 hour and confirm on WhatsApp{" "}
+                  <span style={{ color: "#9CFCAF" }}>{whatsapp}</span>
+                  {". "}Questions? WhatsApp{" "}
                   <a
                     href="https://wa.me/917383620725"
                     target="_blank"
@@ -341,6 +387,62 @@ export default function PaymentModal({ pack, open, onClose }) {
                     onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(156,252,175,0.4)")}
                     onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
                   />
+
+                  {/* WhatsApp number */}
+                  <input
+                    value={whatsapp}
+                    onChange={(e) => setWhatsapp(e.target.value)}
+                    placeholder="WhatsApp number (required) *"
+                    required
+                    type="tel"
+                    style={inputStyle}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(156,252,175,0.4)")}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
+                  />
+
+                  {/* Screenshot upload */}
+                  <div>
+                    <label
+                      htmlFor="payment-screenshot"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "10px 14px",
+                        borderRadius: 10,
+                        fontSize: 14,
+                        fontFamily: "'Instrument Sans', sans-serif",
+                        background: screenshot ? "rgba(156,252,175,0.06)" : "rgba(255,255,255,0.05)",
+                        border: screenshot ? "1px solid rgba(156,252,175,0.3)" : "1px solid rgba(255,255,255,0.08)",
+                        color: screenshot ? "#9CFCAF" : "rgba(255,255,255,0.45)",
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      <span style={{ fontSize: 16 }}>{screenshot ? "✓" : "📎"}</span>
+                      <span>{screenshot ? `Screenshot attached: ${screenshotName}` : "Attach payment screenshot (required) *"}</span>
+                      <input
+                        id="payment-screenshot"
+                        type="file"
+                        accept="image/*"
+                        required
+                        style={{ display: "none" }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          setScreenshotName(file.name);
+                          const reader = new FileReader();
+                          reader.onload = (ev) => setScreenshot(ev.target?.result || null);
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                    </label>
+                    {!screenshot && (
+                      <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", margin: "4px 0 0 4px", fontFamily: "'Instrument Sans', sans-serif" }}>
+                        Upload a screenshot of your payment confirmation
+                      </p>
+                    )}
+                  </div>
 
                   {error && (
                     <p style={{ fontSize: 13, color: "#f87171", margin: 0 }}>{error}</p>

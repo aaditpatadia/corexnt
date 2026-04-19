@@ -1,11 +1,47 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import jsPDF from "jspdf";
 
 const FONT = "'Instrument Sans', sans-serif";
 const SERIF = "'Instrument Serif', serif";
 
 const CREDITS_COST = 3;
+
+function cleanResult(text) {
+  return (text || "")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/^#{1,4}\s+/gm, "")
+    .replace(/^---+$/gm, "")
+    .trim();
+}
+
+function downloadAsPDF(text, title) {
+  const doc = new jsPDF();
+  const margin = 20;
+  const maxWidth = 170;
+  const lineHeight = 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(16);
+  doc.text(title, margin, margin);
+
+  doc.setFontSize(11);
+  let y = margin + 12;
+
+  const lines = doc.splitTextToSize(text, maxWidth);
+  lines.forEach((line) => {
+    if (y > 270) {
+      doc.addPage();
+      y = margin;
+    }
+    doc.text(line, margin, y);
+    y += lineHeight;
+  });
+
+  doc.save(`${title.replace(/\s+/g, "_")}.pdf`);
+}
 
 function Pill({ label, selected, onClick }) {
   return (
@@ -109,7 +145,7 @@ export default function BrandDealPricer() {
       if (!response.ok) throw new Error(data.error || "API error");
       const fullText = data.reply || "";
       if (!fullText) throw new Error("No response generated");
-      setResult(fullText);
+      setResult(cleanResult(fullText));
 
       // Save to history
       try {
@@ -298,24 +334,38 @@ export default function BrandDealPricer() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
           >
-            <div
-              style={{
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 16,
-                padding: "28px 28px 24px",
-                fontFamily: FONT,
-                fontSize: 14,
-                color: "rgba(255,255,255,0.85)",
-                lineHeight: 1.8,
-                whiteSpace: "pre-wrap",
-                marginBottom: 16,
-              }}
-            >
-              {result}
+            {/* Editable output */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <span style={{ fontSize: 11, fontFamily: FONT, fontWeight: 600, color: "rgba(255,255,255,0.4)", letterSpacing: "1px", textTransform: "uppercase" }}>
+                  ✏️ Editable — make it yours
+                </span>
+              </div>
+              <textarea
+                value={result}
+                onChange={(e) => setResult(e.target.value)}
+                style={{
+                  width: "100%",
+                  minHeight: 420,
+                  padding: "20px 22px",
+                  borderRadius: 16,
+                  fontSize: 15,
+                  fontFamily: FONT,
+                  lineHeight: 1.8,
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  color: "rgba(255,255,255,0.9)",
+                  resize: "vertical",
+                  outline: "none",
+                  caretColor: "#9CFCAF",
+                  boxSizing: "border-box",
+                  whiteSpace: "pre-wrap",
+                  overflowY: "auto",
+                }}
+              />
             </div>
 
-            <div style={{ display: "flex", gap: 10 }}>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <motion.button
                 whileHover={{ translateY: -1 }}
                 whileTap={{ scale: 0.98 }}
@@ -335,6 +385,24 @@ export default function BrandDealPricer() {
                 }}
               >
                 Copy result
+              </motion.button>
+              <motion.button
+                whileHover={{ translateY: -1 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => downloadAsPDF(result, "Rate Card")}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: 100,
+                  fontSize: 13,
+                  fontFamily: FONT,
+                  fontWeight: 600,
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  color: "#ffffff",
+                  cursor: "pointer",
+                }}
+              >
+                ↓ Download PDF
               </motion.button>
               <motion.button
                 whileHover={{ translateY: -1 }}

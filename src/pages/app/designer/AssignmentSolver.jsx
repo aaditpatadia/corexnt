@@ -1,47 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import jsPDF from "jspdf";
 
 const FONT = "'Instrument Sans', sans-serif";
 const SERIF = "'Instrument Serif', serif";
-
-const CREDITS_COST = 6;
-
-function cleanResult(text) {
-  return (text || "")
-    .replace(/\*\*([^*]+)\*\*/g, "$1")
-    .replace(/\*([^*]+)\*/g, "$1")
-    .replace(/^#{1,4}\s+/gm, "")
-    .replace(/^---+$/gm, "")
-    .trim();
-}
-
-function downloadAsPDF(text, title) {
-  const doc = new jsPDF();
-  const margin = 20;
-  const maxWidth = 170;
-  const lineHeight = 7;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(16);
-  doc.text(title, margin, margin);
-
-  doc.setFontSize(11);
-  let y = margin + 12;
-
-  const lines = doc.splitTextToSize(text, maxWidth);
-  lines.forEach((line) => {
-    if (y > 270) {
-      doc.addPage();
-      y = margin;
-    }
-    doc.text(line, margin, y);
-    y += lineHeight;
-  });
-
-  doc.save(`${title.replace(/\s+/g, "_")}.pdf`);
-}
+const CREDITS_COST = 4;
 
 function Pill({ label, selected, onClick }) {
   return (
@@ -68,20 +31,6 @@ function Pill({ label, selected, onClick }) {
   );
 }
 
-const inputStyle = {
-  width: "100%",
-  padding: "12px 14px",
-  borderRadius: 10,
-  fontSize: 14,
-  fontFamily: FONT,
-  background: "rgba(255,255,255,0.05)",
-  border: "1px solid rgba(255,255,255,0.08)",
-  color: "#ffffff",
-  outline: "none",
-  boxSizing: "border-box",
-  caretColor: "#9CFCAF",
-};
-
 function Label({ children }) {
   return (
     <label
@@ -101,16 +50,32 @@ function Label({ children }) {
   );
 }
 
-export default function GrowthAudit() {
+const inputStyle = {
+  width: "100%",
+  padding: "12px 14px",
+  borderRadius: 10,
+  fontSize: 14,
+  fontFamily: FONT,
+  background: "rgba(255,255,255,0.05)",
+  border: "1px solid rgba(255,255,255,0.08)",
+  color: "#ffffff",
+  outline: "none",
+  boxSizing: "border-box",
+  caretColor: "#9CFCAF",
+};
+
+export default function AssignmentSolver() {
   const navigate = useNavigate();
 
-  const [handle, setHandle] = useState("");
-  const [frequency, setFrequency] = useState("");
-  const [problem, setProblem] = useState("");
+  const [assignment, setAssignment] = useState("");
+  const [course, setCourse] = useState("");
+  const [deadline, setDeadline] = useState("");
+  const [level, setLevel] = useState("Intermediate");
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -125,7 +90,39 @@ export default function GrowthAudit() {
     setLoading(true);
     localStorage.setItem("corex_credits", String(credits - CREDITS_COST));
 
-    const prompt = `Run a brutally honest growth audit for this creator:\n\n${handle}\nPosting frequency: ${frequency || "not specified"}\nBiggest problem: ${problem || "general growth"}\n\nReturn:\n1. Root cause of the main problem (be specific, not generic)\n2. 3 things to stop doing immediately\n3. 3 things to start doing this week\n4. 7-day execution plan with daily tasks\n5. One metric to track as success signal\n\nNo generic advice. Be a real creative consultant.`;
+    const prompt = `You are a senior design educator and creative director. A design student has shared their assignment brief. Give them a complete structured action plan.
+
+ASSIGNMENT:
+${assignment}
+
+Course: ${course || "Design"}
+Deadline: ${deadline || "not specified"}
+Level: ${level || "Intermediate"}
+
+Return this EXACT structure:
+
+WHAT THIS BRIEF IS ACTUALLY ASKING FOR:
+[In plain language, what the brief wants. What the evaluator will look for.]
+
+WHERE TO START — NEXT 30 MINUTES:
+[3 specific actions to do right now to get unstuck]
+
+THE FULL STRUCTURED PLAN:
+[Phase 1: Research (specific sources and what to look for)]
+[Phase 2: Concept Development (how to generate and filter ideas)]
+[Phase 3: Execution (what to make and in what order)]
+[Phase 4: Presentation (how to frame the work)]
+
+RESOURCES FOR THIS PROJECT:
+[5 specific references — books, designers, brands, campaigns relevant to THIS brief]
+
+COMMON MISTAKES TO AVOID:
+[What average submissions look like. What exceptional looks like.]
+
+WHAT EXCEPTIONAL LOOKS LIKE:
+[Specific qualities that make the top 5% of submissions]
+
+Be specific. Reference real designers, real brands, real techniques. Think like a Srishti/NID/NIFT faculty member who also has industry experience.`;
 
     try {
       const response = await fetch("/api/chat", {
@@ -144,42 +141,62 @@ export default function GrowthAudit() {
       if (!response.ok) throw new Error(data.error || "API error");
       const fullText = data.reply || "";
       if (!fullText) throw new Error("No response generated");
-      setResult(cleanResult(fullText));
+      setResult(fullText);
 
       // Save to history
       try {
         const history = JSON.parse(localStorage.getItem("corex_history") || "[]");
         history.unshift({
           id: Date.now(),
-          title: `Growth Audit: ${handle.slice(0, 30)}`,
+          title: `Assignment: ${assignment.slice(0, 40)}`,
           messages: [
             { role: "user", content: prompt },
             { role: "assistant", content: fullText },
           ],
           ts: Date.now(),
-          type: "creator-engine",
+          type: "designer-studio",
         });
         localStorage.setItem("corex_history", JSON.stringify(history.slice(0, 50)));
       } catch { /* silent */ }
 
     } catch (err) {
-      setError(err.message === "Failed to fetch" ? "Connection error — check your internet and try again." : (err.message || "Something went wrong. Please try again."));
-      localStorage.setItem("corex_credits", String(parseInt(localStorage.getItem("corex_credits") || "0") + CREDITS_COST));
+      setError(
+        err.message === "Failed to fetch"
+          ? "Connection error — check your internet and try again."
+          : err.message || "Something went wrong. Please try again."
+      );
+      // Refund credits on error
+      localStorage.setItem(
+        "corex_credits",
+        String(parseInt(localStorage.getItem("corex_credits") || "0") + CREDITS_COST)
+      );
     }
 
     setLoading(false);
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(result).catch(() => {});
+    navigator.clipboard.writeText(result).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {});
+  };
+
+  const handlePrint = () => {
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.write(`<html><head><title>Assignment Plan</title><style>body{font-family:sans-serif;padding:40px;white-space:pre-wrap;line-height:1.7;color:#111;}</style></head><body>${result.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</body></html>`);
+    win.document.close();
+    win.print();
   };
 
   const handleStartOver = () => {
     setResult("");
     setError("");
-    setHandle("");
-    setFrequency("");
-    setProblem("");
+    setAssignment("");
+    setCourse("");
+    setDeadline("");
+    setLevel("Intermediate");
   };
 
   return (
@@ -196,7 +213,7 @@ export default function GrowthAudit() {
     >
       {/* Back button */}
       <button
-        onClick={() => navigate("/app/creator-engine")}
+        onClick={() => navigate("/app/designer-studio")}
         style={{
           display: "inline-flex",
           alignItems: "center",
@@ -213,12 +230,12 @@ export default function GrowthAudit() {
         onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")}
         onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
       >
-        ← Creator Engine
+        ← Designer Studio
       </button>
 
       {/* Header */}
       <div style={{ marginBottom: 32 }}>
-        <div style={{ fontSize: 32, marginBottom: 12 }}>◎</div>
+        <div style={{ fontSize: 32, marginBottom: 12 }}>🎓</div>
         <h1
           style={{
             fontFamily: SERIF,
@@ -229,10 +246,10 @@ export default function GrowthAudit() {
             fontWeight: 400,
           }}
         >
-          Growth Audit
+          Assignment Solver
         </h1>
         <p style={{ fontFamily: FONT, fontSize: 14, color: "rgba(255,255,255,0.45)", margin: 0 }}>
-          Find what's broken. Fix it in 7 days.
+          Paste your brief. Get a complete action plan from a design educator's perspective.
         </p>
       </div>
 
@@ -246,41 +263,53 @@ export default function GrowthAudit() {
             onSubmit={handleSubmit}
             style={{ display: "flex", flexDirection: "column", gap: 20 }}
           >
-            {/* Handle */}
+            {/* Assignment brief */}
             <div>
-              <Label>Your handle or describe your content</Label>
+              <Label>Assignment brief (required)</Label>
               <textarea
-                value={handle}
-                onChange={(e) => setHandle(e.target.value)}
-                placeholder="e.g. @yourhandle — I post finance tips, 45K followers, mostly reels"
-                rows={3}
+                value={assignment}
+                onChange={(e) => setAssignment(e.target.value)}
+                placeholder="Paste your assignment brief exactly as received"
+                rows={6}
                 required
                 style={{ ...inputStyle, resize: "vertical" }}
               />
             </div>
 
-            {/* Frequency */}
+            {/* Course */}
             <div>
-              <Label>Current posting frequency</Label>
+              <Label>Course / Subject</Label>
               <input
                 type="text"
-                value={frequency}
-                onChange={(e) => setFrequency(e.target.value)}
-                placeholder="e.g. 3x per week"
+                value={course}
+                onChange={(e) => setCourse(e.target.value)}
+                placeholder="e.g. Brand Identity, Typography, UX Design"
                 style={inputStyle}
               />
             </div>
 
-            {/* Problem */}
+            {/* Deadline */}
             <div>
-              <Label>Biggest problem</Label>
+              <Label>Deadline</Label>
+              <input
+                type="text"
+                value={deadline}
+                onChange={(e) => setDeadline(e.target.value)}
+                placeholder="e.g. 3 days, next Monday"
+                style={inputStyle}
+              />
+            </div>
+
+            {/* Skill level */}
+            <div>
+              <Label>Your skill level</Label>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {["Low views", "Low followers", "Low engagement", "No brand deals", "Other"].map((p) => (
+                {["Beginner", "Intermediate", "Advanced"].map((l) => (
                   <Pill
-                    key={p}
-                    label={p}
-                    selected={problem === p}
-                    onClick={() => setProblem(problem === p ? "" : p)}
+                    key={l}
+                    label={l}
+                    selected={level === l}
+                    onClick={() => setLevel(l)}
                   />
                 ))}
               </div>
@@ -303,14 +332,14 @@ export default function GrowthAudit() {
                 fontWeight: 600,
                 background: loading
                   ? "rgba(255,255,255,0.05)"
-                  : "linear-gradient(135deg, #9CFCAF, #226FF7)",
+                  : "linear-gradient(135deg, #226FF7, #9CFCAF)",
                 color: loading ? "rgba(255,255,255,0.3)" : "#000",
                 border: "none",
                 cursor: loading ? "not-allowed" : "pointer",
                 transition: "all 0.2s",
               }}
             >
-              {loading ? "Auditing…" : `Run Audit — ${CREDITS_COST} credits →`}
+              {loading ? "Generating…" : `Get Action Plan — ${CREDITS_COST} credits →`}
             </motion.button>
           </motion.form>
         ) : (
@@ -320,37 +349,24 @@ export default function GrowthAudit() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
           >
-            {/* Editable output */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                <span style={{ fontSize: 11, fontFamily: FONT, fontWeight: 600, color: "rgba(255,255,255,0.4)", letterSpacing: "1px", textTransform: "uppercase" }}>
-                  ✏️ Editable — make it yours
-                </span>
-              </div>
-              <textarea
-                value={result}
-                onChange={(e) => setResult(e.target.value)}
-                style={{
-                  width: "100%",
-                  minHeight: 420,
-                  padding: "20px 22px",
-                  borderRadius: 16,
-                  fontSize: 15,
-                  fontFamily: FONT,
-                  lineHeight: 1.8,
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  color: "rgba(255,255,255,0.9)",
-                  resize: "vertical",
-                  outline: "none",
-                  caretColor: "#9CFCAF",
-                  boxSizing: "border-box",
-                  whiteSpace: "pre-wrap",
-                  overflowY: "auto",
-                }}
-              />
+            <div
+              style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 16,
+                padding: "28px 28px 24px",
+                fontFamily: FONT,
+                fontSize: 14,
+                color: "rgba(255,255,255,0.85)",
+                lineHeight: 1.8,
+                whiteSpace: "pre-wrap",
+                marginBottom: 16,
+              }}
+            >
+              {result}
             </div>
 
+            {/* Action buttons */}
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <motion.button
                 whileHover={{ translateY: -1 }}
@@ -363,32 +379,34 @@ export default function GrowthAudit() {
                   fontSize: 13,
                   fontFamily: FONT,
                   fontWeight: 600,
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  color: "#ffffff",
+                  background: copied ? "rgba(156,252,175,0.12)" : "rgba(255,255,255,0.06)",
+                  border: copied ? "1px solid rgba(156,252,175,0.3)" : "1px solid rgba(255,255,255,0.1)",
+                  color: copied ? "#9CFCAF" : "#ffffff",
                   cursor: "pointer",
                   transition: "all 0.2s",
                 }}
               >
-                Copy result
+                {copied ? "Copied!" : "Copy result"}
               </motion.button>
               <motion.button
                 whileHover={{ translateY: -1 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => downloadAsPDF(result, "Growth Audit")}
+                onClick={handlePrint}
                 style={{
-                  padding: "10px 20px",
-                  borderRadius: 100,
+                  flex: 1,
+                  padding: "11px",
+                  borderRadius: 10,
                   fontSize: 13,
                   fontFamily: FONT,
                   fontWeight: 600,
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  color: "#ffffff",
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  color: "rgba(255,255,255,0.7)",
                   cursor: "pointer",
+                  transition: "all 0.2s",
                 }}
               >
-                ↓ Download PDF
+                Save as PDF
               </motion.button>
               <motion.button
                 whileHover={{ translateY: -1 }}

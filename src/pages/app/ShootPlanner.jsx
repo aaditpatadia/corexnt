@@ -9,7 +9,7 @@ const SHOOT_TYPES = [
   "Editorial", "Event", "Food", "Architecture", "Fashion", "Other",
 ];
 const BUDGETS = ["Under ₹10K", "₹10–25K", "₹25–50K", "₹50K+"];
-const PLATFORMS = ["Instagram Reels", "YouTube", "Website Hero", "Print", "TikTok", "LinkedIn"];
+const PLATFORMS = ["Instagram Reels", "YouTube", "Website Hero", "TikTok", "LinkedIn"];
 
 function Pill({ label, selected, onClick }) {
   return (
