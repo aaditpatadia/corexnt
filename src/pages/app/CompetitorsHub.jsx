@@ -6,35 +6,26 @@ const SERIF = "'Instrument Serif', serif";
 
 const CARDS = [
   {
-    id: "assignment",
-    route: "/app/designers/assignment",
-    icon: "🎓",
-    title: "Assignment Solver",
-    desc: "Turn your brief into a complete structured action plan. Research, concepts, execution — all mapped out.",
+    id: "analysis",
+    route: "/app/competitors/analysis",
+    icon: "◎",
+    title: "Competitor Analysis",
+    desc: "Map what they're doing. Find the gap.",
     credits: 4,
     gradient: "linear-gradient(90deg, #226FF7, #9CFCAF)",
   },
   {
-    id: "critique",
-    route: "/app/designers/critique",
-    icon: "◉",
-    title: "Design Critique",
-    desc: "Upload your design. Get a structured critique — hierarchy, contrast, brand fit, and the three fixes.",
-    credits: 5,
-    gradient: "linear-gradient(90deg, #FFEA71, #226FF7)",
-  },
-  {
-    id: "pricing",
-    route: "/app/designers/pricing",
-    icon: "₹",
-    title: "Pricing Calculator",
-    desc: "Market rate analysis for your project. Know exactly what to charge and how to say it.",
-    credits: 3,
+    id: "intel",
+    route: "/app/competitors/intel",
+    icon: "⚡",
+    title: "Competitor Intelligence",
+    desc: "Deep battle plan. Win the quarter.",
+    credits: 8,
     gradient: "linear-gradient(90deg, #9CFCAF, #FFEA71)",
   },
 ];
 
-export default function DesignerStudio() {
+export default function CompetitorsHub() {
   const navigate = useNavigate();
 
   return (
@@ -43,34 +34,13 @@ export default function DesignerStudio() {
       style={{
         flex: 1,
         overflowY: "auto",
+        WebkitOverflowScrolling: "touch",
         padding: "40px 32px",
         maxWidth: 760,
         margin: "0 auto",
         width: "100%",
       }}
     >
-      {/* Back button */}
-      <button
-        onClick={() => navigate("/app/dashboard")}
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 6,
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          fontFamily: FONT,
-          fontSize: 13,
-          color: "rgba(255,255,255,0.4)",
-          padding: "0 0 28px 0",
-          transition: "color 0.15s",
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")}
-        onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
-      >
-        ← Dashboard
-      </button>
-
       {/* Header */}
       <div style={{ marginBottom: 40 }}>
         <span
@@ -86,7 +56,7 @@ export default function DesignerStudio() {
             marginBottom: 16,
           }}
         >
-          ✏️ Designer Studio
+          ◎ Competitors
         </span>
         <h1
           style={{
@@ -98,7 +68,7 @@ export default function DesignerStudio() {
             fontWeight: 400,
           }}
         >
-          Designer Studio
+          Competitors
         </h1>
         <p
           style={{
@@ -108,7 +78,7 @@ export default function DesignerStudio() {
             margin: 0,
           }}
         >
-          Solve assignments, critique your work, and price your projects. Built for working designers.
+          Map the field. Find the gap. Win the quarter.
         </p>
       </div>
 

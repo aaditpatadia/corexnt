@@ -282,7 +282,7 @@ Reference real design principles (Gestalt, Swiss Style, etc.) and real Indian/gl
     >
       {/* Back button */}
       <button
-        onClick={() => navigate("/app/designer-studio")}
+        onClick={() => navigate("/app/designers")}
         style={{
           display: "inline-flex",
           alignItems: "center",
@@ -299,7 +299,7 @@ Reference real design principles (Gestalt, Swiss Style, etc.) and real Indian/gl
         onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")}
         onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
       >
-        ← Designer Studio
+        ← Designers
       </button>
 
       {/* Header */}

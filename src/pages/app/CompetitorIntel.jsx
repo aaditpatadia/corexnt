@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import ResponseCard from "../../components/ResponseCard";
 import { generateResponsePDF } from "../../utils/generatePDF";
 import { parseResponse, stripMarkdown } from "../../utils/parseResponse";
@@ -19,6 +20,7 @@ const fieldStyle = {
 };
 
 export default function CompetitorIntel() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     industry: INDUSTRIES[0],
     yourBrand: "",
@@ -160,6 +162,27 @@ Use real data. Search the web for current information about ${form.competitor}. 
   return (
     <div className="h-full overflow-y-auto scroll-area">
       <div className="max-w-2xl mx-auto px-4 py-8">
+
+        <button
+          onClick={() => navigate("/app/competitors")}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontFamily: "'Instrument Sans', sans-serif",
+            fontSize: 13,
+            color: "rgba(255,255,255,0.4)",
+            padding: "0 0 28px 0",
+            transition: "color 0.15s",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
+        >
+          ← Competitors
+        </button>
 
         <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} className="mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-4"

@@ -198,7 +198,7 @@ export default function BrandDealPricer() {
     >
       {/* Back button */}
       <button
-        onClick={() => navigate("/app/creator-engine")}
+        onClick={() => navigate("/app/creators")}
         style={{
           display: "inline-flex",
           alignItems: "center",
@@ -215,7 +215,7 @@ export default function BrandDealPricer() {
         onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")}
         onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
       >
-        ← Creator Engine
+        ← Creators
       </button>
 
       {/* Header */}
