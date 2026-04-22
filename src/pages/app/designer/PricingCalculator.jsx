@@ -14,6 +14,8 @@ function cleanResult(text) {
     .replace(/^#{1,4}\s+/gm, "")
     .replace(/^---+$/gm, "")
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/—/g, "-")
+    .replace(/–/g, "-")
     .trim();
 }
 

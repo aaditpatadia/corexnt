@@ -49,28 +49,6 @@ export default function DesignerStudio() {
         width: "100%",
       }}
     >
-      {/* Back button */}
-      <button
-        onClick={() => navigate("/app/dashboard")}
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 6,
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          fontFamily: FONT,
-          fontSize: 13,
-          color: "rgba(255,255,255,0.4)",
-          padding: "0 0 28px 0",
-          transition: "color 0.15s",
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")}
-        onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
-      >
-        ← Dashboard
-      </button>
-
       {/* Header */}
       <div style={{ marginBottom: 40 }}>
         <span
@@ -86,7 +64,7 @@ export default function DesignerStudio() {
             marginBottom: 16,
           }}
         >
-          ✏️ Designer Studio
+          ✏️ Designers
         </span>
         <h1
           style={{
@@ -98,7 +76,7 @@ export default function DesignerStudio() {
             fontWeight: 400,
           }}
         >
-          Designer Studio
+          Designers
         </h1>
         <p
           style={{
