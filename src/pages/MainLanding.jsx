@@ -202,7 +202,7 @@ const FEATURES = [
   {
     icon: "📈",
     title: "Creator Growth Engine",
-    desc: "Reel scripts, brand deal pricing, niche benchmarking, and monetisation roadmaps built for Indian creators.",
+    desc: "Reel scripts, brand deal pricing, niche benchmarking, and monetisation roadmaps built for creators worldwide.",
     grad: "rgba(255,234,113,0.08)",
     border: "rgba(255,234,113,0.2)",
   },
@@ -267,7 +267,7 @@ function SocialProof() {
     { value:"10K+", label:"Creative sessions" },
     { value:"4.9★", label:"User rating" },
     { value:"3s", label:"Average response time" },
-    { value:"India-first", label:"Built for Indian market" },
+    { value:"Global", label:"Built for creators worldwide" },
   ];
   return (
     <section style={{ background:"#000000", padding:"0 24px 120px" }}>

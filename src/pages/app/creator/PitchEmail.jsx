@@ -125,7 +125,7 @@ YOUR MOVE:
 
   return (
     <div className="page-enter" style={{ flex: 1, overflowY: "auto", padding: "40px 32px", maxWidth: 680, margin: "0 auto", width: "100%" }}>
-      <button onClick={() => navigate("/app/creator-engine")} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontFamily: FONT, fontSize: 13, padding: 0, marginBottom: 28, display: "flex", alignItems: "center", gap: 6 }} onMouseEnter={e => e.currentTarget.style.color = "#ffffff"} onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.4)"}>← Creator Engine</button>
+      <button onClick={() => navigate("/app/creators")} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontFamily: FONT, fontSize: 13, padding: 0, marginBottom: 28, display: "flex", alignItems: "center", gap: 6 }} onMouseEnter={e => e.currentTarget.style.color = "#ffffff"} onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.4)"}>← Creators</button>
       <div style={{ marginBottom: 32 }}>
         <span style={{ display: "inline-block", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 100, padding: "4px 14px", fontSize: 12, fontFamily: FONT, color: "rgba(255,255,255,0.5)", marginBottom: 14 }}>✦ Pitch Email Writer</span>
         <h1 style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: 34, color: "#ffffff", margin: "0 0 8px 0", fontWeight: 400 }}>Pitches brands reply to.</h1>

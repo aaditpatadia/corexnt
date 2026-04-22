@@ -7,7 +7,7 @@ const SERIF = "'Instrument Serif', serif";
 const CARDS = [
   {
     id: "reel",
-    route: "/app/creator-engine/reel",
+    route: "/app/creators/reel",
     icon: "🎬",
     title: "Reel Script Generator",
     desc: "3 hooks. Full timed script. Caption. Done.",
@@ -16,7 +16,7 @@ const CARDS = [
   },
   {
     id: "audit",
-    route: "/app/creator-engine/audit",
+    route: "/app/creators/audit",
     icon: "◎",
     title: "Growth Audit",
     desc: "Find what's broken. Fix it in 7 days.",
@@ -25,7 +25,7 @@ const CARDS = [
   },
   {
     id: "pricer",
-    route: "/app/creator-engine/pricer",
+    route: "/app/creators/pricer",
     icon: "⚡",
     title: "Brand Deal Pricer",
     desc: "Your exact rate card. In rupees.",
@@ -34,7 +34,7 @@ const CARDS = [
   },
   {
     id: "pitch",
-    route: "/app/creator-engine/pitch",
+    route: "/app/creators/pitch",
     icon: "✦",
     title: "Pitch Email Writer",
     desc: "Pitches that brands actually reply to.",

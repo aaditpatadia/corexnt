@@ -8,8 +8,6 @@ import PersonalDashboard from "../pages/app/PersonalDashboard";
 import ProfileSetup      from "../pages/app/ProfileSetup";
 import PaymentPage       from "./PaymentPage";
 import CompetitorIntel   from "../pages/app/CompetitorIntel";
-import BriefBuilder      from "../pages/app/BriefBuilder";
-import ShootPlanner     from "../pages/app/ShootPlanner";
 import CreatorEngine    from "../pages/app/CreatorEngine";
 import ReelScript      from "../pages/app/creator/ReelScript";
 import GrowthAudit     from "../pages/app/creator/GrowthAudit";
@@ -20,6 +18,12 @@ import AssignmentSolver    from "../pages/app/designer/AssignmentSolver";
 import DesignCritique      from "../pages/app/designer/DesignCritique";
 import PricingCalculator   from "../pages/app/designer/PricingCalculator";
 import PaymentModal    from "./PaymentModal";
+import CompetitorsHub    from "../pages/app/CompetitorsHub";
+import CompetitorAnalysis from "../pages/app/competitor/CompetitorAnalysis";
+import DirectorsHub      from "../pages/app/DirectorsHub";
+import SourceItOut       from "../pages/app/directors/SourceItOut";
+import ShootDaySystem    from "../pages/app/directors/ShootDaySystem";
+import FlowSystem        from "../pages/app/FlowSystem";
 import ProjectsPage      from "../pages/app/ProjectsPage";
 import SettingsPage      from "../pages/SettingsPage";
 import { hasProfile }    from "../utils/userProfile";
@@ -91,13 +95,13 @@ function Sidebar({ navigate, location, onNewChat, onClose, sidebarRef }) {
   });
 
   const nav = [
-    { icon: "💬", label: "Chat",            path: "chat",             action: () => { navigate("/app/chat"); onClose?.(); setTimeout(() => { if (window.__corex_newChat) window.__corex_newChat(); }, 100); } },
-    { icon: "📁", label: "Projects",        path: "projects",         action: () => { navigate("/app/projects"); onClose?.(); } },
-    { icon: "✦",  label: "Brief Builder",   path: "brief-builder",    action: () => { navigate("/app/brief-builder"); onClose?.(); } },
-    { icon: "📷", label: "Shoot Planner",   path: "shoot-planner",    action: () => { navigate("/app/shoot-planner"); onClose?.(); } },
-    { icon: "🎬", label: "Creator Engine",  path: "creator-engine",   action: () => { navigate("/app/creator-engine"); onClose?.(); } },
-    { icon: "◎",  label: "Competitor Intel", path: "competitor-intel", action: () => { navigate("/app/competitor-intel"); onClose?.(); } },
-    { icon: "✏️",  label: "Designer Studio",  path: "designer-studio",  action: () => { navigate("/app/designer-studio"); onClose?.(); } },
+    { icon: "💬", label: "Chat",        path: "chat",        action: () => { navigate("/app/chat"); onClose?.(); setTimeout(() => { if (window.__corex_newChat) window.__corex_newChat(); }, 100); } },
+    { icon: "📁", label: "Projects",    path: "projects",    action: () => { navigate("/app/projects"); onClose?.(); } },
+    { icon: "◎",  label: "Competitors", path: "competitors", action: () => { navigate("/app/competitors"); onClose?.(); } },
+    { icon: "🎬", label: "Creators",    path: "creators",    action: () => { navigate("/app/creators"); onClose?.(); } },
+    { icon: "🎥", label: "Directors",   path: "directors",   action: () => { navigate("/app/directors"); onClose?.(); } },
+    { icon: "✏️",  label: "Designers",   path: "designers",   action: () => { navigate("/app/designers"); onClose?.(); } },
+    { icon: "📅", label: "Flow",        path: "flow",        action: () => { navigate("/app/flow"); onClose?.(); } },
   ];
 
   return (
@@ -746,18 +750,22 @@ export default function AppShell() {
             <Route path="settings"      element={<SettingsPage />} />
             <Route path="chat"          element={<ChatDashboard userType={userType} userName={userName} onUpgrade={() => setCreditModalOpen(true)} />} />
             <Route path="projects"      element={<ProjectsPage />} />
-            <Route path="competitor-intel" element={<CompetitorIntel />} />
-            <Route path="brief-builder"   element={<BriefBuilder />} />
-            <Route path="shoot-planner"   element={<ShootPlanner />} />
-            <Route path="creator-engine"         element={<CreatorEngine />} />
-            <Route path="creator-engine/reel"   element={<ReelScript />} />
-            <Route path="creator-engine/audit"  element={<GrowthAudit />} />
-            <Route path="creator-engine/pricer" element={<BrandDealPricer />} />
-            <Route path="creator-engine/pitch"  element={<PitchEmail />} />
-            <Route path="designer-studio"               element={<DesignerStudio />} />
-            <Route path="designer-studio/assignment"    element={<AssignmentSolver />} />
-            <Route path="designer-studio/critique"      element={<DesignCritique />} />
-            <Route path="designer-studio/pricing"       element={<PricingCalculator />} />
+            <Route path="competitors"          element={<CompetitorsHub />} />
+            <Route path="competitors/analysis" element={<CompetitorAnalysis />} />
+            <Route path="competitors/intel"    element={<CompetitorIntel />} />
+            <Route path="creators"             element={<CreatorEngine />} />
+            <Route path="creators/reel"        element={<ReelScript />} />
+            <Route path="creators/audit"       element={<GrowthAudit />} />
+            <Route path="creators/pricer"      element={<BrandDealPricer />} />
+            <Route path="creators/pitch"       element={<PitchEmail />} />
+            <Route path="directors"            element={<DirectorsHub />} />
+            <Route path="directors/source"     element={<SourceItOut />} />
+            <Route path="directors/shoot-day"  element={<ShootDaySystem />} />
+            <Route path="designers"            element={<DesignerStudio />} />
+            <Route path="designers/assignment" element={<AssignmentSolver />} />
+            <Route path="designers/critique"   element={<DesignCritique />} />
+            <Route path="designers/pricing"    element={<PricingCalculator />} />
+            <Route path="flow"                 element={<FlowSystem />} />
             <Route path="payment"       element={<PaymentPage onBack={() => navigate("/app/dashboard")} userType={userType} />} />
             <Route path="*"             element={<Navigate to={defaultRoute} replace />} />
           </Routes>

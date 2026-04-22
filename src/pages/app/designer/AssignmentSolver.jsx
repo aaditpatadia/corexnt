@@ -246,7 +246,7 @@ Be specific. Reference real designers, real brands, real techniques. Think like 
     >
       {/* Back button */}
       <button
-        onClick={() => navigate("/app/designer-studio")}
+        onClick={() => navigate("/app/designers")}
         style={{
           display: "inline-flex",
           alignItems: "center",
@@ -263,7 +263,7 @@ Be specific. Reference real designers, real brands, real techniques. Think like 
         onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")}
         onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
       >
-        ← Designer Studio
+        ← Designers
       </button>
 
       {/* Header */}
