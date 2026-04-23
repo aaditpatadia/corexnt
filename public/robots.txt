@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Block authenticated app routes from indexing
+Disallow: /app/
+Disallow: /admin
+Disallow: /share/
+Disallow: /shared/
+
+Sitemap: https://corexnt.vercel.app/sitemap.xml

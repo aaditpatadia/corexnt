@@ -11,7 +11,8 @@ function cleanResult(text) {
   return (text || "")
     .replace(/\*\*/g, "").replace(/\*/g, "")
     .replace(/^#{1,4}\s+/gm, "").replace(/^---+$/gm, "")
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").trim();
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/—/g, "-").replace(/–/g, "-").trim();
 }
 
 function downloadPDF(text, title) {
