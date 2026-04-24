@@ -8,17 +8,50 @@ import {
 import { parseResponse, shouldShowChart, stripMarkdown } from "../utils/parseResponse";
 import { generateResponsePDF } from "../utils/generatePDF";
 
-/* ── Strip markdown / decoration from AI output ── */
+/* ── Render markdown to styled HTML ── */
+function renderMarkdown(text) {
+  if (!text) return "";
+  let html = text
+    // Escape HTML to prevent injection (but keep our own tags)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    // Headers
+    .replace(/^#### (.+)$/gm, '<h5 style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;margin:18px 0 6px;font-family:var(--font-body)">$1</h5>')
+    .replace(/^### (.+)$/gm, '<h4 style="font-size:15px;font-weight:700;color:rgba(255,255,255,0.8);margin:20px 0 8px;font-family:var(--font-body)">$1</h4>')
+    .replace(/^## (.+)$/gm, '<h3 style="font-size:17px;font-weight:700;color:#ffffff;margin:24px 0 10px;font-family:var(--font-body)">$1</h3>')
+    .replace(/^# (.+)$/gm, '<h2 style="font-size:20px;font-weight:700;color:#ffffff;margin:28px 0 12px;font-family:var(--font-body)">$1</h2>')
+    // Horizontal rule
+    .replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:20px 0"/>')
+    // Bold + italic
+    .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#ffffff;font-weight:700">$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em style="color:rgba(255,255,255,0.8)">$1</em>')
+    // Inline code
+    .replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.08);border-radius:4px;padding:2px 6px;font-size:13px;font-family:monospace;color:#9CFCAF">$1</code>')
+    // Numbered lists — collect consecutive lines
+    .replace(/^(\d+)\. (.+)$/gm, '<li class="ol-item" style="margin:6px 0;color:rgba(255,255,255,0.85);font-family:var(--font-body);list-style:none;padding-left:0"><span style="color:#9CFCAF;font-weight:700;min-width:20px;display:inline-block">$1.</span> $2</li>')
+    // Unordered lists
+    .replace(/^[-*•]\s+(.+)$/gm, '<li style="margin:6px 0;padding-left:16px;color:rgba(255,255,255,0.85);font-family:var(--font-body);list-style:none;position:relative"><span style="position:absolute;left:0;color:#9CFCAF">•</span>$1</li>')
+    // Blockquote
+    .replace(/^&gt; (.+)$/gm, '<blockquote style="border-left:3px solid rgba(156,252,175,0.4);padding:8px 16px;margin:12px 0;color:rgba(255,255,255,0.65);background:rgba(156,252,175,0.04);border-radius:0 8px 8px 0;font-family:var(--font-body);font-style:italic">$1</blockquote>')
+    // Wrap consecutive li items in a div
+    .replace(/(<li[^>]*>.*?<\/li>\n?)+/gs, (match) => `<div style="margin:10px 0">${match}</div>`)
+    // Paragraph breaks
+    .replace(/\n\n+/g, '</p><p style="margin:12px 0;color:rgba(255,255,255,0.85);line-height:1.8;font-family:var(--font-body)">')
+    .replace(/\n/g, '<br/>');
+  return `<p style="margin:0 0 12px;color:rgba(255,255,255,0.85);line-height:1.8;font-family:var(--font-body)">${html}</p>`;
+}
+
+/* ── Legacy clean (for action steps / example sections only) ── */
 function cleanAIText(text) {
   if (!text) return "";
   return text
-    .replace(/\*\*([^*]+)\*\*/g, "$1")   // bold
-    .replace(/\*([^*]+)\*/g, "$1")         // italic
-    .replace(/^#{1,4}\s+/gm, "")           // headings
-    .replace(/^---+$/gm, "")               // horizontal rules
-    .replace(/^\s*[-–—]\s+/gm, "• ")      // convert leading dashes to bullet dots
-    .replace(/\*\*/g, "")                  // any remaining **
-    .replace(/\n{3,}/g, "\n\n")            // collapse multiple blank lines
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/^#{1,4}\s+/gm, "")
+    .replace(/^---+$/gm, "")
+    .replace(/^\s*[-–—]\s+/gm, "• ")
+    .replace(/\*\*/g, "")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 
@@ -35,8 +68,9 @@ function renderWithLinks(text) {
   });
 }
 
-/* ── Markdown table parser ── */
+/* ── Markdown table parser — returns {text, tables} with placeholders ── */
 function renderMarkdownTable(text) {
+  const tables = [];
   const lines = text.split('\n');
   let result = '';
   let inTable = false;
@@ -52,7 +86,7 @@ function renderMarkdownTable(text) {
         isFirstDataRow = true;
       }
       if (trimmed.replace(/\|/g, '').replace(/-/g, '').replace(/:/g, '').trim() === '') {
-        // separator row — skip
+        // separator row — skip, mark header done
         isFirstDataRow = false;
         return;
       }
@@ -63,18 +97,23 @@ function renderMarkdownTable(text) {
     } else {
       if (inTable) {
         tableHTML += '</table></div>';
-        result += tableHTML;
+        const placeholder = `\x00TABLE${tables.length}\x00`;
+        tables.push(tableHTML);
         tableHTML = '';
         inTable = false;
         isFirstDataRow = true;
+        result += placeholder + '\n';
       }
       result += line + '\n';
     }
   });
   if (inTable) {
-    result += tableHTML + '</table></div>';
+    tableHTML += '</table></div>';
+    const placeholder = `\x00TABLE${tables.length}\x00`;
+    tables.push(tableHTML);
+    result += placeholder;
   }
-  return result;
+  return { text: result, tables };
 }
 
 /* ── Save to reports ── */
@@ -491,7 +530,7 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
 
   const { title, cleanBody, steps, example, graphData, mindmapData, flowchartData, chips, followups, clarifyOptions } = parseResponse(message.content);
   const showChart = shouldShowChart(graphData);
-  const bodyText  = cleanAIText(stripMarkdown(cleanBody || ""));
+  const bodyText  = cleanBody || ""; // keep raw markdown — rendered below
 
   const plan = typeof window !== "undefined" ? (localStorage.getItem("corex_plan") || "free") : "free";
   const isPremiumPlan = plan === "nineteen_twentys" || plan === "canvas_enterprise";
@@ -542,32 +581,21 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
         </h3>
       )}
 
-      {/* Body paragraphs */}
+      {/* Body — full markdown rendered */}
       {bodyText && (()=>{
-        const processed = renderMarkdownTable(bodyText);
-        const hasTable = processed.includes('<table');
-        if (hasTable) {
-          return (
-            <div
-              style={{ fontSize:15, lineHeight:1.8, color:"rgba(255,255,255,0.85)", fontFamily:"var(--font-body)" }}
-              dangerouslySetInnerHTML={{ __html: renderWithLinks(processed.split(/\n\n+/).map(para => {
-                const t = para.trim();
-                if (!t) return '';
-                if (t.startsWith('<div class="intel-table-wrap">')) return t;
-                return `<p style="margin-bottom:14px">${t}</p>`;
-              }).join('')) }}
-            />
-          );
-        }
-        // No table — use dangerouslySetInnerHTML so links render as anchors
-        const html = renderWithLinks(
-          bodyText.split(/\n\n+/).map(para => {
-            const t = para.trim();
-            return t ? `<p style="margin-bottom:14px">${t}</p>` : '';
-          }).join('')
-        );
+        // Step 1: extract tables → replace with null-byte placeholders so renderMarkdown won't escape their HTML
+        const { text: withPlaceholders, tables } = renderMarkdownTable(bodyText);
+        // Step 2: render remaining markdown (headings, bold, lists, etc.)
+        let html = renderMarkdown(withPlaceholders);
+        // Step 3: re-inject table HTML (was never touched by the escaper)
+        tables.forEach((tableHTML, i) => {
+          html = html.split(`\x00TABLE${i}\x00`).join(tableHTML);
+        });
+        // Step 4: linkify URLs
+        html = renderWithLinks(html);
         return (
           <div
+            className="corex-response-body"
             style={{ fontSize:15, lineHeight:1.8, color:"rgba(255,255,255,0.85)", fontFamily:"var(--font-body)" }}
             dangerouslySetInnerHTML={{ __html: html }}
           />
