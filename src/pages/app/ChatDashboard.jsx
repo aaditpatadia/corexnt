@@ -8,6 +8,7 @@ import { deduct, getCredits, COSTS, translate } from "../../utils/credits";
 import { isSessionLimited, getCooldownRemaining, incrementSessionCount, resetSession, formatCountdown, getPlanLimit } from "../../utils/sessionLimits";
 import { db } from "../../firebase";
 import { doc, setDoc } from "firebase/firestore";
+import { trackMessage, loadMemorySync } from "../../utils/userMemory";
 const deductCredits = deduct; // backward compat alias
 
 const ADMIN_EMAIL = "corexnt@gmail.com";
@@ -608,6 +609,9 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
           adminModel:       localStorage.getItem("userEmail") === "corexnt@gmail.com"
                               ? (localStorage.getItem("corex_model_override") || undefined)
                               : undefined,
+          userMemory:       loadMemorySync(),
+          userName:         localStorage.getItem("corex_user_name") || "",
+          brandName:        localStorage.getItem("corex_brand_name") || "",
         }),
       });
 
@@ -615,6 +619,14 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
       if (!res.ok) throw new Error(data.error || "API error");
       reply      = data.reply || "Something went wrong. Try again.";
       searchUsed = !!data.usedWebSearch;
+
+      // Track message for persistent memory
+      trackMessage({
+        userMessage: text,
+        assistantReply: reply,
+        userType: userType || 'creator',
+        brandName: localStorage.getItem('corex_brand_name') || '',
+      }).catch(() => {});
     } catch {
       reply = `Connection error. Please try again.\n\nFOLLOWUPS: ["Try again", "New idea"]`;
     }

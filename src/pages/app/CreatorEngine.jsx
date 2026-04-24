@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { variants } from "../../utils/animations";
 
 const FONT = "'Instrument Sans', sans-serif";
 const SERIF = "'Instrument Serif', serif";
@@ -47,8 +48,12 @@ export default function CreatorEngine() {
   const navigate = useNavigate();
 
   return (
-    <div
+    <motion.div
       className="page-enter"
+      variants={variants.page}
+      initial="initial"
+      animate="animate"
+      exit="exit"
       style={{
         flex: 1,
         overflowY: "auto",
@@ -206,6 +211,6 @@ export default function CreatorEngine() {
           </motion.div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }

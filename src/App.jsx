@@ -1,5 +1,6 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Component, createContext, useContext, useEffect, useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import { ToastProvider, setGlobalToast, useToast } from "./components/Toast";
 import MainLanding    from "./pages/MainLanding";
 import CreatorLanding from "./pages/CreatorLanding";
@@ -68,6 +69,7 @@ function ToastBridge() {
 
 export default function App() {
   const [currentTheme, setCurrentTheme] = useState(() => getPlanTheme(getCurrentPlan()));
+  const location = useLocation();
 
   useEffect(() => {
     applyTheme(currentTheme);
@@ -88,16 +90,18 @@ export default function App() {
       <ThemeContext.Provider value={currentTheme}>
         <ToastProvider>
           <ToastBridge />
-          <Routes>
-            <Route path="/"         element={<MainLanding />} />
-            <Route path="/creators" element={<Navigate to="/" replace />} />
-            <Route path="/brands"   element={<Navigate to="/" replace />} />
-            <Route path="/app/*"    element={<AppShell />} />
-            <Route path="/share/:shareId"   element={<SharedChat />} />
-            <Route path="/shared/:shareId" element={<SharedChat />} />
-            <Route path="/admin"    element={<AdminPage />} />
-            <Route path="*"         element={<Navigate to="/" replace />} />
-          </Routes>
+          <AnimatePresence mode="wait">
+            <Routes location={location} key={location.pathname}>
+              <Route path="/"         element={<MainLanding />} />
+              <Route path="/creators" element={<Navigate to="/" replace />} />
+              <Route path="/brands"   element={<Navigate to="/" replace />} />
+              <Route path="/app/*"    element={<AppShell />} />
+              <Route path="/share/:shareId"   element={<SharedChat />} />
+              <Route path="/shared/:shareId" element={<SharedChat />} />
+              <Route path="/admin"    element={<AdminPage />} />
+              <Route path="*"         element={<Navigate to="/" replace />} />
+            </Routes>
+          </AnimatePresence>
         </ToastProvider>
       </ThemeContext.Provider>
     </ErrorBoundary>

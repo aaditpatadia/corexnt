@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
+import { variants } from "../../utils/animations";
 
 const FONT = "'Instrument Sans', sans-serif";
 const SERIF = "'Instrument Serif', serif";
@@ -262,8 +263,12 @@ Win Condition: [What does success look like]`;
   };
 
   return (
-    <div
+    <motion.div
       className="page-enter"
+      variants={variants.page}
+      initial="initial"
+      animate="animate"
+      exit="exit"
       style={{
         flex: 1,
         overflowY: "auto",
@@ -509,6 +514,6 @@ Win Condition: [What does success look like]`;
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }
