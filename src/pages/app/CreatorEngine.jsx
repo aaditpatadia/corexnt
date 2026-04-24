@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { variants } from "../../utils/animations";
+import { Film, TrendingUp, Zap, Mail } from "lucide-react";
 
 const FONT = "'Instrument Sans', sans-serif";
 const SERIF = "'Instrument Serif', serif";
@@ -9,7 +10,7 @@ const CARDS = [
   {
     id: "reel",
     route: "/app/creators/reel",
-    icon: "🎬",
+    icon: Film,
     title: "Reel Script Generator",
     desc: "3 hooks. Full timed script. Caption. Done.",
     credits: 5,
@@ -18,7 +19,7 @@ const CARDS = [
   {
     id: "audit",
     route: "/app/creators/audit",
-    icon: "◎",
+    icon: TrendingUp,
     title: "Growth Audit",
     desc: "Find what's broken. Fix it in 7 days.",
     credits: 6,
@@ -27,7 +28,7 @@ const CARDS = [
   {
     id: "pricer",
     route: "/app/creators/pricer",
-    icon: "⚡",
+    icon: Zap,
     title: "Brand Deal Pricer",
     desc: "Your exact rate card. In rupees.",
     credits: 3,
@@ -36,7 +37,7 @@ const CARDS = [
   {
     id: "pitch",
     route: "/app/creators/pitch",
-    icon: "✦",
+    icon: Mail,
     title: "Pitch Email Writer",
     desc: "Pitches that brands actually reply to.",
     credits: 3,
@@ -152,7 +153,7 @@ export default function CreatorEngine() {
             />
 
             {/* Icon */}
-            <div style={{ fontSize: 26, marginBottom: 14 }}>{card.icon}</div>
+            <div style={{ marginBottom: 14, color: "rgba(255,255,255,0.65)" }}><card.icon size={22} strokeWidth={1.6}/></div>
 
             {/* Title */}
             <h3

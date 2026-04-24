@@ -8,20 +8,27 @@ export default async function handler(req, res) {
   try {
     const { niche = "Indian creator economy and D2C brands" } = req.body || {};
 
-    const prompt = `You are a marketing news curator for Indian creators and brands. Search the web and return exactly 5 recent news items (from the past 7 days) relevant to: ${niche}.
+    const prompt = `You are a real-time news curator for creative professionals in India. Search the web RIGHT NOW and return exactly 5 COMPLETELY DIFFERENT recent news items (from the past 48 hours if possible, maximum 7 days) relevant to: ${niche}.
 
-Return ONLY a JSON array in this exact format — no other text:
+CRITICAL RULES:
+- Each headline must be about a DIFFERENT topic/brand/event — no repeating the same story
+- Include a mix of: platform updates, brand campaigns, creator deals, market trends, industry data
+- Every item must have real facts, numbers, or brand names — NO generic statements
+- If searching for creator economy, include: Instagram, YouTube, LinkedIn, WhatsApp, TikTok angles
+- Prioritize breaking news, funding rounds, algorithm changes, viral campaigns
+
+Return ONLY a valid JSON array, no markdown, no explanation:
 [
   {
-    "headline": "Short punchy headline under 10 words",
-    "summary": "One sentence summary with the key fact or number",
-    "source": "Publication name",
+    "headline": "Short punchy headline under 12 words with actual brand/platform name",
+    "summary": "One sentence with the key fact, number, or outcome",
+    "source": "Publication or platform name",
     "category": "one of: Trends | Platform | Brand | Creator | Market",
-    "timeAgo": "e.g. 2 hours ago or 1 day ago"
+    "timeAgo": "e.g. 3 hours ago or 2 days ago"
   }
 ]
 
-Focus on: Instagram/YouTube algorithm changes, Indian D2C brand funding or campaigns, creator deals, social media trends in India, marketing spend shifts. Be specific — include actual brand names, numbers, and facts.`;
+Make sure ALL 5 items are on different topics. Do not repeat the same brand or platform more than once.`;
 
     const openaiRes = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
@@ -58,7 +65,11 @@ Focus on: Instagram/YouTube algorithm changes, Indian D2C brand funding or campa
     }
 
     const news = JSON.parse(jsonMatch[0]);
-    return res.status(200).json({ news });
+    // Deduplicate by headline similarity
+    const uniqueNews = news.filter((item, idx, arr) =>
+      arr.findIndex(n => n.headline.slice(0, 20) === item.headline.slice(0, 20)) === idx
+    ).slice(0, 5);
+    return res.status(200).json({ news: uniqueNews });
 
   } catch (err) {
     console.error("COREX News API error:", err);

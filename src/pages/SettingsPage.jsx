@@ -186,48 +186,48 @@ export default function SettingsPage() {
       {/* Divider */}
       <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', marginBottom: 40, marginTop: 40 }} />
 
-      {/* Section 3 — Need Help? */}
+      {/* Section 3 — Connect with us */}
       <section style={{ marginBottom: 48 }}>
         <h2 style={{ fontFamily: FONT, fontWeight: 600, fontSize: 13, color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 20 }}>
-          Need Help?
+          Connect with COREX
         </h2>
 
-        <div style={{
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: 12,
-          padding: 20,
-        }}>
-          <p style={{ fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', fontSize: 18, color: '#ffffff', margin: '0 0 8px 0' }}>
-            Talk to Aadit directly
-          </p>
-          <p style={{ fontFamily: FONT, fontSize: 14, color: 'rgba(255,255,255,0.45)', margin: '0 0 20px 0' }}>
-            Questions, feedback, or issues — WhatsApp is the fastest way to reach us.
-          </p>
-
-          <button
-            onClick={() => window.open('https://wa.me/917383620725?text=Hi%20Aadit%2C%20I%20need%20help%20with%20Corex', '_blank')}
-            style={{
-              background: 'linear-gradient(135deg, #25D366, #128C7E)',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: 100,
-              padding: '10px 24px',
-              fontSize: 14,
-              fontFamily: FONT,
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'block',
-              marginBottom: 12,
-            }}
-          >
-            💬 WhatsApp us
-          </button>
-
-          <p style={{ fontFamily: FONT, fontSize: 12, color: 'rgba(255,255,255,0.25)', textAlign: 'center', margin: 0 }}>
-            or email corexnt@gmail.com
-          </p>
+        {/* FlipLink social links */}
+        <div style={{ border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden' }}>
+          {[
+            { label: "Twitter",   href: "https://x.com/corexnt",                          color: "#1DA1F2" },
+            { label: "Instagram", href: "https://www.instagram.com/corexnt/",              color: "#E1306C" },
+            { label: "LinkedIn",  href: "https://www.linkedin.com/in/corexnt/",            color: "#0A66C2" },
+            { label: "Reddit",    href: "https://www.reddit.com/user/corexnt/",            color: "#FF4500" },
+            { label: "Gmail",     href: "mailto:corexnt@gmail.com",                        color: "#9CFCAF" },
+          ].map(({ label, href, color }, i) => (
+            <motion.a
+              key={label}
+              href={href}
+              target={href.startsWith("mailto") ? undefined : "_blank"}
+              rel="noopener noreferrer"
+              whileHover={{ x: 6 }}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '14px 18px',
+                borderBottom: i < 4 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                background: 'rgba(255,255,255,0.02)',
+                textDecoration: 'none',
+                cursor: 'pointer',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
+            >
+              <span style={{ fontFamily: FONT, fontWeight: 600, fontSize: 14, color: '#ffffff' }}>{label}</span>
+              <span style={{ fontFamily: FONT, fontSize: 12, color, fontWeight: 600 }}>Open →</span>
+            </motion.a>
+          ))}
         </div>
+
+        <p style={{ fontFamily: FONT, fontSize: 12, color: 'rgba(255,255,255,0.2)', marginTop: 12 }}>
+          DMs open on all platforms · corexnt@gmail.com
+        </p>
       </section>
 
       {/* Delete account — tiny link at bottom */}

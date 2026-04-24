@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { variants } from "../../utils/animations";
+import { Target, Zap } from "lucide-react";
 
 const FONT = "'Instrument Sans', sans-serif";
 const SERIF = "'Instrument Serif', serif";
@@ -9,7 +10,7 @@ const CARDS = [
   {
     id: "analysis",
     route: "/app/competitors/analysis",
-    icon: "◎",
+    icon: Target,
     title: "Competitor Analysis",
     desc: "Map what they're doing. Find the gap.",
     credits: 4,
@@ -18,7 +19,7 @@ const CARDS = [
   {
     id: "intel",
     route: "/app/competitors/intel",
-    icon: "⚡",
+    icon: Zap,
     title: "Competitor Intelligence",
     desc: "Deep battle plan. Win the quarter.",
     credits: 8,
@@ -135,7 +136,7 @@ export default function CompetitorsHub() {
             />
 
             {/* Icon */}
-            <div style={{ fontSize: 26, marginBottom: 14 }}>{card.icon}</div>
+            <div style={{ marginBottom: 14, color: "rgba(255,255,255,0.65)" }}><card.icon size={22} strokeWidth={1.6}/></div>
 
             {/* Title */}
             <h3
