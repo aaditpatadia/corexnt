@@ -819,8 +819,8 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
       <div
         style={{
           flexShrink: 0,
-          borderTop: "1px solid rgba(255,255,255,0.05)",
-          background: "#000000",
+          background: "linear-gradient(to bottom, transparent, #000000 28px)",
+          paddingTop: 2,
         }}
       >
         {/* Session limit banner — shown above input when user hits their plan's session cap */}

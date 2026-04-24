@@ -77,6 +77,118 @@ function NavItem({ icon, label, active, onClick, premium }) {
   );
 }
 
+/* ─── Sidebar InfoCard (dismissible upgrade prompt) ─── */
+function SidebarInfoCard({ onClose: closeSidebar }) {
+  const plan = localStorage.getItem("corex_plan") || "free";
+  const isPro = plan === "nineteen_twentys" || plan === "canvas_enterprise";
+  const storageKey = "corex_sidebar_card_dismissed";
+  const [dismissed, setDismissed] = useState(() => localStorage.getItem(storageKey) === "1");
+  const [hovered, setHovered] = useState(false);
+  const navigate = useNavigate();
+
+  if (isPro || dismissed) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 8, height: 0 }}
+        transition={{ duration: 0.25 }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          margin: "0 12px 8px",
+          borderRadius: 14, overflow: "hidden",
+          border: "1px solid rgba(255,255,255,0.08)",
+          background: "rgba(255,255,255,0.03)",
+          position: "relative",
+        }}
+      >
+        {/* Top glass shimmer */}
+        <div style={{
+          position: "absolute", inset: 0, borderRadius: "inherit",
+          background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 40%, transparent 100%)",
+          pointerEvents: "none",
+        }}/>
+
+        {/* Dismiss */}
+        <button
+          onClick={() => { setDismissed(true); localStorage.setItem(storageKey, "1"); }}
+          style={{
+            position: "absolute", top: 8, right: 8, zIndex: 2,
+            width: 20, height: 20, borderRadius: "50%", border: "none",
+            background: "rgba(255,255,255,0.06)", cursor: "pointer",
+            color: "rgba(255,255,255,0.4)", fontSize: 11,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background="rgba(255,255,255,0.12)"; e.currentTarget.style.color="#fff"; }}
+          onMouseLeave={e => { e.currentTarget.style.background="rgba(255,255,255,0.06)"; e.currentTarget.style.color="rgba(255,255,255,0.4)"; }}
+        >✕</button>
+
+        <div style={{ padding: "14px 14px 12px" }}>
+          {/* Plan label */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <span style={{
+              fontSize: 10, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase",
+              fontFamily: FONT, color: "rgba(255,255,255,0.35)",
+            }}>
+              {plan === "canvas" ? "Canvas Plan" : "Free Plan"}
+            </span>
+            <span style={{
+              fontSize: 10, fontFamily: FONT, fontWeight: 600,
+              padding: "2px 7px", borderRadius: 20,
+              background: "rgba(34,111,247,0.12)",
+              border: "1px solid rgba(34,111,247,0.25)",
+              color: "rgba(107,195,206,0.9)",
+            }}>Upgrade</span>
+          </div>
+
+          {/* Title + desc */}
+          <p style={{ fontSize: 12, fontWeight: 700, color: "#ffffff", fontFamily: FONT, marginBottom: 4 }}>
+            Unlock full intelligence
+          </p>
+          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: FONT, lineHeight: 1.55, marginBottom: 12 }}>
+            Mindmaps, flowcharts, unlimited credits, brand memory — and no limits on creativity.
+          </p>
+
+          {/* CTA */}
+          <motion.button
+            onClick={() => { navigate("/app/payment"); closeSidebar?.(); }}
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+            style={{
+              width: "100%", padding: "8px", borderRadius: 8, border: "none",
+              cursor: "pointer", fontFamily: FONT, fontSize: 12, fontWeight: 700,
+              background: "linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)",
+              color: "#000",
+            }}
+          >
+            Go Nineteen Twentys →
+          </motion.button>
+        </div>
+
+        {/* Hover footer reveal */}
+        <AnimatePresence>
+          {hovered && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              style={{
+                borderTop: "1px solid rgba(255,255,255,0.06)",
+                padding: "8px 14px",
+                display: "flex", justifyContent: "space-between",
+                fontSize: 11, fontFamily: FONT, color: "rgba(255,255,255,0.3)",
+              }}
+            >
+              <span>₹999/month</span>
+              <span>Unlimited credits</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 /* ─── Left Sidebar ─── */
 function Sidebar({ navigate, location, onNewChat, onClose, sidebarRef }) {
   const active = location.pathname.replace("/app/", "").split("/")[0] || "dashboard";
@@ -288,8 +400,11 @@ function Sidebar({ navigate, location, onNewChat, onClose, sidebarRef }) {
         </div>
       </div>
 
+      {/* InfoCard upgrade prompt */}
+      <SidebarInfoCard onClose={onClose}/>
+
       {/* Bottom credit pill */}
-      <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+      <div style={{ padding: "8px 12px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
         <button
           onClick={() => { document.dispatchEvent(new CustomEvent("corex:openCredits")); onClose?.(); }}
           style={{

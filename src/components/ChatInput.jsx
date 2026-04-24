@@ -133,6 +133,13 @@ export default function ChatInput({ onSend, disabled, userType, embedded }) {
   const [focused,       setFocused]       = useState(false);
   const [detectedLinks, setDetectedLinks] = useState([]);
   const [recTime,       setRecTime]       = useState(0);
+  const [isMobile,      setIsMobile]      = useState(() => window.innerWidth < 600);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 600);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   // Mode toggles
   const [showSearch,    setShowSearch]    = useState(false);
@@ -284,7 +291,7 @@ export default function ChatInput({ onSend, disabled, userType, embedded }) {
     <div
       style={embedded ? {
         position: "relative", width: "100%", maxWidth: 720,
-        margin: "0 auto", padding: "10px 16px 18px", boxSizing: "border-box",
+        margin: "0 auto", padding: "6px 12px 10px", boxSizing: "border-box",
       } : {
         position: "absolute", bottom: 40, left: "50%",
         transform: "translateX(-50%)",
@@ -562,13 +569,15 @@ export default function ChatInput({ onSend, disabled, userType, embedded }) {
         </div>
       </div>
 
-      {/* Subtle hint */}
-      <p style={{
-        marginTop: 7, fontSize: 11, color: "rgba(255,255,255,0.18)",
-        textAlign: "center", fontFamily: FONT, letterSpacing: "0.2px",
-      }}>
-        ↵ send &nbsp;·&nbsp; ⇧↵ new line &nbsp;·&nbsp; drop images or PDFs
-      </p>
+      {/* Subtle hint — hidden on mobile */}
+      {!isMobile && (
+        <p style={{
+          marginTop: 5, fontSize: 10.5, color: "rgba(255,255,255,0.15)",
+          textAlign: "center", fontFamily: FONT, letterSpacing: "0.2px",
+        }}>
+          ↵ send &nbsp;·&nbsp; ⇧↵ new line &nbsp;·&nbsp; drop images or PDFs
+        </p>
+      )}
     </div>
   );
 }

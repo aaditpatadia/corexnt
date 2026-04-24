@@ -752,48 +752,164 @@ function Stats() {
 /* ── Pricing ── */
 const PLANS = [
   {
-    name:"Free",
-    price:"₹0",
-    period:"forever",
-    desc:"Try the system. No card required.",
-    features:["5 credits/month","Chat intelligence","PDF exports","Basic formatting"],
-    cta:"Start free",
-    accent:"rgba(255,255,255,0.1)",
-    border:"rgba(255,255,255,0.08)",
-    textAccent:"rgba(255,255,255,0.7)",
-    highlight:false,
+    name: "Free",
+    badge: null,
+    price: "₹0",
+    origPrice: null,
+    period: "forever",
+    desc: "Try COREX. No card, no commitment.",
+    free: ["20 smart sessions total","Chat intelligence","PDF downloads","Basic markdown formatting","Mobile app access"],
+    premium: null,
+    premiumLabel: null,
+    cta: "Start free →",
+    dark: true,
+    highlight: false,
   },
   {
-    name:"Canvas",
-    price:"₹499",
-    period:"/month",
-    desc:"For creators and early-stage brands.",
-    features:["100 credits/month","Live web intelligence","Visual charts & tables","Flow system & planning","History & PDF reports"],
-    cta:"Upgrade to Canvas",
-    accent:"rgba(34,111,247,0.1)",
-    border:"rgba(34,111,247,0.3)",
-    textAccent:"#226FF7",
-    highlight:false,
+    name: "Canvas",
+    badge: null,
+    price: "₹499",
+    origPrice: null,
+    period: "/month",
+    desc: "For creators and early-stage brands moving fast.",
+    free: ["100 credits/month","Live web intelligence","Visual charts & tables","Flow system & project planning","History & PDF reports","Voice input"],
+    premium: null,
+    premiumLabel: null,
+    cta: "Upgrade to Canvas →",
+    dark: true,
+    highlight: false,
   },
   {
-    name:"Nineteen Twentys",
-    price:"₹999",
-    period:"/month",
-    desc:"Full power. For serious creatives.",
-    features:["Unlimited credits","Everything in Canvas","Mindmaps & flowcharts","Multi-mode thinking","Priority intelligence","Brand memory system"],
-    cta:"Go Nineteen Twentys",
-    accent:null, // gradient
-    border:null,
-    textAccent:"#000000",
-    highlight:true,
+    name: "Nineteen Twentys",
+    badge: "Most Popular",
+    price: "₹999",
+    origPrice: "₹1,499",
+    period: "/month",
+    desc: "Full creative power. For serious founders, brands & agencies.",
+    free: ["Unlimited credits","Everything in Canvas","Live web search on every query","Brand memory across sessions"],
+    premium: ["Mindmaps & flowcharts","Multi-mode thinking (Search / Think / Plan)","Priority intelligence & response speed","Competitor deep-dives","Campaign brief generator","Design critique & pricing calculator"],
+    premiumLabel: "Nineteen Twentys exclusive",
+    cta: "Go Nineteen Twentys →",
+    dark: false,
+    highlight: true,
   },
 ];
+
+function PricingCard({ plan, onUpgrade, index }) {
+  const textCol   = plan.highlight ? "#000000" : "#ffffff";
+  const mutedCol  = plan.highlight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.45)";
+  const checkCol  = plan.highlight ? "rgba(0,0,0,0.6)"  : "rgba(156,252,175,0.8)";
+  const sepCol    = plan.highlight ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.08)";
+  const cardBg    = plan.highlight
+    ? "linear-gradient(145deg, #226FF7 0%, #6BC3CE 40%, #9CFCAF 70%, #FFEA71 100%)"
+    : "rgba(255,255,255,0.03)";
+  const cardBdr   = plan.highlight ? "none" : "1px solid rgba(255,255,255,0.08)";
+
+  return (
+    <FadeUp delay={index * 0.08}>
+      <motion.div
+        whileHover={{ y: -6 }}
+        style={{
+          borderRadius: 24, overflow: "hidden",
+          background: cardBg, border: cardBdr,
+          boxShadow: plan.highlight ? "0 24px 64px rgba(34,111,247,0.35)" : "none",
+          transition: "all 0.25s ease", height: "100%",
+          display: "flex", flexDirection: "column",
+        }}
+      >
+        {/* Glass header */}
+        <div style={{
+          padding: "28px 24px 20px", position: "relative",
+          borderBottom: `1px solid ${sepCol}`,
+          background: "linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 40%, transparent 100%)",
+        }}>
+          {plan.badge && (
+            <div style={{
+              position: "absolute", top: 16, right: 16,
+              padding: "3px 10px", borderRadius: 100,
+              background: "rgba(0,0,0,0.18)",
+              fontSize: 10, fontFamily: FONT, fontWeight: 700,
+              color: "rgba(0,0,0,0.65)", letterSpacing: "1px", textTransform: "uppercase",
+            }}>{plan.badge}</div>
+          )}
+
+          {/* Plan name */}
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: mutedCol, fontFamily: FONT, marginBottom: 16 }}>
+            {plan.name}
+          </p>
+
+          {/* Price */}
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
+            {plan.origPrice && (
+              <span style={{ fontSize: 18, fontFamily: FONT, color: mutedCol, textDecoration: "line-through", fontWeight: 400 }}>
+                {plan.origPrice}
+              </span>
+            )}
+            <span style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: 46, fontWeight: 400, color: textCol, lineHeight: 1 }}>
+              {plan.price}
+            </span>
+            <span style={{ fontSize: 14, fontFamily: FONT, color: mutedCol }}>{plan.period}</span>
+          </div>
+          <p style={{ fontSize: 13, color: mutedCol, fontFamily: FONT, lineHeight: 1.5 }}>{plan.desc}</p>
+        </div>
+
+        {/* Body */}
+        <div style={{ padding: "20px 24px", flex: 1, display: "flex", flexDirection: "column", gap: 0 }}>
+          {/* Base features */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+            {plan.free.map(f => (
+              <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
+                <span style={{ color: checkCol, flexShrink: 0, marginTop: 1, fontSize: 13 }}>✓</span>
+                <span style={{ fontFamily: FONT, fontSize: 13.5, color: plan.highlight ? "rgba(0,0,0,0.8)" : "rgba(255,255,255,0.7)", lineHeight: 1.45 }}>{f}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Premium separator */}
+          {plan.premium && (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "16px 0 12px" }}>
+                <span style={{ flex: 1, height: 1, background: sepCol }}/>
+                <span style={{ fontSize: 10, fontFamily: FONT, fontWeight: 600, color: mutedCol, letterSpacing: "1px", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                  {plan.premiumLabel}
+                </span>
+                <span style={{ flex: 1, height: 1, background: sepCol }}/>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+                {plan.premium.map(f => (
+                  <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
+                    <span style={{ color: checkCol, flexShrink: 0, marginTop: 1, fontSize: 13 }}>✦</span>
+                    <span style={{ fontFamily: FONT, fontSize: 13.5, color: plan.highlight ? "rgba(0,0,0,0.8)" : "rgba(255,255,255,0.7)", lineHeight: 1.45 }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* CTA */}
+          <motion.button
+            onClick={onUpgrade}
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+            style={{
+              marginTop: 20,
+              width: "100%", padding: "14px", borderRadius: 14, border: "none",
+              cursor: "pointer", fontFamily: FONT, fontSize: 14, fontWeight: 700,
+              background: plan.highlight ? "rgba(0,0,0,0.82)" : "rgba(255,255,255,0.08)",
+              color: plan.highlight ? "#ffffff" : "rgba(255,255,255,0.8)",
+              transition: "all 0.2s",
+            }}
+          >{plan.cta}</motion.button>
+        </div>
+      </motion.div>
+    </FadeUp>
+  );
+}
 
 function Pricing() {
   const navigate = useNavigate();
   return (
     <section id="pricing" style={{ background:"#000000", padding:"80px 24px 120px" }}>
-      <div style={{ maxWidth:1000, margin:"0 auto" }}>
+      <div style={{ maxWidth:1060, margin:"0 auto" }}>
         <FadeUp>
           <div style={{ textAlign:"center", marginBottom:60 }}>
             <p style={{ fontSize:12, fontWeight:700, letterSpacing:"3px", textTransform:"uppercase", color:"rgba(255,255,255,0.25)", fontFamily:FONT, marginBottom:16 }}>
@@ -805,61 +921,21 @@ function Pricing() {
             <div style={{ display:"flex", justifyContent:"center", marginTop:20 }}>
               <UpgradeBanner
                 text="Upgrade to Nineteen Twentys"
-                sub="and unlock unlimited creative intelligence"
+                sub="— 33% off launch pricing, limited time"
                 onClick={() => navigate("/app/payment")}
               />
             </div>
           </div>
         </FadeUp>
 
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))", gap:16 }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(290px,1fr))", gap:16, alignItems:"stretch" }}>
           {PLANS.map((plan, i) => (
-            <FadeUp key={plan.name} delay={i * 0.08}>
-              <motion.div
-                whileHover={{ y:-6 }}
-                style={{
-                  borderRadius:24, padding:"36px 28px",
-                  background: plan.highlight
-                    ? "linear-gradient(135deg, #226FF7, #6BC3CE, #9CFCAF, #FFEA71)"
-                    : plan.accent,
-                  border: plan.highlight ? "none" : `1px solid ${plan.border}`,
-                  position:"relative", overflow:"hidden", height:"100%",
-                  boxShadow: plan.highlight ? "0 20px 60px rgba(34,111,247,0.3)" : "none",
-                  transition:"all 0.25s ease",
-                }}
-              >
-                {plan.highlight && (
-                  <div style={{ position:"absolute", top:16, right:16, padding:"4px 12px", borderRadius:100, background:"rgba(0,0,0,0.2)", fontSize:11, fontFamily:FONT, fontWeight:700, color:"rgba(0,0,0,0.7)", letterSpacing:"1px", textTransform:"uppercase" }}>
-                    Most Popular
-                  </div>
-                )}
-                <p style={{ fontFamily:FONT, fontWeight:700, fontSize:13, letterSpacing:"1px", textTransform:"uppercase", color: plan.highlight ? "rgba(0,0,0,0.6)" : plan.textAccent, marginBottom:12 }}>{plan.name}</p>
-                <div style={{ display:"flex", alignItems:"baseline", gap:4, marginBottom:6 }}>
-                  <span style={{ fontFamily:SERIF, fontStyle:"italic", fontSize:44, fontWeight:400, color: plan.highlight ? "#000" : "#ffffff" }}>{plan.price}</span>
-                  <span style={{ fontFamily:FONT, fontSize:14, color: plan.highlight ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.4)" }}>{plan.period}</span>
-                </div>
-                <p style={{ fontFamily:FONT, fontSize:14, color: plan.highlight ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.45)", marginBottom:28 }}>{plan.desc}</p>
-                <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:32 }}>
-                  {plan.features.map(f => (
-                    <div key={f} style={{ display:"flex", alignItems:"center", gap:10 }}>
-                      <span style={{ fontSize:14, color: plan.highlight ? "rgba(0,0,0,0.7)" : plan.textAccent, flexShrink:0 }}>✓</span>
-                      <span style={{ fontFamily:FONT, fontSize:14, color: plan.highlight ? "rgba(0,0,0,0.75)" : "rgba(255,255,255,0.65)" }}>{f}</span>
-                    </div>
-                  ))}
-                </div>
-                <motion.button
-                  onClick={() => navigate("/app/payment")}
-                  whileHover={{ scale:1.02 }} whileTap={{ scale:0.98 }}
-                  style={{
-                    width:"100%", padding:"14px", borderRadius:14, border:"none",
-                    cursor:"pointer", fontFamily:FONT, fontSize:15, fontWeight:700,
-                    background: plan.highlight ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.1)",
-                    color: plan.highlight ? "#ffffff" : (plan.textAccent === "rgba(255,255,255,0.7)" ? "rgba(255,255,255,0.8)" : plan.textAccent),
-                    transition:"all 0.2s",
-                  }}
-                >{plan.cta} →</motion.button>
-              </motion.div>
-            </FadeUp>
+            <PricingCard
+              key={plan.name}
+              plan={plan}
+              index={i}
+              onUpgrade={() => navigate(plan.name === "Free" ? "/app" : "/app/payment")}
+            />
           ))}
         </div>
       </div>
