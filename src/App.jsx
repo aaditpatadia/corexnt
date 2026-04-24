@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Component, createContext, useContext, useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
+import { Analytics } from "@vercel/analytics/react";
 import { ToastProvider, setGlobalToast, useToast } from "./components/Toast";
 import MainLanding    from "./pages/MainLanding";
 import CreatorLanding from "./pages/CreatorLanding";
@@ -102,6 +103,7 @@ export default function App() {
               <Route path="*"         element={<Navigate to="/" replace />} />
             </Routes>
           </AnimatePresence>
+          <Analytics />
         </ToastProvider>
       </ThemeContext.Provider>
     </ErrorBoundary>
