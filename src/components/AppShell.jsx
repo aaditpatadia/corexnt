@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { MessageSquare, FolderOpen, Target, Video, Film, Palette, LayoutGrid } from "lucide-react";
 import AuthFlow          from "./AuthFlow";
 import CreditModal       from "./CreditModal";
 import ChatDashboard     from "../pages/app/ChatDashboard";
@@ -34,26 +35,32 @@ import { getPlanTheme, applyTheme, PLAN_THEMES } from "../utils/planTheme";
 const FONT = "'Instrument Sans', sans-serif";
 
 /* ─── Sidebar nav item ─── */
-function NavItem({ icon, label, active, onClick, premium }) {
+function NavItem({ icon: Icon, label, active, onClick, premium, collapsed }) {
   return (
     <button
       onClick={onClick}
+      title={collapsed ? label : undefined}
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 10,
-        padding: "10px 12px",
+        height: 38,
+        paddingLeft: collapsed ? 0 : 10,
+        paddingRight: collapsed ? 0 : 10,
+        justifyContent: collapsed ? "center" : "flex-start",
         borderRadius: 10,
         border: "none",
         cursor: "pointer",
         fontFamily: FONT,
-        fontSize: 14,
+        fontSize: 13.5,
         fontWeight: active ? 600 : 400,
-        color: active ? "#ffffff" : "rgba(255,255,255,0.55)",
-        background: active ? "rgba(255,255,255,0.07)" : "transparent",
+        color: active ? "#ffffff" : "rgba(255,255,255,0.5)",
+        background: active ? "rgba(255,255,255,0.08)" : "transparent",
         textAlign: "left",
         width: "100%",
-        transition: "all 0.2s cubic-bezier(0.16,1,0.3,1)",
+        transition: "background 0.15s, color 0.15s",
+        overflow: "hidden",
+        flexShrink: 0,
+        gap: 0,
       }}
       onMouseEnter={(e) => {
         if (!active) {
@@ -64,15 +71,25 @@ function NavItem({ icon, label, active, onClick, premium }) {
       onMouseLeave={(e) => {
         if (!active) {
           e.currentTarget.style.background = "transparent";
-          e.currentTarget.style.color = "rgba(255,255,255,0.55)";
+          e.currentTarget.style.color = active ? "#ffffff" : "rgba(255,255,255,0.5)";
         }
       }}
     >
-      <span style={{ fontSize: 15, width: 20, textAlign: "center", flexShrink: 0 }}>{icon}</span>
-      <span style={{ flex: 1 }}>{label}</span>
-      {premium && (
-        <span style={{ fontSize: 10, color: "rgba(156,252,175,0.6)", fontWeight: 600, letterSpacing: "0.5px" }}>PRO</span>
-      )}
+      {/* Icon — always centered in 36px column */}
+      <span style={{ width: 36, height: 38, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <Icon size={15} strokeWidth={active ? 2.2 : 1.8} />
+      </span>
+      {/* Label — fade out when collapsed */}
+      <motion.span
+        animate={{ opacity: collapsed ? 0 : 1 }}
+        transition={{ duration: 0.12 }}
+        style={{ whiteSpace: "nowrap", overflow: "hidden", flex: 1, display: "flex", alignItems: "center", gap: 6 }}
+      >
+        {label}
+        {premium && !collapsed && (
+          <span style={{ fontSize: 9, color: "rgba(156,252,175,0.7)", fontWeight: 700, letterSpacing: "0.5px" }}>PRO</span>
+        )}
+      </motion.span>
     </button>
   );
 }
@@ -179,8 +196,8 @@ function SidebarInfoCard({ onClose: closeSidebar }) {
                 fontSize: 11, fontFamily: FONT, color: "rgba(255,255,255,0.3)",
               }}
             >
-              <span>₹999/month</span>
-              <span>Unlimited credits</span>
+              <span>4000 credits · ₹1,920</span>
+              <span>Never expires</span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -191,7 +208,9 @@ function SidebarInfoCard({ onClose: closeSidebar }) {
 
 /* ─── Left Sidebar ─── */
 function Sidebar({ navigate, location, onNewChat, onClose, sidebarRef }) {
-  const active = location.pathname.replace("/app/", "").split("/")[0] || "dashboard";
+  const active      = location.pathname.replace("/app/", "").split("/")[0] || "dashboard";
+  const isMobile    = !!onClose; // mobile drawer always fully expanded
+  const [collapsed, setCollapsed] = useState(!isMobile); // desktop starts collapsed
 
   const [sidebarCredits, setSidebarCredits] = useState(() => parseInt(localStorage.getItem('corex_credits') || '0'));
   useEffect(() => {
@@ -207,90 +226,98 @@ function Sidebar({ navigate, location, onNewChat, onClose, sidebarRef }) {
   });
 
   const nav = [
-    { icon: "💬", label: "Chat",        path: "chat",        action: () => { navigate("/app/chat"); onClose?.(); setTimeout(() => { if (window.__corex_newChat) window.__corex_newChat(); }, 100); } },
-    { icon: "📁", label: "Projects",    path: "projects",    action: () => { navigate("/app/projects"); onClose?.(); } },
-    { icon: "◎",  label: "Competitors", path: "competitors", action: () => { navigate("/app/competitors"); onClose?.(); } },
-    { icon: "🎬", label: "Creators",    path: "creators",    action: () => { navigate("/app/creators"); onClose?.(); } },
-    { icon: "🎥", label: "Directors",   path: "directors",   action: () => { navigate("/app/directors"); onClose?.(); } },
-    { icon: "✏️",  label: "Designers",   path: "designers",   action: () => { navigate("/app/designers"); onClose?.(); } },
-    { icon: "📅", label: "Flow",        path: "flow",        action: () => { navigate("/app/flow"); onClose?.(); } },
+    { icon: MessageSquare, label: "Chat",        path: "chat",        action: () => { navigate("/app/chat"); onClose?.(); setTimeout(() => { if (window.__corex_newChat) window.__corex_newChat(); }, 100); } },
+    { icon: FolderOpen,    label: "Projects",    path: "projects",    action: () => { navigate("/app/projects"); onClose?.(); } },
+    { icon: Target,        label: "Competitors", path: "competitors", action: () => { navigate("/app/competitors"); onClose?.(); } },
+    { icon: Video,         label: "Creators",    path: "creators",    action: () => { navigate("/app/creators"); onClose?.(); } },
+    { icon: Film,          label: "Directors",   path: "directors",   action: () => { navigate("/app/directors"); onClose?.(); } },
+    { icon: Palette,       label: "Designers",   path: "designers",   action: () => { navigate("/app/designers"); onClose?.(); } },
+    { icon: LayoutGrid,    label: "Flow",        path: "flow",        action: () => { navigate("/app/flow"); onClose?.(); } },
   ];
 
   return (
-    <div
+    <motion.div
       ref={sidebarRef}
+      animate={{ width: isMobile ? 240 : collapsed ? 52 : 220 }}
+      transition={{ type: "tween", ease: "easeOut", duration: 0.22 }}
+      onMouseEnter={() => !isMobile && setCollapsed(false)}
+      onMouseLeave={() => !isMobile && setCollapsed(true)}
       style={{
-        width: onClose ? "100%" : 220,  /* fill mobile drawer container, fixed on desktop */
-        minWidth: onClose ? "100%" : 220,
-        background: "#0D0D0D",
         height: "100%",
+        background: "#0D0D0D",
+        borderRight: "1px solid rgba(255,255,255,0.07)",
         display: "flex",
         flexDirection: "column",
-        borderRight: "1px solid rgba(255,255,255,0.07)",
-        flexShrink: 0,
         overflow: "hidden",
+        flexShrink: 0,
       }}
     >
-      {/* Wordmark */}
-      <div style={{ padding: "20px 16px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <button
-          onClick={() => { navigate("/app/dashboard"); onClose?.(); }}
-          style={{ fontFamily: FONT, fontWeight: 600, fontSize: 16, color: "#ffffff", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-        >
-          Corex
-        </button>
-        {onClose && (
+      {/* ── Header ── */}
+      <div style={{
+        height: 56, flexShrink: 0,
+        display: "flex", alignItems: "center",
+        justifyContent: collapsed && !isMobile ? "center" : "space-between",
+        padding: collapsed && !isMobile ? 0 : "0 16px",
+        borderBottom: "1px solid rgba(255,255,255,0.04)",
+      }}>
+        {collapsed && !isMobile ? (
+          /* Collapsed: show "C" logo mark */
           <button
-            onClick={onClose}
-            style={{
-              width: 28, height: 28, borderRadius: 8, border: "none",
-              background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)",
-              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 16, transition: "all 0.15s",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#ffffff"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
+            onClick={() => navigate("/app/dashboard")}
+            style={{ fontFamily: FONT, fontWeight: 700, fontSize: 18, color: "#ffffff", background: "none", border: "none", cursor: "pointer", padding: 0, letterSpacing: "-0.5px" }}
           >
-            ✕
+            C
           </button>
+        ) : (
+          <>
+            <button
+              onClick={() => { navigate("/app/dashboard"); onClose?.(); }}
+              style={{ fontFamily: FONT, fontWeight: 600, fontSize: 16, color: "#ffffff", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+            >
+              Corex
+            </button>
+            {isMobile && (
+              <button
+                onClick={onClose}
+                style={{ width: 28, height: 28, borderRadius: 8, border: "none", background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, transition: "all 0.15s" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background="rgba(255,255,255,0.12)"; e.currentTarget.style.color="#fff"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background="rgba(255,255,255,0.06)"; e.currentTarget.style.color="rgba(255,255,255,0.5)"; }}
+              >✕</button>
+            )}
+          </>
         )}
       </div>
 
-      {/* Nav items */}
-      <div style={{ padding: "0 8px", display: "flex", flexDirection: "column", gap: 2 }}>
+      {/* ── Nav items ── */}
+      <div style={{ padding: "8px 8px 0", display: "flex", flexDirection: "column", gap: 1, flexShrink: 0 }}>
         {/* New Chat button */}
         <motion.button
-          whileHover={{ translateY: -1 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => {
-            navigate('/app/chat');
-            onClose?.();
-            setTimeout(() => {
-              if (window.__corex_newChat) window.__corex_newChat();
-            }, 100);
-          }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => { navigate('/app/chat'); onClose?.(); setTimeout(() => { if (window.__corex_newChat) window.__corex_newChat(); }, 100); }}
+          title={collapsed && !isMobile ? "New Chat" : undefined}
           style={{
-            width: '100%',
-            padding: '10px 14px',
-            borderRadius: 10,
-            fontSize: 13,
-            fontFamily: "'Instrument Sans', sans-serif",
-            fontWeight: 600,
-            background: 'linear-gradient(135deg, rgba(34,111,247,0.15), rgba(156,252,175,0.15))',
-            border: '1px solid rgba(156,252,175,0.2)',
-            color: '#9CFCAF',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            marginBottom: 16,
-            transition: 'all 0.2s',
+            height: 38, width: "100%", borderRadius: 10, fontSize: 13,
+            fontFamily: FONT, fontWeight: 600,
+            background: "linear-gradient(135deg, rgba(34,111,247,0.18), rgba(156,252,175,0.18))",
+            border: "1px solid rgba(156,252,175,0.22)",
+            color: "#9CFCAF", cursor: "pointer",
+            display: "flex", alignItems: "center",
+            justifyContent: collapsed && !isMobile ? "center" : "flex-start",
+            gap: 0, marginBottom: 6, overflow: "hidden",
+            transition: "all 0.2s",
           }}
         >
-          <span style={{ fontSize: 16 }}>✦</span>
-          New Chat
+          <span style={{ width: 36, height: 38, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 15 }}>✦</span>
+          <motion.span
+            animate={{ opacity: collapsed && !isMobile ? 0 : 1 }}
+            transition={{ duration: 0.12 }}
+            style={{ whiteSpace: "nowrap", overflow: "hidden" }}
+          >
+            New Chat
+          </motion.span>
         </motion.button>
 
+        {/* Main nav */}
         {nav.map((item) => (
           <NavItem
             key={item.path}
@@ -299,129 +326,98 @@ function Sidebar({ navigate, location, onNewChat, onClose, sidebarRef }) {
             active={active === item.path}
             onClick={item.action}
             premium={item.premium}
+            collapsed={collapsed && !isMobile}
           />
         ))}
       </div>
 
-      {/* Divider below nav items */}
-      <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "8px 0" }} />
+      {/* ── Divider ── */}
+      <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "8px 0", flexShrink: 0 }} />
 
-      {/* History */}
-      <div style={{ padding: "0 8px", flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 2 }}>
-        <p style={{ fontSize: 10, fontFamily: FONT, fontWeight: 600, color: "rgba(255,255,255,0.25)", letterSpacing: "2px", textTransform: "uppercase", padding: "0 10px 8px" }}>
-          History
-        </p>
-        <div style={{ overflowY: "auto", flex: 1 }}>
-          {history.length === 0 ? (
-            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", padding: "6px 10px", fontFamily: FONT }}>
-              No conversations yet
+      {/* ── History (hidden when collapsed) ── */}
+      <AnimatePresence>
+        {(!collapsed || isMobile) && (
+          <motion.div
+            key="history"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            style={{ padding: "0 8px", flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 1 }}
+          >
+            <p style={{ fontSize: 10, fontFamily: FONT, fontWeight: 600, color: "rgba(255,255,255,0.22)", letterSpacing: "2px", textTransform: "uppercase", padding: "0 10px 6px" }}>
+              History
             </p>
-          ) : (
-            history.map((h, i) => (
-              <div
-                key={h.id}
-                style={{ position: "relative", borderRadius: 8 }}
-                onMouseEnter={(e) => {
-                  const btn = e.currentTarget.querySelector('.del-btn');
-                  if (btn) btn.style.opacity = '1';
-                }}
-                onMouseLeave={(e) => {
-                  const btn = e.currentTarget.querySelector('.del-btn');
-                  if (btn) btn.style.opacity = '0';
-                }}
-              >
-                <motion.button
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.05 }}
-                  onClick={() => {
-                    if (typeof window.__corex_loadConversation === "function") {
-                      window.__corex_loadConversation(h);
-                    }
-                    navigate("/app/chat");
-                    onClose?.();
-                  }}
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    padding: "8px 32px 8px 10px",
-                    borderRadius: 8,
-                    border: "none",
-                    cursor: "pointer",
-                    background: "transparent",
-                    color: "rgba(255,255,255,0.5)",
-                    fontSize: 12,
-                    fontFamily: FONT,
-                    textAlign: "left",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    maxWidth: "100%",
-                    transition: "all 0.15s ease",
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "#ffffff"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
-                >
-                  {(h.title || "Untitled").slice(0, 28)}
-                </motion.button>
+            <div style={{ overflowY: "auto", flex: 1 }}>
+              {history.length === 0 ? (
+                <p style={{ fontSize: 12, color: "rgba(255,255,255,0.18)", padding: "6px 10px", fontFamily: FONT }}>
+                  No conversations yet
+                </p>
+              ) : (
+                history.map((h, i) => (
+                  <div
+                    key={h.id}
+                    style={{ position: "relative", borderRadius: 8 }}
+                    onMouseEnter={(e) => { const b = e.currentTarget.querySelector('.del-btn'); if (b) b.style.opacity='1'; }}
+                    onMouseLeave={(e) => { const b = e.currentTarget.querySelector('.del-btn'); if (b) b.style.opacity='0'; }}
+                  >
+                    <motion.button
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }}
+                      onClick={() => { if (typeof window.__corex_loadConversation === "function") window.__corex_loadConversation(h); navigate("/app/chat"); onClose?.(); }}
+                      style={{ display: "block", width: "100%", padding: "7px 32px 7px 10px", borderRadius: 8, border: "none", cursor: "pointer", background: "transparent", color: "rgba(255,255,255,0.45)", fontSize: 12, fontFamily: FONT, textAlign: "left", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%", transition: "all 0.15s" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background="rgba(255,255,255,0.04)"; e.currentTarget.style.color="#ffffff"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="rgba(255,255,255,0.45)"; }}
+                    >
+                      {(h.title || "Untitled").slice(0, 28)}
+                    </motion.button>
+                    <button
+                      className="del-btn"
+                      onClick={(e) => { e.stopPropagation(); const updated = history.filter(item => item.id !== h.id); setHistory(updated); localStorage.setItem('corex_history', JSON.stringify(updated)); }}
+                      style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", opacity: 0, transition: "opacity 0.15s", background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontSize: 14, padding: "2px 6px", borderRadius: 4 }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color="#f87171"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color="rgba(255,255,255,0.4)"; }}
+                    >×</button>
+                  </div>
+                ))
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-                {/* Delete button */}
-                <button
-                  className="del-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const updated = history.filter(item => item.id !== h.id);
-                    setHistory(updated);
-                    localStorage.setItem('corex_history', JSON.stringify(updated));
-                  }}
-                  style={{
-                    position: "absolute",
-                    right: 6,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    opacity: 0,
-                    transition: "opacity 0.15s",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    color: "rgba(255,255,255,0.4)",
-                    fontSize: 14,
-                    padding: "2px 6px",
-                    borderRadius: 4,
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "#f87171"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
-                >
-                  ×
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
+      {/* ── InfoCard (hidden when collapsed) ── */}
+      {(!collapsed || isMobile) && <SidebarInfoCard onClose={onClose} />}
 
-      {/* InfoCard upgrade prompt */}
-      <SidebarInfoCard onClose={onClose}/>
-
-      {/* Bottom credit pill */}
-      <div style={{ padding: "8px 12px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+      {/* ── Credits pill ── */}
+      <div style={{ padding: "8px 8px", borderTop: "1px solid rgba(255,255,255,0.05)", flexShrink: 0 }}>
         <button
           onClick={() => { document.dispatchEvent(new CustomEvent("corex:openCredits")); onClose?.(); }}
+          title={collapsed && !isMobile ? `${sidebarCredits} credits` : undefined}
           style={{
-            display: "flex", alignItems: "center", gap: 6,
-            width: "100%", padding: "8px 12px", borderRadius: 10,
+            display: "flex", alignItems: "center",
+            justifyContent: collapsed && !isMobile ? "center" : "flex-start",
+            height: 36, width: "100%",
+            paddingLeft: collapsed && !isMobile ? 0 : 10,
+            paddingRight: collapsed && !isMobile ? 0 : 10,
+            borderRadius: 10,
             background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)",
-            color: "rgba(255,255,255,0.6)", fontSize: 13,
-            fontFamily: "'Instrument Sans', sans-serif", cursor: "pointer",
-            transition: "all 0.2s ease",
+            color: "rgba(255,255,255,0.55)", fontFamily: FONT, cursor: "pointer",
+            transition: "all 0.2s ease", overflow: "hidden",
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#fff"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background="rgba(255,255,255,0.08)"; e.currentTarget.style.color="#fff"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background="rgba(255,255,255,0.04)"; e.currentTarget.style.color="rgba(255,255,255,0.55)"; }}
         >
-          ⚡ {sidebarCredits} credits
+          <span style={{ width: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 13 }}>⚡</span>
+          <motion.span
+            animate={{ opacity: collapsed && !isMobile ? 0 : 1 }}
+            transition={{ duration: 0.12 }}
+            style={{ fontSize: 13, whiteSpace: "nowrap", overflow: "hidden" }}
+          >
+            {sidebarCredits} credits
+          </motion.span>
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -647,7 +643,6 @@ export default function AppShell() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(() => window.innerWidth >= 768);
   const [creditModalOpen, setCreditModalOpen] = useState(false);
   const [selectedPack, setSelectedPack] = useState(null);
   const [payModalOpen, setPayModalOpen] = useState(false);
@@ -708,32 +703,11 @@ export default function AppShell() {
     };
   }, []);
 
-  // ESC key closes mobile menu and desktop sidebar
+  // ESC key closes mobile menu
   useEffect(() => {
-    const escHandler = (e) => {
-      if (e.key === 'Escape') {
-        setMobileMenuOpen(false);
-        setDesktopSidebarOpen(false);
-      }
-    };
+    const escHandler = (e) => { if (e.key === 'Escape') setMobileMenuOpen(false); };
     document.addEventListener('keydown', escHandler);
     return () => document.removeEventListener('keydown', escHandler);
-  }, []);
-
-  // Click-outside closes sidebar (both mobile and desktop)
-  useEffect(() => {
-    const handler = (e) => {
-      if (sidebarRef.current && !sidebarRef.current.contains(e.target)) {
-        const isDesktop = window.innerWidth >= 768;
-        if (isDesktop) {
-          setDesktopSidebarOpen(false);
-        } else {
-          setMobileMenuOpen(false);
-        }
-      }
-    };
-    document.addEventListener('mousedown', handler, true);
-    return () => document.removeEventListener('mousedown', handler, true);
   }, []);
 
   const handleNewChat = useCallback(() => {
@@ -791,32 +765,17 @@ export default function AppShell() {
         position: "relative",
       }}
     >
-      {/* Desktop sidebar */}
-      <AnimatePresence>
-        {desktopSidebarOpen && (
-          <motion.div
-            key="desktop-sidebar"
-            initial={{ x: -220, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -220, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 380, damping: 38 }}
-            className="hidden md:flex"
-            style={{ height: "100%", flexShrink: 0, width: 220 }}
-          >
-            <Sidebar {...sidebarProps} sidebarRef={sidebarRef} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Desktop sidebar — always visible, collapses to icon-only (52px) on blur, expands on hover */}
+      <div className="hidden md:flex" style={{ height: "100%", flexShrink: 0 }}>
+        <Sidebar {...sidebarProps} sidebarRef={sidebarRef} />
+      </div>
 
-      {/* Mobile sidebar — backdrop and drawer each get their own AnimatePresence
-           so exit animations fire properly (fragment children don't animate) */}
+      {/* Mobile sidebar — backdrop + drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
             key="mobile-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={() => setMobileMenuOpen(false)}
             style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 200, backdropFilter: "blur(4px)" }}
@@ -827,9 +786,7 @@ export default function AppShell() {
         {mobileMenuOpen && (
           <motion.div
             key="mobile-sidebar"
-            initial={{ x: -240 }}
-            animate={{ x: 0 }}
-            exit={{ x: -240 }}
+            initial={{ x: -240 }} animate={{ x: 0 }} exit={{ x: -240 }}
             transition={{ type: "spring", stiffness: 380, damping: 38 }}
             style={{ position: "fixed", top: 0, left: 0, height: "100vh", zIndex: 201, width: 240 }}
           >
@@ -847,13 +804,7 @@ export default function AppShell() {
           navigate={navigate}
           onNewChat={handleNewChat}
           onCreditClick={() => setCreditModalOpen(true)}
-          onToggleSidebar={() => {
-            if (window.innerWidth >= 768) {
-              setDesktopSidebarOpen((prev) => !prev);
-            } else {
-              setMobileMenuOpen((prev) => !prev);
-            }
-          }}
+          onToggleSidebar={() => setMobileMenuOpen((prev) => !prev)}
         />
 
         {/* Page content */}

@@ -752,74 +752,77 @@ function Stats() {
 /* ── Pricing ── */
 const PLANS = [
   {
-    name: "Free",
+    name: "SPARK",
     badge: null,
-    price: "₹0",
-    origPrice: null,
-    period: "forever",
-    desc: "Try COREX. No card, no commitment.",
-    free: ["20 smart sessions total","Chat intelligence","PDF downloads","Basic markdown formatting","Mobile app access"],
+    price: "₹299",
+    credits: "300 credits",
+    bonus: null,
+    totalCredits: null,
+    expiry: "Credits expire in 90 days",
+    desc: "75 smart sessions or 37 campaign briefs",
+    free: ["Chat intelligence","Live web search","PDF downloads","Voice input","Basic history"],
     premium: null,
     premiumLabel: null,
-    cta: "Start free →",
-    dark: true,
+    cta: "Get Spark →",
     highlight: false,
   },
   {
-    name: "Canvas",
-    badge: null,
-    price: "₹499",
-    origPrice: null,
-    period: "/month",
-    desc: "For creators and early-stage brands moving fast.",
-    free: ["100 credits/month","Live web intelligence","Visual charts & tables","Flow system & project planning","History & PDF reports","Voice input"],
-    premium: null,
-    premiumLabel: null,
-    cta: "Upgrade to Canvas →",
-    dark: true,
-    highlight: false,
-  },
-  {
-    name: "Nineteen Twentys",
+    name: "STUDIO",
     badge: "Most Popular",
-    price: "₹999",
-    origPrice: "₹1,499",
-    period: "/month",
-    desc: "Full creative power. For serious founders, brands & agencies.",
-    free: ["Unlimited credits","Everything in Canvas","Live web search on every query","Brand memory across sessions"],
-    premium: ["Mindmaps & flowcharts","Multi-mode thinking (Search / Think / Plan)","Priority intelligence & response speed","Competitor deep-dives","Campaign brief generator","Design critique & pricing calculator"],
-    premiumLabel: "Nineteen Twentys exclusive",
-    cta: "Go Nineteen Twentys →",
-    dark: false,
+    price: "₹799",
+    credits: "1000 credits",
+    bonus: "+ 200 bonus",
+    totalCredits: "1200 total",
+    expiry: "Credits expire in 180 days",
+    desc: "A full month of serious creative work",
+    free: ["Everything in Spark","Visual charts & flowcharts","Mindmaps & deep research","Flow system & project planning","Brand memory across sessions","Priority response speed"],
+    premium: null,
+    premiumLabel: null,
+    cta: "Get Studio →",
+    highlight: false,
+  },
+  {
+    name: "NINETEEN TWENTYS",
+    badge: "Full Creative OS",
+    price: "₹1,920",
+    credits: "3500 credits",
+    bonus: "+ 500 bonus",
+    totalCredits: "4000 total",
+    expiry: "Never expires.",
+    desc: "The full Creative OS.",
+    free: ["Everything in Studio","Competitor deep-dives","Campaign brief generator","Design critique & pricing calculator","Multi-mode thinking (Search / Think / Plan)","Unlimited session length"],
+    premium: null,
+    premiumLabel: null,
+    cta: "Get Nineteen Twentys →",
     highlight: true,
   },
 ];
 
 function PricingCard({ plan, onUpgrade, index }) {
-  const textCol   = plan.highlight ? "#000000" : "#ffffff";
-  const mutedCol  = plan.highlight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.45)";
-  const checkCol  = plan.highlight ? "rgba(0,0,0,0.6)"  : "rgba(156,252,175,0.8)";
-  const sepCol    = plan.highlight ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.08)";
-  const cardBg    = plan.highlight
-    ? "linear-gradient(145deg, #226FF7 0%, #6BC3CE 40%, #9CFCAF 70%, #FFEA71 100%)"
+  const textCol  = plan.highlight ? "#000000" : "#ffffff";
+  const mutedCol = plan.highlight ? "rgba(0,0,0,0.5)"  : "rgba(255,255,255,0.45)";
+  const checkCol = plan.highlight ? "rgba(0,0,0,0.65)" : "rgba(156,252,175,0.85)";
+  const sepCol   = plan.highlight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.07)";
+  const cardBg   = plan.highlight
+    ? "linear-gradient(145deg, #226FF7 0%, #6BC3CE 45%, #9CFCAF 72%, #FFEA71 100%)"
     : "rgba(255,255,255,0.03)";
-  const cardBdr   = plan.highlight ? "none" : "1px solid rgba(255,255,255,0.08)";
+  const cardBdr  = plan.highlight ? "none" : "1px solid rgba(255,255,255,0.08)";
 
   return (
     <FadeUp delay={index * 0.08}>
       <motion.div
-        whileHover={{ y: -6 }}
+        whileHover={{ y: -5 }}
         style={{
           borderRadius: 24, overflow: "hidden",
           background: cardBg, border: cardBdr,
-          boxShadow: plan.highlight ? "0 24px 64px rgba(34,111,247,0.35)" : "none",
+          boxShadow: plan.highlight ? "0 28px 72px rgba(34,111,247,0.3)" : "none",
           transition: "all 0.25s ease", height: "100%",
           display: "flex", flexDirection: "column",
         }}
       >
-        {/* Glass header */}
+        {/* ── Glass header ── */}
         <div style={{
-          padding: "28px 24px 20px", position: "relative",
+          padding: "26px 24px 18px", position: "relative",
           borderBottom: `1px solid ${sepCol}`,
           background: "linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 40%, transparent 100%)",
         }}>
@@ -827,64 +830,63 @@ function PricingCard({ plan, onUpgrade, index }) {
             <div style={{
               position: "absolute", top: 16, right: 16,
               padding: "3px 10px", borderRadius: 100,
-              background: "rgba(0,0,0,0.18)",
-              fontSize: 10, fontFamily: FONT, fontWeight: 700,
-              color: "rgba(0,0,0,0.65)", letterSpacing: "1px", textTransform: "uppercase",
+              background: plan.highlight ? "rgba(0,0,0,0.22)" : "rgba(255,255,255,0.1)",
+              fontSize: 9.5, fontFamily: FONT, fontWeight: 700,
+              color: plan.highlight ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.7)",
+              letterSpacing: "1px", textTransform: "uppercase",
             }}>{plan.badge}</div>
           )}
 
           {/* Plan name */}
-          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: mutedCol, fontFamily: FONT, marginBottom: 16 }}>
+          <p style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "2.5px", textTransform: "uppercase", color: mutedCol, fontFamily: FONT, marginBottom: 14 }}>
             {plan.name}
           </p>
 
           {/* Price */}
-          <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
-            {plan.origPrice && (
-              <span style={{ fontSize: 18, fontFamily: FONT, color: mutedCol, textDecoration: "line-through", fontWeight: 400 }}>
-                {plan.origPrice}
-              </span>
-            )}
-            <span style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: 46, fontWeight: 400, color: textCol, lineHeight: 1 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 6 }}>
+            <span style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: 50, fontWeight: 400, color: textCol, lineHeight: 1 }}>
               {plan.price}
             </span>
-            <span style={{ fontSize: 14, fontFamily: FONT, color: mutedCol }}>{plan.period}</span>
           </div>
-          <p style={{ fontSize: 13, color: mutedCol, fontFamily: FONT, lineHeight: 1.5 }}>{plan.desc}</p>
+
+          {/* Credits row */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+            <span style={{ fontSize: 14, fontFamily: FONT, fontWeight: 600, color: textCol }}>
+              {plan.credits}
+            </span>
+            {plan.bonus && (
+              <>
+                <span style={{ fontSize: 13, color: mutedCol, fontFamily: FONT }}>{plan.bonus}</span>
+                <span style={{ fontSize: 12, fontFamily: FONT, fontWeight: 700,
+                  color: plan.highlight ? "rgba(0,0,0,0.75)" : "#9CFCAF",
+                  background: plan.highlight ? "rgba(0,0,0,0.1)" : "rgba(156,252,175,0.12)",
+                  padding: "1px 8px", borderRadius: 20,
+                }}>= {plan.totalCredits}</span>
+              </>
+            )}
+          </div>
+
+          {/* Desc + expiry */}
+          <p style={{ fontSize: 12.5, color: mutedCol, fontFamily: FONT, lineHeight: 1.5, marginBottom: 2 }}>{plan.desc}</p>
+          <p style={{ fontSize: 11.5, fontFamily: FONT, fontWeight: 600,
+            color: plan.highlight
+              ? (plan.expiry.includes("Never") ? "rgba(0,0,0,0.65)" : mutedCol)
+              : (plan.expiry.includes("Never") ? "#9CFCAF" : "rgba(255,255,255,0.35)"),
+          }}>
+            {plan.expiry.includes("Never") ? "✦ " : ""}{plan.expiry}
+          </p>
         </div>
 
-        {/* Body */}
-        <div style={{ padding: "20px 24px", flex: 1, display: "flex", flexDirection: "column", gap: 0 }}>
-          {/* Base features */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+        {/* ── Feature list ── */}
+        <div style={{ padding: "18px 24px", flex: 1, display: "flex", flexDirection: "column" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 9, flex: 1 }}>
             {plan.free.map(f => (
               <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
                 <span style={{ color: checkCol, flexShrink: 0, marginTop: 1, fontSize: 13 }}>✓</span>
-                <span style={{ fontFamily: FONT, fontSize: 13.5, color: plan.highlight ? "rgba(0,0,0,0.8)" : "rgba(255,255,255,0.7)", lineHeight: 1.45 }}>{f}</span>
+                <span style={{ fontFamily: FONT, fontSize: 13, color: plan.highlight ? "rgba(0,0,0,0.78)" : "rgba(255,255,255,0.68)", lineHeight: 1.45 }}>{f}</span>
               </div>
             ))}
           </div>
-
-          {/* Premium separator */}
-          {plan.premium && (
-            <>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "16px 0 12px" }}>
-                <span style={{ flex: 1, height: 1, background: sepCol }}/>
-                <span style={{ fontSize: 10, fontFamily: FONT, fontWeight: 600, color: mutedCol, letterSpacing: "1px", textTransform: "uppercase", whiteSpace: "nowrap" }}>
-                  {plan.premiumLabel}
-                </span>
-                <span style={{ flex: 1, height: 1, background: sepCol }}/>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-                {plan.premium.map(f => (
-                  <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
-                    <span style={{ color: checkCol, flexShrink: 0, marginTop: 1, fontSize: 13 }}>✦</span>
-                    <span style={{ fontFamily: FONT, fontSize: 13.5, color: plan.highlight ? "rgba(0,0,0,0.8)" : "rgba(255,255,255,0.7)", lineHeight: 1.45 }}>{f}</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
 
           {/* CTA */}
           <motion.button
@@ -894,10 +896,15 @@ function PricingCard({ plan, onUpgrade, index }) {
               marginTop: 20,
               width: "100%", padding: "14px", borderRadius: 14, border: "none",
               cursor: "pointer", fontFamily: FONT, fontSize: 14, fontWeight: 700,
-              background: plan.highlight ? "rgba(0,0,0,0.82)" : "rgba(255,255,255,0.08)",
-              color: plan.highlight ? "#ffffff" : "rgba(255,255,255,0.8)",
+              background: plan.highlight
+                ? "linear-gradient(135deg, rgba(0,0,0,0.85), rgba(0,0,0,0.7))"
+                : "rgba(255,255,255,0.08)",
+              color: plan.highlight ? "#ffffff" : "rgba(255,255,255,0.85)",
               transition: "all 0.2s",
+              boxShadow: plan.highlight ? "0 4px 20px rgba(0,0,0,0.25)" : "none",
             }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = plan.highlight ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.13)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = plan.highlight ? "linear-gradient(135deg, rgba(0,0,0,0.85), rgba(0,0,0,0.7))" : "rgba(255,255,255,0.08)"; }}
           >{plan.cta}</motion.button>
         </div>
       </motion.div>
