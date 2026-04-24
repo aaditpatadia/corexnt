@@ -11,39 +11,46 @@ import { generateResponsePDF } from "../utils/generatePDF";
 /* ── Render markdown to styled HTML ── */
 function renderMarkdown(text) {
   if (!text) return "";
-  // Pre-collapse blank lines between consecutive list items so they stay tight
+
+  // ── Pre-collapse: kill ALL double-blank-lines near list items ────────────────
   let html = text
-    .replace(/^(\d+\..+)\n\n+(?=\d+\.)/gm, '$1\n')   // numbered list items
-    .replace(/^([-*•].+)\n\n+(?=[-*•])/gm,  '$1\n')   // bullet list items
-    // Escape HTML to prevent injection (but keep our own tags)
+    // Consecutive numbered items: 1. foo\n\n2. bar → 1. foo\n2. bar
+    .replace(/^(\d+\..+)\n\n+(?=\d+\.)/gm, '$1\n')
+    // Numbered item → description paragraph (blank line separating them): collapse
+    .replace(/^(\d+\..+)\n\n+(?=[^\d\n*\-•])/gm, '$1\n')
+    // Description paragraph → next numbered item: collapse
+    .replace(/^([^\d\n*\-•#>].+)\n\n+(?=\d+\.)/gm, '$1\n')
+    // Consecutive bullet items
+    .replace(/^([-*•].+)\n\n+(?=[-*•])/gm, '$1\n')
+    // Escape HTML
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     // Headers
-    .replace(/^#### (.+)$/gm, '<h5 style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;margin:18px 0 6px;font-family:var(--font-body)">$1</h5>')
-    .replace(/^### (.+)$/gm, '<h4 style="font-size:15px;font-weight:700;color:rgba(255,255,255,0.8);margin:20px 0 8px;font-family:var(--font-body)">$1</h4>')
-    .replace(/^## (.+)$/gm, '<h3 style="font-size:17px;font-weight:700;color:#ffffff;margin:24px 0 10px;font-family:var(--font-body)">$1</h3>')
-    .replace(/^# (.+)$/gm, '<h2 style="font-size:20px;font-weight:700;color:#ffffff;margin:28px 0 12px;font-family:var(--font-body)">$1</h2>')
+    .replace(/^#### (.+)$/gm, '<h5 style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;margin:16px 0 4px;font-family:var(--font-body)">$1</h5>')
+    .replace(/^### (.+)$/gm, '<h4 style="font-size:15px;font-weight:700;color:rgba(255,255,255,0.8);margin:18px 0 6px;font-family:var(--font-body)">$1</h4>')
+    .replace(/^## (.+)$/gm, '<h3 style="font-size:17px;font-weight:700;color:#ffffff;margin:22px 0 8px;font-family:var(--font-body)">$1</h3>')
+    .replace(/^# (.+)$/gm, '<h2 style="font-size:20px;font-weight:700;color:#ffffff;margin:26px 0 10px;font-family:var(--font-body)">$1</h2>')
     // Horizontal rule
-    .replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:20px 0"/>')
-    // Treat ALL-CAPS label lines (like "WHAT'S WORKING:") as compact section headers
-    .replace(/^([A-Z][A-Z\s''&\/\-]+:?)$/gm, '<p style="font-size:10.5px;font-weight:700;color:rgba(255,255,255,0.38);letter-spacing:2px;text-transform:uppercase;font-family:var(--font-body);margin:14px 0 4px;padding:0">$1</p>')
+    .replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:16px 0"/>')
+    // ALL-CAPS section labels
+    .replace(/^([A-Z][A-Z\s''&\/\-]+:?)$/gm, '<p style="font-size:10.5px;font-weight:700;color:rgba(255,255,255,0.38);letter-spacing:2px;text-transform:uppercase;font-family:var(--font-body);margin:12px 0 3px;padding:0">$1</p>')
     // Bold + italic
     .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
     .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#ffffff;font-weight:700">$1</strong>')
     .replace(/\*(.+?)\*/g, '<em style="color:rgba(255,255,255,0.8)">$1</em>')
     // Inline code
     .replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.08);border-radius:4px;padding:2px 6px;font-size:13px;font-family:monospace;color:#9CFCAF">$1</code>')
-    // Numbered lists — collect consecutive lines
-    .replace(/^(\d+)\. (.+)$/gm, '<li class="ol-item" style="margin:3px 0;color:rgba(255,255,255,0.85);font-family:var(--font-body);list-style:none;padding-left:0;line-height:1.6"><span style="color:#9CFCAF;font-weight:700;min-width:22px;display:inline-block">$1.</span> $2</li>')
+    // Numbered lists
+    .replace(/^(\d+)\. (.+)$/gm, '<li class="ol-item" style="margin:2px 0;color:rgba(255,255,255,0.85);font-family:var(--font-body);list-style:none;padding-left:0;line-height:1.55"><span style="color:#9CFCAF;font-weight:700;min-width:22px;display:inline-block">$1.</span> $2</li>')
     // Unordered lists
-    .replace(/^[-*•]\s+(.+)$/gm, '<li style="margin:3px 0;padding-left:16px;color:rgba(255,255,255,0.85);font-family:var(--font-body);list-style:none;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:#9CFCAF">•</span>$1</li>')
+    .replace(/^[-*•]\s+(.+)$/gm, '<li style="margin:2px 0;padding-left:16px;color:rgba(255,255,255,0.85);font-family:var(--font-body);list-style:none;position:relative;line-height:1.55"><span style="position:absolute;left:0;color:#9CFCAF">•</span>$1</li>')
     // Blockquote
-    .replace(/^&gt; (.+)$/gm, '<blockquote style="border-left:3px solid rgba(156,252,175,0.4);padding:8px 16px;margin:12px 0;color:rgba(255,255,255,0.65);background:rgba(156,252,175,0.04);border-radius:0 8px 8px 0;font-family:var(--font-body);font-style:italic">$1</blockquote>')
-    // Wrap consecutive li items in a div
-    .replace(/(<li[^>]*>.*?<\/li>\n?)+/gs, (match) => `<div style="margin:6px 0">${match}</div>`)
-    // Paragraph breaks
-    .replace(/\n\n+/g, '</p><p style="margin:8px 0;color:rgba(255,255,255,0.85);line-height:1.65;font-family:var(--font-body)">')
+    .replace(/^&gt; (.+)$/gm, '<blockquote style="border-left:3px solid rgba(156,252,175,0.4);padding:6px 14px;margin:8px 0;color:rgba(255,255,255,0.65);background:rgba(156,252,175,0.04);border-radius:0 8px 8px 0;font-family:var(--font-body);font-style:italic">$1</blockquote>')
+    // Wrap consecutive li items
+    .replace(/(<li[^>]*>.*?<\/li>\n?)+/gs, (match) => `<div style="margin:4px 0">${match}</div>`)
+    // Paragraph breaks — keep margin minimal
+    .replace(/\n\n+/g, '</p><p style="margin:4px 0;color:rgba(255,255,255,0.85);line-height:1.6;font-family:var(--font-body)">')
     .replace(/\n/g, '<br/>');
-  return `<p style="margin:0 0 8px;color:rgba(255,255,255,0.85);line-height:1.65;font-family:var(--font-body)">${html}</p>`;
+  return `<p style="margin:0 0 4px;color:rgba(255,255,255,0.85);line-height:1.6;font-family:var(--font-body)">${html}</p>`;
 }
 
 /* ── Legacy clean (for action steps / example sections only) ── */
