@@ -499,6 +499,153 @@ function PlanGateBanner({ feature }) {
   );
 }
 
+/* ── Extract URLs from rendered text for source display ── */
+function extractSources(text) {
+  if (!text) return [];
+  const urlRegex = /https?:\/\/[^\s<>"{}|\\^`[\]()]+/g;
+  const matches = [...new Set(text.match(urlRegex) || [])];
+  return matches.slice(0, 6).map(url => {
+    try {
+      const u = new URL(url);
+      return { url, domain: u.hostname.replace(/^www\./, '') };
+    } catch { return { url, domain: url.slice(0,30) }; }
+  });
+}
+
+/* ── Perplexity-style follow-ups section ── */
+function FollowUpsSection({ followups, chips, onChip }) {
+  const all = [...(followups || []), ...(chips || [])].filter(Boolean);
+  if (!all.length) return null;
+  return (
+    <div style={{ marginTop: 24 }}>
+      <p style={{
+        fontSize: 11, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase',
+        color: 'rgba(255,255,255,0.25)', fontFamily: "var(--font-body)", marginBottom: 10,
+      }}>
+        Follow-ups
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {all.map((item, i) => (
+          <motion.button
+            key={i}
+            onClick={() => onChip?.(item)}
+            whileHover={{ x: 4 }}
+            whileTap={{ scale: 0.98 }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '10px 14px', borderRadius: 10,
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.07)',
+              color: 'rgba(255,255,255,0.65)', cursor: 'pointer',
+              fontFamily: "var(--font-body)", fontSize: 14, textAlign: 'left',
+              transition: 'all 0.15s ease', width: '100%',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.06)'; e.currentTarget.style.color='#ffffff'; e.currentTarget.style.borderColor='rgba(255,255,255,0.14)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.03)'; e.currentTarget.style.color='rgba(255,255,255,0.65)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.07)'; }}
+          >
+            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13, flexShrink: 0 }}>↳</span>
+            <span style={{ flex: 1 }}>{item}</span>
+            <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 13, flexShrink: 0 }}>→</span>
+          </motion.button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Source citations bar ── */
+function SourcesBar({ sources }) {
+  if (!sources.length) return null;
+  return (
+    <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <p style={{
+        fontSize: 10, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase',
+        color: 'rgba(255,255,255,0.2)', fontFamily: "var(--font-body)", marginBottom: 8,
+      }}>
+        {sources.length} source{sources.length !== 1 ? 's' : ''} referenced
+      </p>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        {sources.map((s, i) => (
+          <a
+            key={i} href={s.url} target="_blank" rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              padding: '4px 10px', borderRadius: 20,
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              fontSize: 11, fontFamily: "var(--font-body)",
+              color: 'rgba(255,255,255,0.45)', textDecoration: 'none',
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color='rgba(255,255,255,0.8)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.2)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.45)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.08)'; }}
+          >
+            <span style={{ width: 14, height: 14, borderRadius: 3, background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, flexShrink: 0 }}>
+              {i + 1}
+            </span>
+            {s.domain}
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Like / Dislike ── */
+function FeedbackRow({ messageId, onRegenerate }) {
+  const key = `corex_feedback_${messageId}`;
+  const [vote, setVote] = useState(() => localStorage.getItem(key) || null);
+  const cast = (v) => {
+    const next = vote === v ? null : v;
+    setVote(next);
+    if (next) localStorage.setItem(key, next); else localStorage.removeItem(key);
+  };
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12 }}>
+      {[
+        { v: 'up',   icon: '↑', tip: 'Good response' },
+        { v: 'down', icon: '↓', tip: 'Bad response' },
+      ].map(({ v, icon, tip }) => (
+        <motion.button
+          key={v}
+          onClick={() => cast(v)}
+          whileTap={{ scale: 0.88 }}
+          title={tip}
+          style={{
+            width: 28, height: 28, borderRadius: 8, border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 14, fontFamily: "var(--font-body)",
+            background: vote === v
+              ? (v === 'up' ? 'rgba(156,252,175,0.12)' : 'rgba(248,113,113,0.12)')
+              : 'rgba(255,255,255,0.04)',
+            color: vote === v
+              ? (v === 'up' ? '#9CFCAF' : '#f87171')
+              : 'rgba(255,255,255,0.3)',
+            transition: 'all 0.15s',
+          }}
+          onMouseEnter={e => { if (vote !== v) e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+          onMouseLeave={e => { if (vote !== v) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+        >
+          {icon}
+        </motion.button>
+      ))}
+      {vote === 'down' && (
+        <motion.button
+          initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }}
+          onClick={onRegenerate}
+          style={{
+            padding: '4px 10px', borderRadius: 8, border: '1px solid rgba(248,113,113,0.25)',
+            background: 'rgba(248,113,113,0.06)', cursor: 'pointer',
+            fontSize: 11, fontFamily: "var(--font-body)", color: '#f87171',
+          }}
+        >
+          Regenerate
+        </motion.button>
+      )}
+    </div>
+  );
+}
+
 /* ── COREX response ── */
 export default function ResponseCard({ message, onChip, onRegenerate, onSendMessage, onShare, userType = "creator" }) {
   const { role, searchUsed } = message;
@@ -531,6 +678,8 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
   const { title, cleanBody, steps, example, graphData, mindmapData, flowchartData, chips, followups, clarifyOptions } = parseResponse(message.content);
   const showChart = shouldShowChart(graphData);
   const bodyText  = cleanBody || ""; // keep raw markdown — rendered below
+  const sources   = searchUsed ? extractSources(bodyText) : [];
+  const msgId     = message.id || message.ts || String(message.content?.length);
 
   const plan = typeof window !== "undefined" ? (localStorage.getItem("corex_plan") || "free") : "free";
   const isPremiumPlan = plan === "nineteen_twentys" || plan === "canvas_enterprise";
@@ -556,20 +705,21 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
       onMouseLeave={()=>setHovered(false)}>
 
       {/* COREX Intelligence label */}
-      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
-        <span style={{ fontSize:11, fontWeight:600, letterSpacing:"1.5px", textTransform:"uppercase", color:"rgba(255,255,255,0.3)", fontFamily:"var(--font-body)" }}>
-          COREX Intelligence
+      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8, flexWrap:"wrap" }}>
+        <span style={{ fontSize:10, fontWeight:600, letterSpacing:"2px", textTransform:"uppercase", color:"rgba(255,255,255,0.22)", fontFamily:"var(--font-body)" }}>
+          COREX
         </span>
         {searchUsed && (
           <span style={{
             fontSize:10, fontWeight:600, color:"#9CFCAF",
-            background:"rgba(156,252,175,0.1)", border:"1px solid rgba(156,252,175,0.2)",
+            background:"rgba(156,252,175,0.08)", border:"1px solid rgba(156,252,175,0.18)",
             borderRadius:20, padding:"2px 8px",
             fontFamily:"var(--font-body)", letterSpacing:"0.5px",
             display:"inline-flex", alignItems:"center", gap:5,
           }}>
-            <span style={{ animation:"liveIntelPulse 2s ease-in-out infinite", display:"inline-block", width:6, height:6, borderRadius:"50%", background:"#9CFCAF" }}/>
+            <span style={{ animation:"liveIntelPulse 2s ease-in-out infinite", display:"inline-block", width:5, height:5, borderRadius:"50%", background:"#9CFCAF" }}/>
             Live intel
+            {sources.length > 0 && ` · ${sources.length} sources`}
           </span>
         )}
       </div>
@@ -712,26 +862,15 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
         </div>
       )}
 
-      {/* Follow-up chips — styled pills */}
-      {(chips.length > 0 || (followups && followups.length > 0)) && (
-        <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginTop:20 }}>
-          {[...chips, ...(followups || [])].map((chip, i) => (
-            <motion.button key={i} onClick={()=>onChip?.(chip)}
-              whileHover={{ y:-1, scale:1.02 }} whileTap={{ scale:0.97 }}
-              style={{
-                padding:"8px 16px", borderRadius:100, fontSize:13,
-                fontFamily:"var(--font-body)",
-                background:"rgba(255,255,255,0.04)",
-                border:"1px solid rgba(255,255,255,0.1)",
-                color:"rgba(255,255,255,0.65)", cursor:"pointer",
-                transition:"all 0.2s cubic-bezier(0.16,1,0.3,1)",
-              }}
-              onMouseEnter={e=>{ e.currentTarget.style.background="rgba(156,252,175,0.08)"; e.currentTarget.style.borderColor="rgba(156,252,175,0.3)"; e.currentTarget.style.color="#ffffff"; }}
-              onMouseLeave={e=>{ e.currentTarget.style.background="rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor="rgba(255,255,255,0.1)"; e.currentTarget.style.color="rgba(255,255,255,0.65)"; }}>
-              {chip}
-            </motion.button>
-          ))}
-        </div>
+      {/* Sources (when web search was used) */}
+      {sources.length > 0 && <SourcesBar sources={sources}/>}
+
+      {/* Perplexity-style follow-ups */}
+      <FollowUpsSection followups={followups} chips={chips} onChip={onChip}/>
+
+      {/* Like / Dislike feedback */}
+      {!message.streaming && (
+        <FeedbackRow messageId={msgId} onRegenerate={onRegenerate}/>
       )}
 
       {/* Copy / Redo / Save / PDF — hover action bar */}
@@ -786,7 +925,7 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
 
       {/* ── Four action buttons (assistant only, always visible) ── */}
       {!message.streaming && (
-        <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ marginTop: 16 }}>
 
           {/* Button row — all 4 inline, no expanding inside */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
