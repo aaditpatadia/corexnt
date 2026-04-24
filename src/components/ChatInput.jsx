@@ -139,68 +139,82 @@ export default function ChatInput({ onSend, disabled, userType, embedded }) {
     for (const f of dropped.slice(0, MAX_FILES - files.length)) await attachFile(f);
   };
 
-  const processVoiceInput = (rawTranscript) => {
-    // Smart intent cleaning — remove filler words, structure the input
-    const fillers = /\b(um+|uh+|like|you know|basically|so|well|i mean|right|okay|actually)\b/gi;
-    const cleaned = rawTranscript
-      .replace(fillers, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-    // Capitalize first letter
-    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  const cleanTranscript = (raw) => {
+    if (!raw) return '';
+    const fillers = /\b(um+|uh+|hmm+|err+|like|you know|basically|so like|i mean|right so|okay so|actually)\b/gi;
+    const out = raw.replace(fillers, '').replace(/\s{2,}/g, ' ').trim();
+    return out.charAt(0).toUpperCase() + out.slice(1);
   };
 
   const toggleVoice = () => {
     if (listening) {
       recognRef.current?.stop();
+      recognRef.current = null;
       setListening(false);
-      setVoiceStatus('idle');
       return;
     }
+
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
-      alert('Voice input is not supported in this browser. Try Chrome.');
+      alert('Voice input requires Chrome or Edge. Please switch browsers.');
       return;
     }
+
     const r = new SR();
     r.continuous = true;
     r.interimResults = true;
-    r.lang = 'en-IN';
+    r.maxAlternatives = 1;
+    // intentionally no r.lang — use browser default for best accuracy
 
-    let finalTranscript = '';
+    let accumulated = '';
+    let silenceTimer = null;
+
+    const resetSilenceTimer = () => {
+      clearTimeout(silenceTimer);
+      silenceTimer = setTimeout(() => r.stop(), 2500);
+    };
+
+    r.onstart = () => setListening(true);
 
     r.onresult = (e) => {
-      setVoiceStatus('listening');
+      resetSilenceTimer();
       let interim = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
         if (e.results[i].isFinal) {
-          finalTranscript += e.results[i][0].transcript;
+          accumulated += e.results[i][0].transcript + ' ';
         } else {
           interim = e.results[i][0].transcript;
         }
       }
-      // Show interim results in the textarea
-      setText(processVoiceInput(finalTranscript + interim));
+      const live = cleanTranscript((accumulated + interim).trim());
+      if (live) setText(live);
     };
 
     r.onend = () => {
+      clearTimeout(silenceTimer);
+      recognRef.current = null;
       setListening(false);
-      setVoiceStatus('idle');
-      if (finalTranscript) {
-        setText(processVoiceInput(finalTranscript));
-      }
+      if (accumulated.trim()) setText(cleanTranscript(accumulated.trim()));
     };
 
     r.onerror = (e) => {
+      clearTimeout(silenceTimer);
+      recognRef.current = null;
       setListening(false);
-      setVoiceStatus('idle');
-      if (e.error !== 'no-speech') console.warn('Voice error:', e.error);
+      if (e.error === 'not-allowed') {
+        alert('Microphone access denied. Allow mic in browser settings and try again.');
+      } else if (e.error !== 'no-speech' && e.error !== 'aborted') {
+        console.warn('Voice error:', e.error);
+      }
     };
 
-    recognRef.current = r;
-    r.start();
-    setListening(true);
-    setVoiceStatus('listening');
+    try {
+      r.start();
+      recognRef.current = r;
+      resetSilenceTimer();
+    } catch (err) {
+      console.warn('Voice start error:', err);
+    }
   };
 
   const canSend = (text.trim().length > 0 || files.length > 0) && !disabled;
