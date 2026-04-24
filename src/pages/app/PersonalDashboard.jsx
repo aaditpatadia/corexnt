@@ -144,7 +144,9 @@ function NewsPanel({ userType }) {
   useEffect(() => {
     let stale = false;
     const cached = sessionStorage.getItem("corex_news");
-    if (cached) {
+    const cachedAt = sessionStorage.getItem("corex_news_at");
+    const isStale = !cachedAt || (Date.now() - parseInt(cachedAt, 10)) > 30 * 60 * 1000;
+    if (cached && !isStale) {
       try { setNews(JSON.parse(cached)); setLoading(false); return; } catch {}
     }
     fetch("/api/news", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ niche }) })
@@ -153,7 +155,7 @@ function NewsPanel({ userType }) {
         if (stale) return;
         const items = d.news || [];
         setNews(items);
-        try { sessionStorage.setItem("corex_news", JSON.stringify(items)); } catch {}
+        try { sessionStorage.setItem("corex_news", JSON.stringify(items)); sessionStorage.setItem("corex_news_at", String(Date.now())); } catch {}
       })
       .catch(() => {})
       .finally(() => { if (!stale) setLoading(false); });

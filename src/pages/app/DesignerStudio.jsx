@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { variants } from "../../utils/animations";
+import { GraduationCap, Layers, IndianRupee } from "lucide-react";
 
 const FONT = "'Instrument Sans', sans-serif";
 const SERIF = "'Instrument Serif', serif";
@@ -9,7 +10,7 @@ const CARDS = [
   {
     id: "assignment",
     route: "/app/designers/assignment",
-    icon: "🎓",
+    icon: GraduationCap,
     title: "Assignment Solver",
     desc: "Turn your brief into a complete structured action plan. Research, concepts, execution — all mapped out.",
     credits: 4,
@@ -18,7 +19,7 @@ const CARDS = [
   {
     id: "critique",
     route: "/app/designers/critique",
-    icon: "◉",
+    icon: Layers,
     title: "Design Critique",
     desc: "Upload your design. Get a structured critique — hierarchy, contrast, brand fit, and the three fixes.",
     credits: 5,
@@ -27,7 +28,7 @@ const CARDS = [
   {
     id: "pricing",
     route: "/app/designers/pricing",
-    icon: "₹",
+    icon: IndianRupee,
     title: "Pricing Calculator",
     desc: "Market rate analysis for your project. Know exactly what to charge and how to say it.",
     credits: 3,
@@ -143,7 +144,7 @@ export default function DesignerStudio() {
             />
 
             {/* Icon */}
-            <div style={{ fontSize: 26, marginBottom: 14 }}>{card.icon}</div>
+            <div style={{ marginBottom: 14, color: "rgba(255,255,255,0.65)" }}><card.icon size={22} strokeWidth={1.6}/></div>
 
             {/* Title */}
             <h3

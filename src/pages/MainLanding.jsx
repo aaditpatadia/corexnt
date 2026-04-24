@@ -998,80 +998,108 @@ function CTABanner() {
   );
 }
 
-/* ── Contact ── */
-function Contact() {
-  const [form, setForm] = useState({ name:"", email:"", message:"" });
-  const [sent, setSent] = useState(false);
-  const set = k => e => setForm(f => ({ ...f, [k]:e.target.value }));
-  const inp = {
-    width:"100%", padding:"14px 18px", borderRadius:14,
-    border:"1.5px solid rgba(255,255,255,0.08)",
-    background:"rgba(255,255,255,0.04)", color:"#ffffff",
-    fontSize:15, fontFamily:FONT, outline:"none",
-    transition:"border-color 0.2s", boxSizing:"border-box",
-  };
-  const submit = (e) => {
-    e.preventDefault();
-    if (!form.name || !form.email || !form.message) return;
-    const s = encodeURIComponent(`COREX — Message from ${form.name}`);
-    const b = encodeURIComponent(`Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`);
-    window.location.href = `mailto:corexnt@gmail.com?subject=${s}&body=${b}`;
-    setSent(true);
-  };
+/* ── Contact — FlipLink social links ── */
+const FLIP_DURATION = 0.22;
+const FLIP_STAGGER  = 0.02;
+
+function FlipLink({ children, href }) {
+  const letters = children.split("");
   return (
-    <section id="contact" style={{ background:"#000000", padding:"80px 24px 120px" }}>
-      <div style={{ maxWidth:580, margin:"0 auto" }}>
+    <motion.a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      initial="initial"
+      whileHover="hovered"
+      style={{
+        position: "relative", display: "block", overflow: "hidden",
+        whiteSpace: "nowrap", lineHeight: 0.82,
+        color: "#ffffff", textDecoration: "none",
+        fontFamily: FONT, fontWeight: 800,
+        textTransform: "uppercase",
+        fontSize: "clamp(44px, 9vw, 130px)",
+        letterSpacing: "-0.02em",
+      }}
+    >
+      {/* Top layer — slides up on hover */}
+      <div aria-hidden="true">
+        {letters.map((l, i) => (
+          <motion.span
+            key={i}
+            variants={{ initial: { y: 0 }, hovered: { y: "-100%" } }}
+            transition={{ duration: FLIP_DURATION, ease: "easeInOut", delay: FLIP_STAGGER * i }}
+            style={{ display: "inline-block" }}
+          >
+            {l === " " ? "\u00A0" : l}
+          </motion.span>
+        ))}
+      </div>
+      {/* Bottom layer — slides in from below */}
+      <div style={{ position: "absolute", inset: 0 }}>
+        {letters.map((l, i) => (
+          <motion.span
+            key={i}
+            variants={{ initial: { y: "100%" }, hovered: { y: 0 } }}
+            transition={{ duration: FLIP_DURATION, ease: "easeInOut", delay: FLIP_STAGGER * i }}
+            style={{ display: "inline-block", color: "#9CFCAF" }}
+          >
+            {l === " " ? "\u00A0" : l}
+          </motion.span>
+        ))}
+      </div>
+      {/* Screen-reader text */}
+      <span style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0,0,0,0)" }}>
+        {children}
+      </span>
+    </motion.a>
+  );
+}
+
+function Contact() {
+  return (
+    <section id="contact" style={{ background: "#000000", padding: "80px 0 0", overflow: "hidden" }}>
+      {/* Label */}
+      <div style={{ padding: "0 24px", marginBottom: 32 }}>
         <FadeUp>
-          <div style={{ textAlign:"center", marginBottom:56 }}>
-            <p style={{ fontSize:12, fontWeight:700, letterSpacing:"3px", textTransform:"uppercase", color:"rgba(255,255,255,0.25)", fontFamily:FONT, marginBottom:16 }}>
-              Get in touch
-            </p>
-            <h2 style={{ fontFamily:SERIF, fontStyle:"italic", fontSize:"clamp(32px,5vw,54px)", fontWeight:400, color:"#ffffff", margin:"0 0 16px" }}>
-              Let's talk.
-            </h2>
-            <p style={{ fontSize:16, color:"rgba(255,255,255,0.38)", fontFamily:FONT }}>
-              Questions, partnerships, or just say hi —{" "}
-              <a href="mailto:corexnt@gmail.com" style={{ color:"rgba(255,255,255,0.6)", textDecoration:"underline", textUnderlineOffset:3 }}>
-                corexnt@gmail.com
-              </a>
-            </p>
-          </div>
+          <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", fontFamily: FONT, marginBottom: 8 }}>
+            Find us everywhere
+          </p>
+          <p style={{ fontSize: 16, color: "rgba(255,255,255,0.35)", fontFamily: FONT, maxWidth: 480 }}>
+            Hover to interact — every link opens directly.
+          </p>
         </FadeUp>
-        <FadeUp delay={0.1}>
-          {sent ? (
-            <motion.div initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }}
-              style={{ textAlign:"center", padding:"64px 40px", borderRadius:24, background:"rgba(156,252,175,0.05)", border:"1px solid rgba(156,252,175,0.15)" }}>
-              <div style={{ fontSize:52, marginBottom:16 }}>✓</div>
-              <h3 style={{ fontFamily:SERIF, fontStyle:"italic", fontSize:28, color:"#ffffff", marginBottom:8 }}>Message sent!</h3>
-              <p style={{ fontSize:15, color:"rgba(255,255,255,0.4)", fontFamily:FONT }}>We'll get back to you within 24 hours.</p>
-            </motion.div>
-          ) : (
-            <form onSubmit={submit} style={{ display:"flex", flexDirection:"column", gap:14 }}>
-              {[
-                { key:"name", label:"Name", ph:"Aadit Patadia", type:"text" },
-                { key:"email", label:"Email", ph:"you@example.com", type:"email" },
-              ].map(({ key, label, ph, type }) => (
-                <div key={key}>
-                  <label style={{ display:"block", fontSize:12, fontWeight:600, color:"rgba(255,255,255,0.4)", fontFamily:FONT, marginBottom:8, letterSpacing:"0.5px", textTransform:"uppercase" }}>{label}</label>
-                  <input type={type} value={form[key]} onChange={set(key)} placeholder={ph} style={inp}
-                    onFocus={e=>e.target.style.borderColor="rgba(255,255,255,0.25)"}
-                    onBlur={e=>e.target.style.borderColor="rgba(255,255,255,0.08)"}/>
-                </div>
-              ))}
-              <div>
-                <label style={{ display:"block", fontSize:12, fontWeight:600, color:"rgba(255,255,255,0.4)", fontFamily:FONT, marginBottom:8, letterSpacing:"0.5px", textTransform:"uppercase" }}>Message</label>
-                <textarea value={form.message} onChange={set("message")} placeholder="What's on your mind?" rows={5}
-                  style={{ ...inp, resize:"vertical" }}
-                  onFocus={e=>e.target.style.borderColor="rgba(255,255,255,0.25)"}
-                  onBlur={e=>e.target.style.borderColor="rgba(255,255,255,0.08)"}/>
-              </div>
-              <motion.button type="submit" whileHover={{ scale:1.02 }} whileTap={{ scale:0.98 }}
-                style={{ padding:"16px 0", borderRadius:100, border:"none", cursor:"pointer", fontFamily:FONT, fontSize:15, fontWeight:700, background:GRAD, color:"#000000", marginTop:4 }}>
-                Send message →
-              </motion.button>
-            </form>
-          )}
-        </FadeUp>
+      </div>
+
+      {/* Flip links */}
+      <div style={{ padding: "0 20px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        {[
+          { label: "Twitter",   href: "https://x.com/corexnt" },
+          { label: "Instagram", href: "https://www.instagram.com/corexnt/" },
+          { label: "LinkedIn",  href: "https://www.linkedin.com/in/corexnt/" },
+          { label: "Reddit",    href: "https://www.reddit.com/user/corexnt/" },
+          { label: "Gmail",     href: "mailto:corexnt@gmail.com" },
+        ].map(({ label, href }, i) => (
+          <motion.div
+            key={label}
+            initial={{ opacity: 0, x: -24 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.06, duration: 0.5, ease: [0.16,1,0.3,1] }}
+            style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "4px 0" }}
+          >
+            <FlipLink href={href}>{label}</FlipLink>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Bottom email line */}
+      <div style={{ padding: "32px 24px 80px", textAlign: "center" }}>
+        <p style={{ fontFamily: FONT, fontSize: 14, color: "rgba(255,255,255,0.25)" }}>
+          Direct email:{" "}
+          <a href="mailto:corexnt@gmail.com" style={{ color: "rgba(255,255,255,0.5)", textDecoration: "underline", textUnderlineOffset: 3 }}>
+            corexnt@gmail.com
+          </a>
+        </p>
       </div>
     </section>
   );

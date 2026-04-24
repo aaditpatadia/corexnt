@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { variants } from "../../utils/animations";
+import { Search, Film } from "lucide-react";
 
 const FONT = "'Instrument Sans', sans-serif";
 const SERIF = "'Instrument Serif', serif";
@@ -9,7 +10,7 @@ const CARDS = [
   {
     id: "source",
     route: "/app/directors/source",
-    icon: "🔍",
+    icon: Search,
     title: "Source It Out",
     desc: "Find everything for your shoot. In one place.",
     credits: 5,
@@ -18,7 +19,7 @@ const CARDS = [
   {
     id: "shoot-day",
     route: "/app/directors/shoot-day",
-    icon: "🎬",
+    icon: Film,
     title: "Shoot Day System",
     desc: "Shot list. Timeline. On-set guide.",
     credits: 5,
@@ -135,7 +136,7 @@ export default function DirectorsHub() {
             />
 
             {/* Icon */}
-            <div style={{ fontSize: 26, marginBottom: 14 }}>{card.icon}</div>
+            <div style={{ marginBottom: 14, color: "rgba(255,255,255,0.65)" }}><card.icon size={22} strokeWidth={1.6}/></div>
 
             {/* Title */}
             <h3

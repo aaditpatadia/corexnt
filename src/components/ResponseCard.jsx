@@ -11,7 +11,10 @@ import { generateResponsePDF } from "../utils/generatePDF";
 /* ── Render markdown to styled HTML ── */
 function renderMarkdown(text) {
   if (!text) return "";
+  // Pre-collapse blank lines between consecutive list items so they stay tight
   let html = text
+    .replace(/^(\d+\..+)\n\n+(?=\d+\.)/gm, '$1\n')   // numbered list items
+    .replace(/^([-*•].+)\n\n+(?=[-*•])/gm,  '$1\n')   // bullet list items
     // Escape HTML to prevent injection (but keep our own tags)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     // Headers
@@ -21,6 +24,8 @@ function renderMarkdown(text) {
     .replace(/^# (.+)$/gm, '<h2 style="font-size:20px;font-weight:700;color:#ffffff;margin:28px 0 12px;font-family:var(--font-body)">$1</h2>')
     // Horizontal rule
     .replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:20px 0"/>')
+    // Treat ALL-CAPS label lines (like "WHAT'S WORKING:") as compact section headers
+    .replace(/^([A-Z][A-Z\s''&\/\-]+:?)$/gm, '<p style="font-size:10.5px;font-weight:700;color:rgba(255,255,255,0.38);letter-spacing:2px;text-transform:uppercase;font-family:var(--font-body);margin:14px 0 4px;padding:0">$1</p>')
     // Bold + italic
     .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
     .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#ffffff;font-weight:700">$1</strong>')
@@ -28,17 +33,17 @@ function renderMarkdown(text) {
     // Inline code
     .replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.08);border-radius:4px;padding:2px 6px;font-size:13px;font-family:monospace;color:#9CFCAF">$1</code>')
     // Numbered lists — collect consecutive lines
-    .replace(/^(\d+)\. (.+)$/gm, '<li class="ol-item" style="margin:6px 0;color:rgba(255,255,255,0.85);font-family:var(--font-body);list-style:none;padding-left:0"><span style="color:#9CFCAF;font-weight:700;min-width:20px;display:inline-block">$1.</span> $2</li>')
+    .replace(/^(\d+)\. (.+)$/gm, '<li class="ol-item" style="margin:3px 0;color:rgba(255,255,255,0.85);font-family:var(--font-body);list-style:none;padding-left:0;line-height:1.6"><span style="color:#9CFCAF;font-weight:700;min-width:22px;display:inline-block">$1.</span> $2</li>')
     // Unordered lists
-    .replace(/^[-*•]\s+(.+)$/gm, '<li style="margin:6px 0;padding-left:16px;color:rgba(255,255,255,0.85);font-family:var(--font-body);list-style:none;position:relative"><span style="position:absolute;left:0;color:#9CFCAF">•</span>$1</li>')
+    .replace(/^[-*•]\s+(.+)$/gm, '<li style="margin:3px 0;padding-left:16px;color:rgba(255,255,255,0.85);font-family:var(--font-body);list-style:none;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:#9CFCAF">•</span>$1</li>')
     // Blockquote
     .replace(/^&gt; (.+)$/gm, '<blockquote style="border-left:3px solid rgba(156,252,175,0.4);padding:8px 16px;margin:12px 0;color:rgba(255,255,255,0.65);background:rgba(156,252,175,0.04);border-radius:0 8px 8px 0;font-family:var(--font-body);font-style:italic">$1</blockquote>')
     // Wrap consecutive li items in a div
-    .replace(/(<li[^>]*>.*?<\/li>\n?)+/gs, (match) => `<div style="margin:10px 0">${match}</div>`)
+    .replace(/(<li[^>]*>.*?<\/li>\n?)+/gs, (match) => `<div style="margin:6px 0">${match}</div>`)
     // Paragraph breaks
-    .replace(/\n\n+/g, '</p><p style="margin:12px 0;color:rgba(255,255,255,0.85);line-height:1.8;font-family:var(--font-body)">')
+    .replace(/\n\n+/g, '</p><p style="margin:8px 0;color:rgba(255,255,255,0.85);line-height:1.65;font-family:var(--font-body)">')
     .replace(/\n/g, '<br/>');
-  return `<p style="margin:0 0 12px;color:rgba(255,255,255,0.85);line-height:1.8;font-family:var(--font-body)">${html}</p>`;
+  return `<p style="margin:0 0 8px;color:rgba(255,255,255,0.85);line-height:1.65;font-family:var(--font-body)">${html}</p>`;
 }
 
 /* ── Legacy clean (for action steps / example sections only) ── */
