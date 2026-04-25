@@ -4,7 +4,11 @@
       "Bash(node --input-type=module)",
       "mcp__Claude_in_Chrome__tabs_context_mcp",
       "mcp__Claude_in_Chrome__navigate",
-      "mcp__Claude_in_Chrome__computer"
+      "mcp__Claude_in_Chrome__computer",
+      "Bash(npx vite *)",
+      "Bash(node --check api/chat.js)",
+      "Bash(node --check api/chat.js api/news.js)",
+      "Bash(npm run *)"
     ]
   }
 }

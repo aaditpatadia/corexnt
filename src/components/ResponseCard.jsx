@@ -12,45 +12,52 @@ import { generateResponsePDF } from "../utils/generatePDF";
 function renderMarkdown(text) {
   if (!text) return "";
 
-  // ── Pre-collapse: kill ALL double-blank-lines near list items ────────────────
-  let html = text
-    // Consecutive numbered items: 1. foo\n\n2. bar → 1. foo\n2. bar
-    .replace(/^(\d+\..+)\n\n+(?=\d+\.)/gm, '$1\n')
-    // Numbered item → description paragraph (blank line separating them): collapse
-    .replace(/^(\d+\..+)\n\n+(?=[^\d\n*\-•])/gm, '$1\n')
-    // Description paragraph → next numbered item: collapse
-    .replace(/^([^\d\n*\-•#>].+)\n\n+(?=\d+\.)/gm, '$1\n')
-    // Consecutive bullet items
-    .replace(/^([-*•].+)\n\n+(?=[-*•])/gm, '$1\n')
-    // Escape HTML
+  // ── Step 1: Aggressively collapse ALL double-newlines around list context ────
+  // This eliminates the gaps between numbered titles and their descriptions,
+  // between bullets and their context, and across all list-adjacent transitions.
+  let t = text
+    .replace(/\n{3,}/g, '\n\n')                        // max 2 newlines anywhere
+    .replace(/\n\n(?=\d{1,2}\. )/g, '\n')              // anything → numbered item
+    .replace(/(^\d{1,2}\. .+)(\n\n)(?!\n)/gm, '$1\n') // numbered item → anything
+    .replace(/\n\n(?=[-*•] )/g, '\n')                  // anything → bullet item
+    .replace(/(^[-*•] .+)(\n\n)(?!\n)/gm, '$1\n');    // bullet item → anything
+
+  // ── Step 2: Convert to HTML ──────────────────────────────────────────────────
+  let html = t
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    // Headers
-    .replace(/^#### (.+)$/gm, '<h5 style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;margin:16px 0 4px;font-family:var(--font-body)">$1</h5>')
-    .replace(/^### (.+)$/gm, '<h4 style="font-size:15px;font-weight:700;color:rgba(255,255,255,0.8);margin:18px 0 6px;font-family:var(--font-body)">$1</h4>')
-    .replace(/^## (.+)$/gm, '<h3 style="font-size:17px;font-weight:700;color:#ffffff;margin:22px 0 8px;font-family:var(--font-body)">$1</h3>')
-    .replace(/^# (.+)$/gm, '<h2 style="font-size:20px;font-weight:700;color:#ffffff;margin:26px 0 10px;font-family:var(--font-body)">$1</h2>')
+    // Markdown headers
+    .replace(/^#### (.+)$/gm, '<h5 style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:1.2px;margin:14px 0 3px;font-family:var(--font-body)">$1</h5>')
+    .replace(/^### (.+)$/gm,  '<h4 style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.75);margin:16px 0 5px;font-family:var(--font-body)">$1</h4>')
+    .replace(/^## (.+)$/gm,   '<h3 style="font-size:16px;font-weight:700;color:#ffffff;margin:20px 0 7px;font-family:var(--font-body)">$1</h3>')
+    .replace(/^# (.+)$/gm,    '<h2 style="font-size:19px;font-weight:700;color:#ffffff;margin:22px 0 9px;font-family:var(--font-body)">$1</h2>')
     // Horizontal rule
-    .replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:16px 0"/>')
-    // ALL-CAPS section labels
-    .replace(/^([A-Z][A-Z\s''&\/\-]+:?)$/gm, '<p style="font-size:10.5px;font-weight:700;color:rgba(255,255,255,0.38);letter-spacing:2px;text-transform:uppercase;font-family:var(--font-body);margin:12px 0 3px;padding:0">$1</p>')
+    .replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid rgba(255,255,255,0.07);margin:14px 0"/>')
+    // ALL-CAPS label lines (e.g. "WHAT'S WORKING:")
+    .replace(/^([A-Z][A-Z\s''&\/\-]{3,}:?)$/gm,
+      '<p style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:2px;text-transform:uppercase;font-family:var(--font-body);margin:10px 0 2px;padding:0">$1</p>')
     // Bold + italic
     .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
     .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#ffffff;font-weight:700">$1</strong>')
     .replace(/\*(.+?)\*/g, '<em style="color:rgba(255,255,255,0.8)">$1</em>')
     // Inline code
-    .replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.08);border-radius:4px;padding:2px 6px;font-size:13px;font-family:monospace;color:#9CFCAF">$1</code>')
-    // Numbered lists
-    .replace(/^(\d+)\. (.+)$/gm, '<li class="ol-item" style="margin:2px 0;color:rgba(255,255,255,0.85);font-family:var(--font-body);list-style:none;padding-left:0;line-height:1.55"><span style="color:#9CFCAF;font-weight:700;min-width:22px;display:inline-block">$1.</span> $2</li>')
-    // Unordered lists
-    .replace(/^[-*•]\s+(.+)$/gm, '<li style="margin:2px 0;padding-left:16px;color:rgba(255,255,255,0.85);font-family:var(--font-body);list-style:none;position:relative;line-height:1.55"><span style="position:absolute;left:0;color:#9CFCAF">•</span>$1</li>')
+    .replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.08);border-radius:4px;padding:1px 5px;font-size:12.5px;font-family:monospace;color:#9CFCAF">$1</code>')
+    // Numbered list items — tight line-height, no gaps
+    .replace(/^(\d+)\. (.+)$/gm,
+      '<li style="display:flex;gap:0;align-items:baseline;margin:1px 0;line-height:1.55;font-family:var(--font-body);list-style:none"><span style="color:#9CFCAF;font-weight:700;min-width:24px;flex-shrink:0;font-size:13.5px">$1.</span><span style="color:rgba(255,255,255,0.88);font-size:14px"> $2</span></li>')
+    // Bullet list items
+    .replace(/^[-*•]\s+(.+)$/gm,
+      '<li style="display:flex;gap:0;align-items:baseline;margin:1px 0;line-height:1.55;font-family:var(--font-body);list-style:none"><span style="color:#9CFCAF;font-weight:700;min-width:18px;flex-shrink:0;font-size:14px">•</span><span style="color:rgba(255,255,255,0.88);font-size:14px">$1</span></li>')
     // Blockquote
-    .replace(/^&gt; (.+)$/gm, '<blockquote style="border-left:3px solid rgba(156,252,175,0.4);padding:6px 14px;margin:8px 0;color:rgba(255,255,255,0.65);background:rgba(156,252,175,0.04);border-radius:0 8px 8px 0;font-family:var(--font-body);font-style:italic">$1</blockquote>')
-    // Wrap consecutive li items
-    .replace(/(<li[^>]*>.*?<\/li>\n?)+/gs, (match) => `<div style="margin:4px 0">${match}</div>`)
-    // Paragraph breaks — keep margin minimal
-    .replace(/\n\n+/g, '</p><p style="margin:4px 0;color:rgba(255,255,255,0.85);line-height:1.6;font-family:var(--font-body)">')
+    .replace(/^&gt; (.+)$/gm,
+      '<blockquote style="border-left:2px solid rgba(156,252,175,0.35);padding:5px 12px;margin:6px 0;color:rgba(255,255,255,0.6);background:rgba(156,252,175,0.03);border-radius:0 6px 6px 0;font-family:var(--font-body);font-style:italic;font-size:13.5px">$1</blockquote>')
+    // Wrap consecutive <li> in a tight div (no extra margin between items)
+    .replace(/(<li[^>]*>[\s\S]*?<\/li>(?:\n<li[^>]*>[\s\S]*?<\/li>)*)/g,
+      (match) => `<div style="margin:5px 0 5px;padding:0">${match}</div>`)
+    // Paragraph / line breaks — single newline = <br>, double = paragraph gap
+    .replace(/\n\n+/g, '</p><p style="margin:5px 0;color:rgba(255,255,255,0.85);line-height:1.62;font-family:var(--font-body);font-size:14px">')
     .replace(/\n/g, '<br/>');
-  return `<p style="margin:0 0 4px;color:rgba(255,255,255,0.85);line-height:1.6;font-family:var(--font-body)">${html}</p>`;
+
+  return `<p style="margin:0;color:rgba(255,255,255,0.85);line-height:1.62;font-family:var(--font-body);font-size:14px">${html}</p>`;
 }
 
 /* ── Legacy clean (for action steps / example sections only) ── */
@@ -201,7 +208,7 @@ function buildChart(graphData) {
 }
 
 /* ── User bubble ── */
-function UserBubble({ message }) {
+function UserBubble({ message, onImageClick }) {
   const [copied,   setCopied]   = useState(false);
   const [expanded, setExpanded] = useState(false);
   const { content, files = [] } = message;
@@ -220,7 +227,7 @@ function UserBubble({ message }) {
         {files.length > 0 && (
           <div style={{ display:"flex", flexWrap:"wrap", gap:8, justifyContent:"flex-end", marginBottom:6 }}>
             {files.map((f, i) => f.preview
-              ? <img key={i} src={f.preview} alt={f.name} style={{ width:60, height:60, borderRadius:14, objectFit:"cover" }}/>
+              ? <img key={i} src={f.preview} alt={f.name} onClick={() => onImageClick?.(f.preview)} style={{ width:60, height:60, borderRadius:14, objectFit:"cover", cursor:"pointer" }}/>
               : <div key={i} style={{ display:"flex", alignItems:"center", gap:4, padding:"6px 12px", borderRadius:16, fontSize:12, background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.1)", color:"rgba(255,255,255,0.6)", fontFamily:"var(--font-body)" }}>
                   📎 {f.name}
                 </div>
@@ -659,7 +666,7 @@ function FeedbackRow({ messageId, onRegenerate }) {
 }
 
 /* ── COREX response ── */
-export default function ResponseCard({ message, onChip, onRegenerate, onSendMessage, onShare, userType = "creator" }) {
+export default function ResponseCard({ message, onChip, onRegenerate, onSendMessage, onShare, onImageClick, userType = "creator" }) {
   const { role, searchUsed } = message;
 
   const [copied,     setCopied]     = useState(false);
@@ -685,7 +692,7 @@ export default function ResponseCard({ message, onChip, onRegenerate, onSendMess
     return () => document.removeEventListener('mousedown', handler);
   }, [makeItOpen]);
 
-  if (role === "user") return <UserBubble message={message}/>;
+  if (role === "user") return <UserBubble message={message} onImageClick={onImageClick}/>;
 
   const { title, cleanBody, steps, example, graphData, mindmapData, flowchartData, chips, followups, clarifyOptions } = parseResponse(message.content);
   const showChart = shouldShowChart(graphData);
