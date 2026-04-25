@@ -1076,7 +1076,6 @@ function Contact() {
           { label: "Twitter",   href: "https://x.com/corexnt" },
           { label: "Instagram", href: "https://www.instagram.com/corexnt/" },
           { label: "LinkedIn",  href: "https://www.linkedin.com/in/corexnt/" },
-          { label: "Reddit",    href: "https://www.reddit.com/user/corexnt/" },
           { label: "Gmail",     href: "mailto:corexnt@gmail.com" },
         ].map(({ label, href }, i) => (
           <motion.div

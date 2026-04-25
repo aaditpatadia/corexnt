@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
+import { Film } from "lucide-react";
 
 const FONT = "'Instrument Sans', sans-serif";
 const SERIF = "'Instrument Serif', serif";
@@ -284,7 +285,7 @@ END OF DAY CHECKLIST:
 
       {/* Header */}
       <div style={{ marginBottom: 32 }}>
-        <div style={{ fontSize: 32, marginBottom: 12 }}>🎬</div>
+        <div style={{ marginBottom: 16, color: "rgba(255,255,255,0.3)" }}><Film size={36} strokeWidth={1.4}/></div>
         <h1
           style={{
             fontFamily: SERIF,

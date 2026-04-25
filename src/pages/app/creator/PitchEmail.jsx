@@ -68,7 +68,7 @@ What they're offering: ${offer}
 
 Return EXACTLY this structure:
 
-📧 SUBJECT LINE:
+SUBJECT LINE:
 [subject line that gets opened — specific, not clickbaity]
 
 ✉️ EMAIL BODY:
@@ -88,7 +88,7 @@ Hi [Name],
 📝 FOLLOW-UP MESSAGE (send if no reply in 5 days):
 [Short, direct follow-up that adds new value — not just "bumping this"]
 
-💡 PRO TIPS FOR THIS PITCH:
+PRO TIPS FOR THIS PITCH:
 → [Specific personalization tip for ${brand}]
 → [Timing or delivery tip]
 → [What to do if they negotiate rate]

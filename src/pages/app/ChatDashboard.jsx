@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Square, X } from "lucide-react";
 import ChatInput    from "../../components/ChatInput";
 import ResponseCard from "../../components/ResponseCard";
 import { stripMarkdown } from "../../utils/parseResponse";
@@ -455,8 +456,10 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
   const [credits,     setCredits]     = useState(getCredits);
   const [shareToast,  setShareToast]  = useState(false);
   const [cooldownMs,  setCooldownMs]  = useState(0);
+  const [lightboxImg, setLightboxImg] = useState(null);
   const bottomRef    = useRef(null);
   const scrollRef    = useRef(null);
+  const abortRef     = useRef(null);
 
   useEffect(() => {
     if (!sessionStorage.getItem("corex_session_id"))
@@ -593,9 +596,11 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
         try { return JSON.parse(localStorage.getItem("corex_user_profile") || "null"); }
         catch { return null; }
       })();
+      abortRef.current = new AbortController();
       const res = await fetch("/api/chat", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
+        signal:  abortRef.current.signal,
         body:    JSON.stringify({
           messages:         contextWindow.map(m => ({ role: m.role, content: m.content || "" })),
           files:            apiFiles,
@@ -627,7 +632,8 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
         userType: userType || 'creator',
         brandName: localStorage.getItem('corex_brand_name') || '',
       }).catch(() => {});
-    } catch {
+    } catch (e) {
+      if (e.name === 'AbortError') { reply = ""; setMessages(prev => prev.slice(0, -1)); setLoading(false); return; }
       reply = `Connection error. Please try again.\n\nFOLLOWUPS: ["Try again", "New idea"]`;
     }
 
@@ -791,6 +797,7 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
                     userType={userType}
                     onChip={chip => sendMessage(chip, [])}
                     onShare={() => handleShare(msg)}
+                    onImageClick={setLightboxImg}
                     onRegenerate={() => {
                       const prev = messages.slice(0, messages.findIndex(m => m.id === msg.id));
                       const last = [...prev].reverse().find(m => m.role === "user");
@@ -809,6 +816,16 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
             </AnimatePresence>
 
             {loading && <ThinkingCard hasImage={messages.length > 0 && messages[messages.length-1]?.files?.some(f => f.type?.startsWith("image/"))} />}
+            {loading && (
+              <div style={{ display:"flex", justifyContent:"center", marginTop: 8, marginBottom: 4 }}>
+                <button
+                  onClick={() => abortRef.current?.abort()}
+                  style={{ display:"flex", alignItems:"center", gap:6, padding:"6px 16px", borderRadius:100, fontSize:12, fontFamily:"'Instrument Sans', sans-serif", fontWeight:600, color:"rgba(255,255,255,0.5)", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", cursor:"pointer" }}
+                >
+                  <Square size={11} fill="currentColor"/> Stop generating
+                </button>
+              </div>
+            )}
             {limitHit && !loading && <LimitBanner onUpgrade={onUpgrade} />}
             <div ref={bottomRef} />
           </div>
@@ -917,6 +934,18 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
           }
         }
       `}</style>
+
+      {lightboxImg && (
+        <div
+          onClick={() => setLightboxImg(null)}
+          style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.92)", zIndex:9999, display:"flex", alignItems:"center", justifyContent:"center", cursor:"zoom-out" }}
+        >
+          <img src={lightboxImg} alt="attachment" style={{ maxWidth:"90vw", maxHeight:"88vh", borderRadius:12, boxShadow:"0 8px 40px rgba(0,0,0,0.6)", objectFit:"contain" }}/>
+          <button onClick={() => setLightboxImg(null)} style={{ position:"absolute", top:20, right:24, background:"rgba(255,255,255,0.1)", border:"none", borderRadius:"50%", width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:"#fff" }}>
+            <X size={18}/>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
