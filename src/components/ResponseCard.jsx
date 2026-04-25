@@ -50,9 +50,9 @@ function renderMarkdown(text) {
     // Blockquote
     .replace(/^&gt; (.+)$/gm,
       '<blockquote style="border-left:2px solid rgba(156,252,175,0.35);padding:5px 12px;margin:6px 0;color:rgba(255,255,255,0.6);background:rgba(156,252,175,0.03);border-radius:0 6px 6px 0;font-family:var(--font-body);font-style:italic;font-size:13.5px">$1</blockquote>')
-    // Wrap consecutive <li> in a tight div (no extra margin between items)
+    // Wrap consecutive <li> in a tight div — strip internal \n so they can't become <br/>
     .replace(/(<li[^>]*>[\s\S]*?<\/li>(?:\n<li[^>]*>[\s\S]*?<\/li>)*)/g,
-      (match) => `<div style="margin:5px 0 5px;padding:0">${match}</div>`)
+      (match) => `<div style="margin:5px 0 5px;padding:0">${match.replace(/\n/g, "")}</div>`)
     // Paragraph / line breaks — single newline = <br>, double = paragraph gap
     .replace(/\n\n+/g, '</p><p style="margin:5px 0;color:rgba(255,255,255,0.85);line-height:1.62;font-family:var(--font-body);font-size:14px">')
     .replace(/\n/g, '<br/>');

@@ -239,7 +239,9 @@ function RevealCard({ message }) {
       .replace(/GRAPH_DATA:[\s\S]*$/m, "")
       .replace(/Chips:.*$/m, "")
       .replace(/FOLLOWUPS:[\s\S]*$/m, "")
+      .replace(/CLARIFY:[\s\S]*$/m, "")
       .replace(/BRANCH_[ABC]:.*$/gm, "")
+      .replace(/BRANCH_[ABC]_(?:TITLE|BODY|DESC):.*$/gm, "")
       .replace(/THINKING:.*$/m, "")
       .trim()
   );
@@ -783,6 +785,21 @@ export default function ChatDashboard({ userType, userName, onUpgrade }) {
                         data={branches}
                         onSelect={handleBranchSelect}
                         userMessage={prevUser2?.content || ""}
+                      />
+                    );
+                  }
+                  // Skip word-reveal for CLARIFY responses — show chips immediately
+                  if (/CLARIFY:\s*\[/.test(msg.content || "")) {
+                    return (
+                      <ResponseCard
+                        key={msg.id}
+                        message={msg}
+                        userType={userType}
+                        onChip={chip => sendMessage(chip, [])}
+                        onShare={() => handleShare(msg)}
+                        onImageClick={setLightboxImg}
+                        onRegenerate={() => {}}
+                        onSendMessage={(prompt, cost) => { deduct(cost); sendMessage(prompt, []); }}
                       />
                     );
                   }
